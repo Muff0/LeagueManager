@@ -1,0 +1,27 @@
+﻿@page "/notifications"
+@inject Services.MainService MainService
+@rendermode InteractiveServer
+
+<PageTitle>Notifications</PageTitle>
+
+<h1>Sync</h1>
+
+<p role="status">@message</p>
+
+<button class="btn btn-primary" @onclick="SendNotification">Test Notification</button>
+
+@code {
+    private string message = "Loading...";
+    private async void SendNotification()
+    {
+        try
+        {
+
+            await MainService.SendNotification();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+}

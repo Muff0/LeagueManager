@@ -1,0 +1,41 @@
+﻿@page "/sync"
+@inject Services.MainService MainService
+@rendermode InteractiveServer
+
+<PageTitle>Sync</PageTitle>
+
+<h1>Sync</h1>
+
+<p role="status">@message</p>
+
+<button class="btn btn-primary" @onclick="SyncPlayers">Sync Players</button>
+<button class="btn btn-primary" @onclick="SyncMatches">Sync Matches</button>
+
+@code {
+    private string message = "Loading...";
+    
+    private async void SyncMatches()
+    {
+        try
+        {
+
+            await MainService.SyncMatches();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+    private async void SyncPlayers()
+    {
+        try
+        {
+
+            await MainService.UpdatePlayers();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+}
