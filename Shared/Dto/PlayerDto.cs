@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shared.Enum;
 
 namespace Shared.Dto
 {
@@ -15,7 +16,7 @@ namespace Shared.Dto
         public string DiscordHandle { get; set; } = "";
         public string OGSHandle { get; set; } = "";
         public string LeagoMemberId { get; set; } = "";
-        public int Rank { get; set; }
+        public PlayerRank Rank { get; set; }
         public string LeagoKey { get; set; } = string.Empty;
     }
 }

@@ -50,7 +50,7 @@ namespace Data
             return queryObject.Execute(GetDbContext());
         }
 
-        public IQueryable<T2> RunQuery<T2>(Query<T, T2> queryObject) where T2 : class
+        public ICollection<T2> RunQuery<T2>(Query<T, T2> queryObject) where T2 : class
         {
             return queryObject.Execute(GetDbContext());
         }
@@ -60,7 +60,7 @@ namespace Data
             return await queryObject.ExecuteAsync(GetDbContext());
         }
 
-        public async Task<IQueryable<T2>> RunQueryAsync<T2>(Query<T, T2> queryObject) where T2 : class
+        public async Task<ICollection<T2>> RunQueryAsync<T2>(Query<T, T2> queryObject) where T2 : class
         {
             return await queryObject.ExecuteAsync(GetDbContext());
         }

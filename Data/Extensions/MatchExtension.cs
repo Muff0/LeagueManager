@@ -20,7 +20,9 @@ namespace Data
                 ScheduleTime = match.GameTimeUTC.GetValueOrDefault(),
                 GameLink = match.Link,
                 IsPlayed = match.IsComplete,
-                Players = match.PlayerMatches?.Select(pm => pm.ToPlayerMatchDto()).ToArray(),
+                Players = match.PlayerMatches?.Select(pm => pm.ToPlayerMatchDto(skipMatch: true)).ToArray(),
+                Round = match.Round,
+                SeasonId = match.SeasonId
             };
         }
     }

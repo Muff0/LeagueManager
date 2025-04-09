@@ -43,7 +43,6 @@ namespace LeagoService
             _roundsClient = new RoundsClient(httpClient);
             _tournamentsClient = new TournamentsClient(httpClient);
             _usersClient = new UsersClient(httpClient);
-
         }
 
         public Task GetHealth()
@@ -88,7 +87,7 @@ namespace LeagoService
                 res.Matches = mres.Select(mm => new MatchDto()
                 {
                     LeagoKey = mm.Key,
-                    ScheduleTime = mm.WallTime,
+                    ScheduleTime = mm.WallTime.GetValueOrDefault().UtcDateTime,
                     GameLink = mm.OnlineGameUrl,
                     MatchSetLevel = mm.MatchSetLevel,
                     Players = mm.Players.Select(pp => new PlayerMatchDto()
@@ -100,9 +99,9 @@ namespace LeagoService
                             LeagoKey = pp.Key,
                             LeagoMemberId = pp.MemberId,
                             OGSHandle = pp.OnlineHandle,
-                            Rank = pp.RankId
+                            Rank = (PlayerRank)pp.RankId
                         },
-                        Color = (pp.Color == "black") ? PlayerColor.Black : PlayerColor.White,
+                        Color = (pp.Color.Equals("black", StringComparison.OrdinalIgnoreCase)) ? PlayerColor.Black : PlayerColor.White,
                         HasConfirmed = pp.IsMatchTimeAccepted,
                         HasForfeited = false,
                         Outcome = (Shared.Enum.PlayerMatchOutcome)pp.Outcome
@@ -137,7 +136,7 @@ namespace LeagoService
                         LastName = p.FamilyName ?? "",
                         LeagoMemberId = p.MemberId ?? "",
                         LeagoKey = p.Key ?? "",
-                        Rank = p.RankId,
+                        Rank = (PlayerRank)p.RankId,
                         OGSHandle = p.OnlineHandle ?? ""
                     }).ToArray();
             }

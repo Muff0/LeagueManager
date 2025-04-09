@@ -19,11 +19,11 @@ namespace Data
 
         T RunQuery<T>(Scalar<T2, T> queryObject);
 
-        IQueryable<T> RunQuery<T>(Query<T2, T> queryObject) where T : class;
+        ICollection<T> RunQuery<T>(Query<T2, T> queryObject) where T : class;
 
         Task<T> RunQueryAsync<T>(Scalar<T2, T> queryObject);
 
-        Task<IQueryable<T>> RunQueryAsync<T>(Query<T2, T> queryObject) where T : class;
+        Task<ICollection<T>> RunQueryAsync<T>(Query<T2, T> queryObject) where T : class;
 
         #endregion Methods
     }

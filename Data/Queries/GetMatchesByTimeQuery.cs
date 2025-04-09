@@ -14,21 +14,36 @@ namespace Data.Queries
         public DateTime? TimeTo { get; set; }
         public bool IncludeCompleted { get; set; } = false;
         public bool InlcudePlayers { get; set; } = false;
+        public bool IncludeNotConfirmed { get; set; } = false;
+        public int MaxCount { get; set; } = 0;
 
-        public override IQueryable<Match> Execute(LeagueContext context)
+        protected override IQueryable<Match> BuildQuery(LeagueContext context)
         {
-            var query = context.Matches.AsQueryable();
+            var query = base.BuildQuery(context);
+
             if (InlcudePlayers)
                 query = query.Include(mm => mm.PlayerMatches)
                     .ThenInclude(pm => pm.Player);
 
-            query = query.Where(mm => mm.GameTimeUTC >= TimeFrom.GetValueOrDefault().ToUniversalTime()
-                    && mm.GameTimeUTC <= TimeTo.GetValueOrDefault().ToUniversalTime());
+            if (TimeFrom != null)
+                query = query.Where(mm => mm.GameTimeUTC >= TimeFrom.GetValueOrDefault().ToUniversalTime());
+
+            if (TimeTo != null)
+                query = query.Where(mm => mm.GameTimeUTC <= TimeTo.GetValueOrDefault().ToUniversalTime());
+
+            if (!IncludeNotConfirmed)
+                query = query.Where(mm => mm.PlayerMatches.All(pm => pm.HasConfirmed));
 
             if (!IncludeCompleted)
                 query = query.Where(mm => !mm.IsComplete);
 
+            query = query.OrderBy(mm => mm.GameTimeUTC);
+
+            if (MaxCount > 0)
+                query = query.Take(MaxCount);
+
             return query;
         }
+
     }
 }

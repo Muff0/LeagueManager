@@ -38,7 +38,7 @@ namespace Data
         /// </summary>
         /// <param name="context">The DbContext to query</param>
         /// <returns>An IQueryable<T></returns>
-        public virtual IQueryable<T2> Execute(T context)
+        protected virtual IQueryable<T2> BuildQuery(T context)
         {
             IQueryable<T2> query = context.Set<T2>();
 
@@ -50,15 +50,29 @@ namespace Data
             return query;
         }
 
+
         /// <summary>
         /// Asynchronously reates an IQueryable for the specified entity type and applies the given
         /// AsNoTracking and LazyLoadingEnabled settings
         /// </summary>
         /// <param name="context">The DbContext to query</param>
         /// <returns>An IQueryable<T></returns>
-        public async virtual Task<IQueryable<T2>> ExecuteAsync(T context)
+        public virtual ICollection<T2> Execute(T context)
         {
-            return await Task.Run(() => Execute(context));
+            var query = BuildQuery(context);
+            return query.ToList();
+        }
+
+
+        /// <summary>
+        /// Asynchronously 
+        /// </summary>
+        /// <param name="context">The DbContext to query</param>
+        /// <returns>An IQueryable<T></returns>
+        public async virtual Task<ICollection<T2>> ExecuteAsync(T context)
+        {
+            var query = BuildQuery(context);
+            return await query.ToListAsync();
         }
 
         #endregion Methods

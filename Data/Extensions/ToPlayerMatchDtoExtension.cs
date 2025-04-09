@@ -10,14 +10,14 @@ namespace Data
 {
     public static class ToPlayerMatchDtoExtension
     {
-        public static PlayerMatchDto ToPlayerMatchDto(this PlayerMatch playerMatch)
+        public static PlayerMatchDto ToPlayerMatchDto(this PlayerMatch playerMatch, bool skipMatch = false, bool skipPlayer = false)
         {
             return new PlayerMatchDto()
             {
                 PlayerId = playerMatch.PlayerId,
                 MatchId = playerMatch.MatchId,
-                Player = playerMatch.Player?.ToPlayerDto(),
-                Match = playerMatch.Match?.ToMatchDto(),
+                Player = skipPlayer ? null : playerMatch.Player?.ToPlayerDto(),
+                Match = skipMatch ? null : playerMatch.Match?.ToMatchDto(),
                 HasConfirmed = playerMatch.HasConfirmed,
                 Color = playerMatch.Color,
                 Outcome = playerMatch.Outcome,

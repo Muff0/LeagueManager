@@ -5,6 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Shared.Enum;
 
 namespace Data.Model
 {
@@ -21,7 +22,7 @@ namespace Data.Model
         public string DiscordHandle { get; set; } = String.Empty;
         public string OGSHandle { get; set; } = String.Empty;
         public string LeagoMemberId { get; set; } = String.Empty;
-        public int Rank { get; set; }
+        public PlayerRank Rank { get; set; }
 
 
 

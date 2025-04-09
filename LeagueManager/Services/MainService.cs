@@ -4,6 +4,7 @@ using Data.Model;
 using Discord;
 using LeagoClient;
 using LeagoService;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Shared.Dto;
 using Shared.Dto.Discord;
@@ -45,8 +46,11 @@ namespace LeagueManager.Services
             var query = new Data.Queries.GetMatchesByTimeQuery()
             {
                 InlcudePlayers = true,
-                TimeFrom = DateTime.Now,
-                TimeTo = DateTime.Now.AddMinutes(24000)
+                IncludeCompleted = false,
+                IncludeNotConfirmed = false,
+                TimeFrom = DateTime.Now.ToUniversalTime(),
+                TimeTo = DateTime.Now.AddMinutes(360).ToUniversalTime(),
+                MaxCount = 5
             };
 
             var res = await _dataService.RunQueryAsync(query);
@@ -58,12 +62,12 @@ namespace LeagueManager.Services
         {
             var resm = await GetUpcomingMatches();
 
+            if (resm.Length == 0)
+                return;
+
             await _discordService.SendUpcomingMatchesNotification(new SendUpcomingMatchesNotificationInDto()
             {
-                Matches = resm.Select(mm => new MatchDto()
-                {
-                   
-                }).ToArray()
+                Matches = resm.Select(mm => mm.ToMatchDto()).ToArray()
             });
         }
 
@@ -137,17 +141,19 @@ namespace LeagueManager.Services
                     if (currentMatch.Players == null)
                         throw new InvalidOperationException("Players is null");
 
-                    var existingMatch = _context.Matches.FirstOrDefault(mm => mm.LeagoKey == currentMatch.LeagoKey);
+                    var existingMatch = _context.Matches.Include(mm => mm.PlayerMatches)
+                        .ThenInclude(pm => pm.Player)
+                        .FirstOrDefault(mm => mm.LeagoKey == currentMatch.LeagoKey);
 
                     if (existingMatch == null)
                     {
-                        var newMatch = new Data.Model.Match()
+                        var newMatch = new Data.Model.Match() 
                         {
                             LeagoKey = currentMatch.LeagoKey,
                             SeasonId = activeSeason.Id,
                             Round = 2,
                             Link = currentMatch.GameLink,
-                            GameTimeUTC = currentMatch.ScheduleTime?.UtcDateTime,
+                            GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime(),
                             PlayerMatches = new List<PlayerMatch>()
                         };
 
@@ -177,7 +183,7 @@ namespace LeagueManager.Services
                     }
                     else
                     {
-                        existingMatch.GameTimeUTC = currentMatch.ScheduleTime?.UtcDateTime;
+                        existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
                         existingMatch.Link = currentMatch.GameLink;
                         existingMatch.IsComplete = currentMatch.IsPlayed;
 
@@ -190,6 +196,7 @@ namespace LeagueManager.Services
 
                             existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
                             existingPlayerMatch.Outcome = playerMatch.Outcome;
+                            existingPlayerMatch.Color = playerMatch.Color;
                         }
                     }
 
