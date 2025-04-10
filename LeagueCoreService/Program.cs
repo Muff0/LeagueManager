@@ -1,20 +1,13 @@
-using LeagueManager.Components;
-using LeagueManager.Services;
-using Shared.Settings;
+using Data;
+using LeagueCoreService;
+using LeagueCoreService.Services;
+using Microsoft.EntityFrameworkCore;
+using NetCord.Hosting.Gateway;
 using Newtonsoft.Json;
 using Shared.Converter;
-using System;
-using Microsoft.EntityFrameworkCore;
-using Data;
-using NetCord.Hosting.Gateway;
-using LeagueCoreService;
-using Microsoft.EntityFrameworkCore.Query;
+using Shared.Settings;
 
-var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
-builder.Services.AddRazorComponents()
-    .AddInteractiveServerComponents();
+var builder = Host.CreateApplicationBuilder(args);
 
 builder.Services.Configure<LeagoSettings>(builder.Configuration.GetSection("Leago"));
 builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("Discord"));
@@ -46,27 +39,16 @@ builder.Services.AddScoped<QueueDataService>();
 builder.Services.AddScoped<LeagoService.LeagoMainService>();
 builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<Discord.DiscordService>();
-
-// Start the Discord service 
-builder.Services.AddDiscordGateway();
-
-// Temp service init for debug -- REMOVE SERVICE REFERENCE  WHEN DELETING
-
-builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
 builder.Services.AddHostedService<Worker>();
 
-var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-}
+// Start the Discord service 
 
-app.UseAntiforgery();
 
-app.MapStaticAssets();
-app.MapRazorComponents<App>()
-    .AddInteractiveServerRenderMode();
+builder.Services.AddDiscordGateway();
 
-app.Run();
+
+
+
+var host = builder.Build();
+host.Run();

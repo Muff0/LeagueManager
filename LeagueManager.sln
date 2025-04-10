@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GoMagic", "GoMagic\GoMagic.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{1A177773-874E-4F21-9B9C-006D9AE4E45E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LeagueCoreService", "LeagueCoreService\LeagueCoreService.csproj", "{94A50445-80EA-4F59-99AE-0E286468DD9C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,6 +53,10 @@ Global
 		{1A177773-874E-4F21-9B9C-006D9AE4E45E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1A177773-874E-4F21-9B9C-006D9AE4E45E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1A177773-874E-4F21-9B9C-006D9AE4E45E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{94A50445-80EA-4F59-99AE-0E286468DD9C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{94A50445-80EA-4F59-99AE-0E286468DD9C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{94A50445-80EA-4F59-99AE-0E286468DD9C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{94A50445-80EA-4F59-99AE-0E286468DD9C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

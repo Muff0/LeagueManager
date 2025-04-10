@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 namespace Data
 {
-    public abstract class Scalar<T, T2> where T : DbContext
+    public abstract class Scalar<T, T2> where T : DbContext where T2 : class
     {
         #region Properties
 
@@ -17,12 +17,50 @@ namespace Data
 
         #region Methods
 
-        public abstract T2 Execute(T context);
-
-        public async virtual Task<T2> ExecuteAsync(T context)
+        /// <summary>
+        /// Creates an IQueryable for the specified entity type and applies the given
+        /// AsNoTracking and LazyLoadingEnabled settings
+        /// </summary>
+        /// <param name="context">The DbContext to query</param>
+        /// <returns>An IQueryable<T></returns>
+        protected virtual IQueryable<T2> BuildQuery(T context)
         {
-            return await Task.Run(() => Execute(context));
+            IQueryable<T2> query = context.Set<T2>();
+
+            if (AsNoTracking)
+                query = query.AsNoTracking();
+
+            context.ChangeTracker.LazyLoadingEnabled = !LazyLoadingDisabled;
+
+            return query;
         }
+
+        /// <summary>
+        /// Asynchronously reates an IQueryable for the specified entity type and applies the given
+        /// AsNoTracking and LazyLoadingEnabled settings
+        /// </summary>
+        /// <param name="context">The DbContext to query</param>
+        /// <returns>An IQueryable<T></returns>
+        public virtual T2? Execute(T context)
+        {
+            var query = BuildQuery(context);
+
+            return query.FirstOrDefault();
+        }
+
+
+        /// <summary>
+        /// Asynchronously 
+        /// </summary>
+        /// <param name="context">The DbContext to query</param>
+        /// <returns>An IQueryable<T></returns>
+        public async virtual Task<T2?> ExecuteAsync(T context)
+        {
+            var query = BuildQuery(context);
+
+            return await query.FirstOrDefaultAsync();
+        }
+
 
         #endregion Methods
     }

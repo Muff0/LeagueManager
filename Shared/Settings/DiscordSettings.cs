@@ -13,6 +13,6 @@ namespace Shared.Settings
         public string Token { get; set; } = string.Empty;
         public ulong TestChannelId { get; set; } 
         public ulong MatchAnnouncementChannelId { get; set; }
-        public string MatchAnnouncementRole { get; set; } = string.Empty;
+        public ulong MatchAnnouncementRoleId { get; set; }
     }
 }

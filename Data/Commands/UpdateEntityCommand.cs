@@ -24,7 +24,6 @@ namespace Data.Commands
         protected override void RunAction(T context)
         {
             context.Update(_entity);
-            context.SaveChanges();
         }
         #endregion Methods
     }

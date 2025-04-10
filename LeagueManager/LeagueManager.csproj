@@ -18,6 +18,7 @@
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\Discord\Discord.csproj" />
     <ProjectReference Include="..\LeagoService\LeagoService.csproj" />
+    <ProjectReference Include="..\LeagueCoreService\LeagueCoreService.csproj" />
   </ItemGroup>
 
 </Project>

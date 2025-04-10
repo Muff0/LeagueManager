@@ -47,7 +47,7 @@ namespace Discord
 
         protected string BuildMatchString(MatchDto match)
         {
-            string res = BuildMatchTitle(match) + Environment.NewLine
+            string res = "**" + BuildMatchTitle(match) + "**" + Environment.NewLine
                 + "Game Time: " + BuildTimeTag(match.ScheduleTime.GetValueOrDefault()) + Environment.NewLine
                 + match.GameLink;
             return res;
@@ -57,9 +57,9 @@ namespace Discord
         {
             string matchList = string.Join(Environment.NewLine + Environment.NewLine, matches.Select(BuildMatchString));
 
-            string content = DiscordTemplates.UpcomingMatchesIntroMessage + Environment.NewLine + Environment.NewLine
+            string content = DiscordTemplates.UpcomingMatchesIntroMessage + Environment.NewLine
                 + matchList + Environment.NewLine + Environment.NewLine
-                + "@" + _settings.Value.MatchAnnouncementRole;
+                + $"<@&{_settings.Value.MatchAnnouncementRoleId}>" ;
 
             return new MessageProperties()
                 .WithContent(content)

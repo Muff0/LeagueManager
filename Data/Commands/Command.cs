@@ -8,7 +8,7 @@ namespace Data.Commands
     {
         #region Events
 
-        public event EventHandler JobCompleted;
+        public event EventHandler? JobCompleted;
 
         #endregion Events
 
@@ -32,12 +32,13 @@ namespace Data.Commands
             try
             {
                 RunAction(context);
+                context.SaveChanges();
             }            
             catch (Exception e)
             {
                 throw new DbUpdateException("Command Execution Failed: " + e.Message, e);
             }
-            context.Dispose();
+
             RaiseJobCompleted();
         }
 
@@ -46,10 +47,25 @@ namespace Data.Commands
             context.ChangeTracker.AutoDetectChangesEnabled = AutoDetectChangesEnabled;
         }
 
-        public virtual Task ExecuteAsync(T context)
+        public virtual async Task ExecuteAsync(T context)
         {
-            return Task.Run(() => Execute(context))
-                .ContinueWith(task => RaiseJobCompleted());
+
+            if (context == null)
+                throw new ArgumentNullException("Context");
+
+            ConfigureParameters(context);
+
+            try
+            {
+                RunAction(context);
+                await context.SaveChangesAsync();
+            }
+            catch (Exception e)
+            {
+                throw new DbUpdateException("Command Execution Failed: " + e.Message, e);
+            }
+
+            RaiseJobCompleted();
         }
 
         protected virtual void RaiseJobCompleted()
