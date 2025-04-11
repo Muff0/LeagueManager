@@ -39,7 +39,7 @@ namespace LeagueManager.Services
             var command = new CommandMessage()
             {
                 CreatedAtUtc = DateTime.UtcNow,
-                Type = "SendNotification",
+                Type = "SyncMatches",
                 Payload = ""
             };
 
@@ -52,7 +52,7 @@ namespace LeagueManager.Services
             var command = new CommandMessage()
             {
                 CreatedAtUtc = DateTime.UtcNow,
-                Type = "SendNotification",
+                Type = "UpdatePlayers",
                 Payload = ""
             };
 

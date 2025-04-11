@@ -31,6 +31,8 @@ namespace Data.Commands.Queue
             if (UpdateProcessedTime)
                 command.ProcessedAtUtc = DateTime.UtcNow;
 
+            context.Entry(command).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
+
         }
     }
 }

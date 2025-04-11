@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using Data;
+using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
 using Discord;
@@ -20,21 +21,18 @@ namespace LeagueCoreService.Services
         private readonly LeagueContext _context;
         private readonly IOptions<LeagoSettings> _leagoOptions;
         private readonly LeagueDataService _leagueDataService;
-        private readonly QueueDataService _queueDataService;
         private readonly DiscordService _discordService;
 
         public MainService(LeagoMainService leagoService, 
             IOptions<LeagoSettings> leagoOptions, 
             LeagueContext leagueContext, 
             LeagueDataService dataService,
-            QueueDataService queueDataService,
             DiscordService discordService)
         {
             _context = leagueContext;
             _leagoService = leagoService;
             _leagoOptions = leagoOptions;
             _leagueDataService = dataService;
-            _queueDataService = queueDataService;
             _discordService = discordService;
         }
 
@@ -73,15 +71,6 @@ namespace LeagueCoreService.Services
             {
                 Matches = resm.Select(mm => mm.ToMatchDto()).ToArray()
             });
-        }
-
-        public async Task<CommandMessage> GetNextCommand()
-        {
-            return await _queueDataService.RunQueryAsync(
-                new GetNextCommandMessageQuery()
-                {
-
-                });
         }
 
         public async Task UpdateActiveSeason()
