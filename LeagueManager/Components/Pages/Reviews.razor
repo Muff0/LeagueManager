@@ -1,0 +1,28 @@
+﻿@page "/reviews"
+@inject Services.MainService MainService
+@rendermode InteractiveServer
+
+<PageTitle>Reviews</PageTitle>
+
+<h1>Reviews</h1>
+
+<p role="status">@message</p>
+
+<button class="btn btn-primary" @onclick="GenerateReviews">Generate Reviews</button>
+
+@code {
+    private string message = "Loading...";
+    
+    private async void GenerateReviews()
+    {
+        try
+        {
+
+            await MainService.BuildReviews();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+}

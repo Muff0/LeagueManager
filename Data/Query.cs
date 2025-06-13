@@ -28,6 +28,12 @@ namespace Data
         /// </summary>
         public bool OrderResults { get; set; } = true;
 
+        /// <summary>
+        /// Max number of results to return
+        /// If 0, no max limit is applied
+        /// </summary>
+        public int MaxCount { get; set; } = 0;
+
         #endregion Properties
 
         #region Methods
@@ -60,6 +66,10 @@ namespace Data
         public virtual ICollection<T2> Execute(T context)
         {
             var query = BuildQuery(context);
+
+            if (MaxCount > 0)
+                query = query.Take(MaxCount);
+
             return query.ToList();
         }
 

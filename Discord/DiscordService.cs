@@ -53,6 +53,19 @@ namespace Discord
             return res;
         }
 
+
+
+        protected MessageProperties BuildRoundStartNotification(int round, DateTime endDate)
+        {
+            string content = string.Format(DiscordTemplates.RoundStartMessage, round, BuildTimeTag(endDate), $"@{_settings.Value.AdminUsername}") + Environment.NewLine
+                + $"<@&{_settings.Value.LeagueAnnouncementRoleId}>";
+
+            return new MessageProperties()
+                .WithContent(content)
+                .WithAllowedMentions(new AllowedMentionsProperties().WithAllowedRoles(null).WithAllowedUsers(null))
+                .WithFlags(MessageFlags.SuppressEmbeds);
+        }
+
         protected MessageProperties BuildUpcomingMatchesNotification(MatchDto[] matches)
         {
             string matchList = string.Join(Environment.NewLine + Environment.NewLine, matches.Select(BuildMatchString));
@@ -67,6 +80,43 @@ namespace Discord
                 .WithFlags(MessageFlags.SuppressEmbeds);
         }
 
+        public async Task UpdatePlayerRole()
+        {
+            var role = await _client.GetGuildRoleAsync(_settings.Value.ServerId, _settings.Value.PlayerRoleId);
+
+
+            _client.SearchGuildUsersAsync(_settings.Value.ServerId, new GuildUsersSearchPaginationProperties());
+        }
+
+        public async Task AssignRoleToUsers(AssignRoleToUsersInDto inDto)
+        {
+            try
+            {
+                var users = _client.SearchGuildUsersAsync(_settings.Value.ServerId).ToBlockingEnumerable();
+
+                foreach (string userId in inDto.Users)
+                {
+                }
+            }
+            catch (Exception ex)
+            {
+                return;
+            }
+        }
+
+        public async Task SendRoundStartNotification(SendRoundStartNotificationInDto inDto)
+        {
+            try
+            {
+                var msg = BuildRoundStartNotification(inDto.RoundNumber,inDto.RoundEnd);
+
+                await _client.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
+            }
+            catch (Exception ex)
+            {
+                return;
+            }
+        }
         public async Task SendUpcomingMatchesNotification(SendUpcomingMatchesNotificationInDto inDto)
         {
             try

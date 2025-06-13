@@ -1,0 +1,49 @@
+﻿@page "/orders"
+@inject Services.MainService MainService
+@rendermode InteractiveServer
+
+<PageTitle>Orders</PageTitle>
+
+<h1>Orders</h1>
+
+<p role="status">@message</p>
+
+<InputFile OnChange="OnFileUploaded" />
+
+
+<button class="btn btn-primary" @onclick="GetMissingPayments">Get Missing Payments</button>
+
+
+<p role="status">@missingpayments</p>
+
+@code {
+    private string message = "Loading...";
+    private string missingpayments = "...";
+
+    private async  void GetMissingPayments()
+    {
+        var resMP = await MainService.GetMissingPayments();
+
+        missingpayments = string.Join("; ", resMP.Select(pl => pl.EmailAddress));
+    }
+
+    private async void OnFileUploaded(InputFileChangeEventArgs e)
+    {
+        try
+        {
+
+            var file = e.File;
+            if (file is not null)
+            {
+                using var stream = file.OpenReadStream(maxAllowedSize: 10_000_000); // 10 MB limit
+                var result = await MainService.UploadOrdersFile(stream);
+
+                message = result ? "Upload successful!" : "Upload failed.";
+            }
+        }
+        catch (Exception ex)
+        {
+            message = "Error";
+        }
+    }
+}

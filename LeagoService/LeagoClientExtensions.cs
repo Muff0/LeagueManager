@@ -13,4 +13,5 @@ namespace LeagoClient
             settings.Converters.Add(new Shared.Converter.FallbackDateTimeOffsetConverter());
         }
     }
+
 }

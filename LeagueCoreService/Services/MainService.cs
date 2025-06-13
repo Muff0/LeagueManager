@@ -1,5 +1,6 @@
 ﻿using System.Drawing;
 using Data;
+using Data.Commands.Player;
 using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
@@ -7,6 +8,7 @@ using Discord;
 using LeagoClient;
 using LeagoService;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Options;
 using Shared.Dto;
 using Shared.Dto.Discord;
@@ -18,18 +20,18 @@ namespace LeagueCoreService.Services
     {
         private readonly LeagoMainService _leagoService;
 
-        private readonly LeagueContext _context;
+        private readonly IDbContextFactory<LeagueContext> _leagueContextFactory;
         private readonly IOptions<LeagoSettings> _leagoOptions;
         private readonly LeagueDataService _leagueDataService;
         private readonly DiscordService _discordService;
 
         public MainService(LeagoMainService leagoService, 
-            IOptions<LeagoSettings> leagoOptions, 
-            LeagueContext leagueContext, 
+            IOptions<LeagoSettings> leagoOptions,
+            IDbContextFactory<LeagueContext> leagueContextFactory, 
             LeagueDataService dataService,
             DiscordService discordService)
         {
-            _context = leagueContext;
+            _leagueContextFactory = leagueContextFactory;
             _leagoService = leagoService;
             _leagoOptions = leagoOptions;
             _leagueDataService = dataService;
@@ -60,7 +62,7 @@ namespace LeagueCoreService.Services
             return res.ToArray();
         }
 
-        public async Task SendNotification()
+        public async Task SendUpcomingMatchesNotification()
         {
             var resm = await GetUpcomingMatches();
 
@@ -86,40 +88,46 @@ namespace LeagueCoreService.Services
                 throw new InvalidOperationException();
 
             var activeSeason = res2.Result.Seasons.OrderByDescending(x => x.StartDate).FirstOrDefault();
-
-            if (activeSeason != null)
+            using (var context = _leagueContextFactory.CreateDbContext())
             {
 
-                var existingSeason = _context.Seasons.FirstOrDefault(ss => ss.LeagoL1Key == activeSeason.LeagoL1Key);
-                if (existingSeason == null)
+                if (activeSeason != null)
                 {
-                    existingSeason = new Season()
-                    {
-                        LeagoL1Key = activeSeason.LeagoL1Key,
-                        Title = activeSeason.Title,
-                    };
 
-                    _context.Seasons.Add(existingSeason);
-                    _context.SaveChanges();
+                    var existingSeason = context.Seasons.FirstOrDefault(ss => ss.LeagoL1Key == activeSeason.LeagoL1Key);
+                    if (existingSeason == null)
+                    {
+                        existingSeason = new Season()
+                        {
+                            LeagoL1Key = activeSeason.LeagoL1Key,
+                            Title = activeSeason.Title,
+                        };
+
+                        context.Seasons.Add(existingSeason);
+                        context.SaveChanges();
+                    }
                 }
             }
         }
 
         public SeasonDto? GetActiveSeason()
         {
-            var existingSeason = _context.Seasons.FirstOrDefault(ss => ss.IsActive);
-
-            if (existingSeason == null)
-                return null;
-
-            return new SeasonDto()
+            using (var context = _leagueContextFactory.CreateDbContext())
             {
-                Id = existingSeason.Id,
-                Title  = existingSeason.Title,
-                LeagoL1Key = existingSeason.LeagoL1Key,
-                LeagoL2Key = existingSeason.LeagoL2Key,
-                IsActive = existingSeason.IsActive
-            };
+                var existingSeason = context.Seasons.FirstOrDefault(ss => ss.IsActive);
+
+                if (existingSeason == null)
+                    return null;
+
+                return new SeasonDto()
+                {
+                    Id = existingSeason.Id,
+                    Title = existingSeason.Title,
+                    LeagoL1Key = existingSeason.LeagoL1Key,
+                    LeagoL2Key = existingSeason.LeagoL2Key,
+                    IsActive = existingSeason.IsActive
+                };
+            }
         }
 
         public async Task SyncMatches()
@@ -130,142 +138,96 @@ namespace LeagueCoreService.Services
 
             var getMatchesRes = await _leagoService.GetMatches(new GetMatchesInDto()
             {
-                RoundKey = 2,
+                RoundKey = 3,
                 TournamentKey = activeSeason.LeagoL2Key,
                 MatchesCount = 100
             });
 
             if (getMatchesRes != null)
             {
-                var toAdd = new List<Data.Model.Match>();
-                foreach (var currentMatch in getMatchesRes.Matches)
+                using (var context = _leagueContextFactory.CreateDbContext())
                 {
-                    if (currentMatch.Players == null)
-                        throw new InvalidOperationException("Players is null");
-
-                    var existingMatch = _context.Matches.Include(mm => mm.PlayerMatches)
-                        .ThenInclude(pm => pm.Player)
-                        .FirstOrDefault(mm => mm.LeagoKey == currentMatch.LeagoKey);
-
-                    if (existingMatch == null)
+                    var toAdd = new List<Data.Model.Match>();
+                    foreach (var currentMatch in getMatchesRes.Matches)
                     {
-                        var newMatch = new Data.Model.Match() 
+                        if (currentMatch.Players == null)
+                            throw new InvalidOperationException("Players is null");
+
+                        var existingMatch = context.Matches.Include(mm => mm.PlayerMatches)
+                            .ThenInclude(pm => pm.Player)
+                            .FirstOrDefault(mm => mm.LeagoKey == currentMatch.LeagoKey);
+
+                        if (existingMatch == null)
                         {
-                            LeagoKey = currentMatch.LeagoKey,
-                            SeasonId = activeSeason.Id,
-                            Round = 2,
-                            Link = currentMatch.GameLink,
-                            GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime(),
-                            PlayerMatches = new List<PlayerMatch>()
-                        };
-
-                        foreach (PlayerMatchDto playerMatch in currentMatch.Players)
-                        {
-
-                            if (playerMatch?.Player == null)
-                                continue;
-
-                            var existingPlayer = _context.Players.FirstOrDefault(pp => pp.LeagoKey == playerMatch.Player.LeagoKey);
-
-                            if (existingPlayer == null)
-                                continue;
-
-                            var newPlayerMatch = new PlayerMatch()
+                            var newMatch = new Data.Model.Match()
                             {
-                                Color = playerMatch.Color,
-                                PlayerId = existingPlayer.Id,
-                                HasConfirmed = playerMatch.HasConfirmed,
-                                Outcome = playerMatch.Outcome,
+                                LeagoKey = currentMatch.LeagoKey,
+                                SeasonId = activeSeason.Id,
+                                Round = 2,
+                                Link = currentMatch.GameLink,
+                                GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime(),
+                                PlayerMatches = new List<PlayerMatch>()
                             };
 
-                            newMatch.PlayerMatches.Add(newPlayerMatch);
+                            foreach (PlayerMatchDto playerMatch in currentMatch.Players)
+                            {
+
+                                if (playerMatch?.Player == null)
+                                    continue;
+
+                                var existingPlayer = context.Players.FirstOrDefault(pp => pp.LeagoKey == playerMatch.Player.LeagoKey);
+
+                                if (existingPlayer == null)
+                                    continue;
+
+                                var newPlayerMatch = new PlayerMatch()
+                                {
+                                    Color = playerMatch.Color,
+                                    PlayerId = existingPlayer.Id,
+                                    HasConfirmed = playerMatch.HasConfirmed,
+                                    Outcome = playerMatch.Outcome,
+                                };
+
+                                newMatch.PlayerMatches.Add(newPlayerMatch);
+                            }
+
+                            toAdd.Add(newMatch);
                         }
-
-                        toAdd.Add(newMatch);
-                    }
-                    else
-                    {
-                        existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
-                        existingMatch.Link = currentMatch.GameLink;
-                        existingMatch.IsComplete = currentMatch.IsPlayed;
-
-                        foreach (PlayerMatchDto playerMatch in currentMatch.Players)
+                        else
                         {
-                            var existingPlayerMatch = existingMatch.PlayerMatches?.FirstOrDefault(pm => pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
+                            existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
+                            existingMatch.Link = currentMatch.GameLink;
+                            existingMatch.IsComplete = currentMatch.IsPlayed;
 
-                            if (existingPlayerMatch == null)
-                                continue;
+                            foreach (PlayerMatchDto playerMatch in currentMatch.Players)
+                            {
+                                var existingPlayerMatch = existingMatch.PlayerMatches?.FirstOrDefault(pm => pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
 
-                            existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
-                            existingPlayerMatch.Outcome = playerMatch.Outcome;
-                            existingPlayerMatch.Color = playerMatch.Color;
+                                if (existingPlayerMatch == null)
+                                    continue;
+
+                                existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
+                                existingPlayerMatch.Outcome = playerMatch.Outcome;
+                                existingPlayerMatch.Color = playerMatch.Color;
+                            }
                         }
+
                     }
 
+                    await context.AddRangeAsync(toAdd);
+                    await context.SaveChangesAsync();
                 }
-
-                await _context.AddRangeAsync(toAdd);
-                await _context.SaveChangesAsync();
             }
         }
 
-        public async Task UpdatePlayers()
+
+        public async Task SendRoundStartNotification()
         {
-
-            var activeSeason = GetActiveSeason();
-            if (activeSeason == null) 
-                return;
-
-            var getPlayersRes = await _leagoService.GetPlayers(new Shared.Dto.GetPlayersInDto()
-            {
-                TournamentKey = activeSeason.LeagoL1Key
+            await _discordService.SendRoundStartNotification(new SendRoundStartNotificationInDto()
+            { 
+                RoundEnd = DateTime.Parse("2025-04-28 10:00:00"),
+                RoundNumber = 5
             });
-
-
-            List<Data.Model.Player> toAdd = new List<Data.Model.Player>();
-
-                foreach (var player in getPlayersRes.Players)
-                {
-                    var existingPlayer = _context.Players.FirstOrDefault(pl => pl.FirstName == player.FirstName && pl.LastName == player.LastName);
-
-                    if (existingPlayer == null)
-                    {
-                        existingPlayer = new Data.Model.Player()
-                        {
-                            FirstName = player.FirstName,
-                            LastName = player.LastName,
-                            OGSHandle = player.OGSHandle,
-                            LeagoMemberId = player.LeagoMemberId,
-                            LeagoKey = player.LeagoKey,
-                            Rank = player.Rank,
-                        };
-                        toAdd.Add(existingPlayer);
-                    }
-                    else
-                    {
-                        existingPlayer.Rank = player.Rank;
-                        existingPlayer.OGSHandle = player.OGSHandle;
-                        existingPlayer.LeagoMemberId = player.LeagoMemberId;
-                        existingPlayer.LeagoKey = player.LeagoKey;
-                    }
-
-                        var currentPlayerSeason = existingPlayer.PlayerSeasons.FirstOrDefault(ps => ps.SeasonId == activeSeason.Id && ps.PlayerId == existingPlayer.Id);
-
-                    if (currentPlayerSeason == null)
-                    {
-                        existingPlayer.PlayerSeasons.Add(
-                            new PlayerSeason()
-                            {
-                                SeasonId = activeSeason.Id,
-                                ParticipationTier = Shared.Enum.PlayerParticipationTier.Registered
-                            });
-                    }
-                }
-
-                _context.AddRange(toAdd);
-
-                _context.SaveChanges();
-        
         }
     }
 }

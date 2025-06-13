@@ -15,7 +15,6 @@ namespace Data.Queries
         public bool IncludeCompleted { get; set; } = false;
         public bool InlcudePlayers { get; set; } = false;
         public bool IncludeNotConfirmed { get; set; } = false;
-        public int MaxCount { get; set; } = 0;
 
         protected override IQueryable<Match> BuildQuery(LeagueContext context)
         {
@@ -39,8 +38,6 @@ namespace Data.Queries
 
             query = query.OrderBy(mm => mm.GameTimeUTC);
 
-            if (MaxCount > 0)
-                query = query.Take(MaxCount);
 
             return query;
         }

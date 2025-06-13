@@ -3,6 +3,7 @@ using System;
 using Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Data.Migrations
 {
     [DbContext(typeof(LeagueContext))]
-    partial class LeagueContextModelSnapshot : ModelSnapshot
+    [Migration("20250611145720_0011")]
+    partial class _0011
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -185,9 +188,6 @@ namespace Data.Migrations
                     b.Property<int>("Round")
                         .HasColumnType("integer");
 
-                    b.Property<int>("SeasonId")
-                        .HasColumnType("integer");
-
                     b.Property<int?>("TeacherId")
                         .HasColumnType("integer");
 
@@ -195,9 +195,9 @@ namespace Data.Migrations
 
                     b.HasIndex("MatchId");
 
-                    b.HasIndex("TeacherId");
+                    b.HasIndex("OwnerPlayerId");
 
-                    b.HasIndex("OwnerPlayerId", "SeasonId");
+                    b.HasIndex("TeacherId");
 
                     b.ToTable("Reviews");
                 });
@@ -324,7 +324,7 @@ namespace Data.Migrations
                         .HasForeignKey("MatchId");
 
                     b.HasOne("Data.Model.Player", "OwnerPlayer")
-                        .WithMany("Reviews")
+                        .WithMany()
                         .HasForeignKey("OwnerPlayerId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -333,17 +333,9 @@ namespace Data.Migrations
                         .WithMany("Reviews")
                         .HasForeignKey("TeacherId");
 
-                    b.HasOne("Data.Model.PlayerSeason", "PlayerSeason")
-                        .WithMany("Reviews")
-                        .HasForeignKey("OwnerPlayerId", "SeasonId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.Navigation("Match");
 
                     b.Navigation("OwnerPlayer");
-
-                    b.Navigation("PlayerSeason");
 
                     b.Navigation("Teacher");
                 });
@@ -358,15 +350,11 @@ namespace Data.Migrations
                     b.Navigation("PlayerMatches");
 
                     b.Navigation("PlayerSeasons");
-
-                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("Data.Model.PlayerSeason", b =>
                 {
                     b.Navigation("Matches");
-
-                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("Data.Model.Season", b =>

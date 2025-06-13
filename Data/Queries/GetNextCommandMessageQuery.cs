@@ -8,18 +8,19 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Queries
 {
-    public class GetNextCommandMessageQuery : Scalar<QueueContext,CommandMessage>
+    public class GetActiveSeasonQuery : Scalar<LeagueContext,Season>
     {
 
-        protected override IQueryable<CommandMessage> BuildQuery(QueueContext context)
+        public bool IncludePlayerSeasons { get; set; } = false;
+
+        protected override IQueryable<Season> BuildQuery(LeagueContext context)
         {
             var query = base.BuildQuery(context);
 
-            query = query.Where(cm => cm.Status == Shared.Enum.QueueStatus.Pending);
+            if (IncludePlayerSeasons)
+                query = query.Include(x => x.PlayerSeasons);
 
-            query = query.OrderBy(cm => cm.CreatedAtUtc);
-
-            return query;
+            return query.Where(se => se.IsActive).OrderByDescending(se => se.Id);
         }
 
     }

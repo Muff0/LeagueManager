@@ -13,7 +13,7 @@ namespace Data.Commands
         #endregion Events
 
 
-        public bool AutoDetectChangesEnabled { get; set; } = false;
+        public bool AutoDetectChangesEnabled { get; set; } = true;
 
         #region Methods
 

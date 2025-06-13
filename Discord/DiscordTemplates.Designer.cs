@@ -70,6 +70,20 @@ namespace Discord {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Hello everyone!
+        ///The pairings for Round {0} have been published! 
+        ///You have until {1} to play your games, please contact your opponent as soon as possible. 
+        /// 
+        ///For any issues or questions you DM or ping {2}.
+        ///.
+        /// </summary>
+        internal static string RoundStartMessage {
+            get {
+                return ResourceManager.GetString("RoundStartMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Hey players!
         ///	These League Matches will be played soon, come watch them!
         ///	

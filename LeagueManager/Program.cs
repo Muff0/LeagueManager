@@ -9,6 +9,9 @@ using Data;
 using NetCord.Hosting.Gateway;
 using LeagueCoreService;
 using Microsoft.EntityFrameworkCore.Query;
+using LeagoClient;
+using System.Net.Http;
+using LeagoService;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +30,35 @@ JsonConvert.DefaultSettings = () => new JsonSerializerSettings
     NullValueHandling = NullValueHandling.Ignore
 };
 
-builder.Services.AddHttpClient();
+builder.Services.AddSingleton<ITokenProvider,LeagoTokenProvider>();
+builder.Services.AddTransient<LeagoAuthenticatedHttpHandler>();
+
+// Clients registration
+
+builder.Services.AddHttpClient<AccountClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<ArenaMembersClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<ArenasClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<EventsClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<HealthClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<LeaguesClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<MatchesClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<PaymentsClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<ProfilesClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<RoundsClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<TournamentsClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<UsersClient>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
 
 // Read connection string from appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");

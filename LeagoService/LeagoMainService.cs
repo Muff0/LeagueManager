@@ -10,8 +10,6 @@ namespace LeagoService
     {
 
 
-        private readonly HttpClient _httpClient;
-
         private readonly AccountClient _accountClient;
         private readonly ArenaMembersClient _arenaMembersClient;
         private readonly ArenasClient _arenasClient;
@@ -26,23 +24,32 @@ namespace LeagoService
         private readonly UsersClient _usersClient;
 
 
-        public LeagoMainService(HttpClient httpClient)
+        public LeagoMainService(AccountClient accountClient,
+            ArenaMembersClient arenaMembersClient,
+            ArenasClient arenasClient,
+            EventsClient eventsClient,
+            HealthClient healthClient,
+            LeaguesClient leaguesClient,
+            MatchesClient matchesClient,
+            PaymentsClient paymentsClient,
+            ProfilesClient profilesClient,
+            RoundsClient roundsClient,
+            TournamentsClient tournamentsClient,
+            UsersClient usersClient)
         {
-         
-            _httpClient = httpClient;
 
-            _accountClient = new AccountClient(httpClient);
-            _arenaMembersClient = new ArenaMembersClient(httpClient);
-            _arenasClient = new ArenasClient(httpClient);
-            _eventsClient = new EventsClient(httpClient);
-            _healthClient = new HealthClient(httpClient);
-            _leaguesClient = new LeaguesClient(httpClient);
-            _matchesClient = new MatchesClient(httpClient);
-            _paymentsClient = new PaymentsClient(httpClient);
-            _profilesClient = new ProfilesClient(httpClient);
-            _roundsClient = new RoundsClient(httpClient);
-            _tournamentsClient = new TournamentsClient(httpClient);
-            _usersClient = new UsersClient(httpClient);
+            _accountClient = accountClient;
+            _arenaMembersClient = arenaMembersClient;
+            _arenasClient = arenasClient;
+            _eventsClient = eventsClient;
+            _healthClient = healthClient;
+            _leaguesClient = leaguesClient;
+            _matchesClient = matchesClient;
+            _paymentsClient = paymentsClient;
+            _profilesClient = profilesClient;
+            _roundsClient = roundsClient;
+            _tournamentsClient = tournamentsClient;
+            _usersClient = usersClient;
         }
 
         public Task GetHealth()
@@ -139,6 +146,7 @@ namespace LeagoService
                         Rank = (PlayerRank)p.RankId,
                         OGSHandle = p.OnlineHandle ?? ""
                     }).ToArray();
+
             }
             catch
             {
@@ -220,14 +228,17 @@ namespace LeagoService
         }
 
 
-        public GetProfileOutDto GetProfile(GetProfileInDto inDto)
+        public async Task<GetProfileOutDto> GetProfile(GetProfileInDto inDto)
         {
 
             var res = new GetProfileOutDto();
             try
             {
-                var ires = _profilesClient.GetPublicProfileAsync(inDto.ProfileKey);
-
+                var ires = await _profilesClient.GetPublicProfileAsync(inDto.ProfileKey);
+                var rres = await _arenasClient.GetMemberAsync(inDto.ArenaKey, inDto.ArenaKey + "-" +inDto.ProfileKey);
+                res.Timezone = ires.Timezone;
+                res.Email = rres.Email;
+                res.DiscordHandle = ires.Discord;
             }
             catch
             {

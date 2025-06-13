@@ -9,6 +9,7 @@
 <p role="status">@message</p>
 
 <button class="btn btn-primary" @onclick="SendNotification">Test Notification</button>
+<button class="btn btn-primary" @onclick="SendRoundStartNotification">Round Start Notification</button>
 
 @code {
     private string message = "Loading...";
@@ -24,4 +25,17 @@
             message = "Error";
         }
     }
+    private async void SendRoundStartNotification()
+    {
+        try
+        {
+
+            await MainService.SendRoundStartNotification();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+    
 }

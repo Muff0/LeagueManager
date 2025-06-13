@@ -1,0 +1,40 @@
+﻿@page "/discord"
+@inject Services.MainService MainService
+@rendermode InteractiveServer
+
+<PageTitle>Discord</PageTitle>
+
+<h1>Discord</h1>
+
+<p role="status">@message</p>
+
+<button class="btn btn-primary" @onclick="UpdatePlayerRole">Update Player Role</button>
+
+@code {
+    private string message = "Loading...";
+    
+    private async void UpdatePlayerRole()
+    {
+        try
+        {
+
+            await MainService.UpdateDiscordPlayerRole();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+    private async void SyncPlayers()
+    {
+        try
+        {
+
+            await MainService.UpdatePlayers();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+}

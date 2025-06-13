@@ -16,7 +16,7 @@ namespace Data.Model
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
 
-        public ICollection<PlayerMatch>? PlayerMatches { get; set; }
+        public ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
         public string Link { get; set; } = string.Empty;
 
         public bool IsComplete { get; set; } = false;

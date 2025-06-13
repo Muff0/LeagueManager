@@ -49,6 +49,16 @@ namespace Data
             modelBuilder.Entity<PlayerSeason>()
                 .HasKey(ps => new { ps.PlayerId,ps.SeasonId});
 
+            modelBuilder.Entity<Review>()
+                .HasOne(re => re.OwnerPlayer)
+                .WithMany(pl => pl.Reviews)
+                .HasForeignKey(re => re.OwnerPlayerId);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(re => re.PlayerSeason)
+                .WithMany(ps => ps.Reviews)
+                .HasForeignKey(re => new { re.OwnerPlayerId, re.SeasonId });
+
             modelBuilder.Entity<Season>()
                 .HasMany(p => p.PlayerSeasons)
                 .WithOne(ps => ps.Season)

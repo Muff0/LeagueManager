@@ -25,7 +25,10 @@ namespace Data
 
         public void Execute(Command<T> commandObject)
         {
-            commandObject.Execute(GetDbContext());
+            using (var dbContext = GetDbContext())
+            {
+                commandObject.Execute(dbContext);
+            }
         }
 
         public void Execute(BatchCommand<T> commandObject)
@@ -36,7 +39,10 @@ namespace Data
 
         public async Task ExecuteAsync(Command<T> commandObject)
         {
-            await commandObject.ExecuteAsync(GetDbContext());
+            using (var dbContext = GetDbContext())
+            {
+                await commandObject.ExecuteAsync(dbContext);
+            }
         }
 
         public async Task ExecuteAsync(BatchCommand<T> commandObject)

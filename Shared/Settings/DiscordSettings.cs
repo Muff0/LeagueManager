@@ -14,5 +14,9 @@ namespace Shared.Settings
         public ulong TestChannelId { get; set; } 
         public ulong MatchAnnouncementChannelId { get; set; }
         public ulong MatchAnnouncementRoleId { get; set; }
+        public ulong LeagueAnnouncementRoleId { get; set; }
+        public ulong ServerId { get; set; }
+        public string AdminUsername { get; set; } = string.Empty;
+        public ulong PlayerRoleId { get; set; } = 0;
     }
 }

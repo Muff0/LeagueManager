@@ -16,9 +16,10 @@ namespace Data.Model
 
         public Player? Player { get; set; }
 
-
         public ICollection<Match>? Matches { get; set; } 
 
-        public PlayerParticipationTier ParticipationTier { get; set; }
+        public PlayerParticipationTier ParticipationTier { get; set; } = PlayerParticipationTier.None;
+        public PlayerPaymentStatus PaymentStatus { get; set; } = PlayerPaymentStatus.None;
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 }

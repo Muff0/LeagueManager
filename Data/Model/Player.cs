@@ -22,12 +22,11 @@ namespace Data.Model
         public string DiscordHandle { get; set; } = String.Empty;
         public string OGSHandle { get; set; } = String.Empty;
         public string LeagoMemberId { get; set; } = String.Empty;
+        public int GoMagicUserId { get; set; }
         public PlayerRank Rank { get; set; }
-
-
-
         public ICollection<PlayerSeason> PlayerSeasons { get; set; } = new List<PlayerSeason>();
         public string LeagoKey { get; set; } = string.Empty;
-        public ICollection<PlayerMatch>? PlayerMatches { get; set; }
+        public ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
+        public ICollection<Review> Reviews { get; set; } = new List<Review>();
     }
 }

@@ -1,4 +1,5 @@
 using Data;
+using LeagoService;
 using LeagueCoreService;
 using LeagueCoreService.Services;
 using Microsoft.EntityFrameworkCore;
@@ -20,7 +21,12 @@ JsonConvert.DefaultSettings = () => new JsonSerializerSettings
     NullValueHandling = NullValueHandling.Ignore
 };
 
-builder.Services.AddHttpClient();
+
+
+builder.Services.AddHttpClient<LeagoTokenProvider>();
+builder.Services.AddTransient<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<LeagoMainService>()
+    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
 
 // Read connection string from appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
