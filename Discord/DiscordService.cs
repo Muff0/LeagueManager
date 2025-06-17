@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using NetCord;
 using NetCord.Rest;
+using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
 using Shared.Enum;
@@ -8,7 +9,7 @@ using Shared.Settings;
 
 namespace Discord
 {
-    public class DiscordService
+    public class DiscordService : ServiceBase
     {
         private readonly RestClient _client;
         private readonly IOptions<DiscordSettings> _settings;

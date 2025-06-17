@@ -5,10 +5,11 @@ using Data;
 using Shared.Enum;
 using Shared.Dto;
 using Data.Commands.Review;
+using Shared;
 
 namespace LeagueManager.Services
 {
-    public class ReviewService
+    public class ReviewService : ServiceBase
     {
 
         private readonly LeagueDataService _leagueDataService;
@@ -64,6 +65,15 @@ namespace LeagueManager.Services
             {
                 Reviews = updateList.ToArray()
             });
+        }
+
+        /// <summary>
+        /// Links reviews to the corresponding Matches, if they exist
+        /// </summary>
+        public async Task LinkExistingReviewMatches()
+        { 
+            await _leagueDataService.ExecuteAsync(
+                new LinkExistingReviewMatchesCommand());
         }
 
         public async Task BuildReviews()

@@ -12,6 +12,7 @@ using Discord;
 using LeagoService;
 using Mail;
 using Microsoft.Extensions.Options;
+using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
 using Shared.Enum;
@@ -19,7 +20,7 @@ using Shared.Settings;
 
 namespace LeagueManager.Services
 {
-    public class MainService
+    public class MainService : ServiceBase
     {
         private readonly QueueDataService _queueDataService;
         private readonly LeagueDataService _leagueDataService;
@@ -88,23 +89,47 @@ namespace LeagueManager.Services
             return PlayerParticipationTier.None;
         }
 
+        public async Task LinkReviewMatches()
+        {
+            try
+            {
+                await _reviewService.LinkExistingReviewMatches();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
         public async Task<bool> UploadOrdersFile(Stream content)
         {
-            using var contentStream = new StreamReader(content);
+            try
+            {
+                using var contentStream = new StreamReader(content);
+                var table = await BuildOrderDataTable(content);
+                var payments = ParsePaymentData(table);
+                await ProcessPaymentData(payments);
 
-            var table = await BuildOrderDataTable(content);
-
-            var payments = ParsePaymentData(table);
-
-            await ProcessPaymentData(payments);
-
-            return true;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return false;
+            }
         }
 
         public async Task BuildReviews()
         {
-            await _reviewService.BuildReviews();
-            await _reviewService.AssignRoundsToReviews();
+            try
+            {
+                await _reviewService.BuildReviews();
+                await _reviewService.AssignRoundsToReviews();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
         }
 
         public async Task FetchMissingDiscordIds()
@@ -136,12 +161,6 @@ namespace LeagueManager.Services
             {
                 HandleException(ex);
             }
-        }
-
-        private void HandleException(Exception ex)
-        {
-            //lol
-            return;
         }
 
         public async Task UpdateDiscordPlayerRole()
@@ -228,17 +247,10 @@ namespace LeagueManager.Services
                     });
             }
 
-            try
-            {
-                _leagueDataService.Execute(new UpdatePlayerSeasons() { PlayerRegistrations = toUpdate.ToArray() });
-                _leagueDataService.Execute(new UpdatePlayersDataCommand() { Players = updateGoMagicIdList.ToArray() });
+            _leagueDataService.Execute(new UpdatePlayerSeasons() { PlayerRegistrations = toUpdate.ToArray() });
+            _leagueDataService.Execute(new UpdatePlayersDataCommand() { Players = updateGoMagicIdList.ToArray() });
 
-                string noRegstr = string.Join(";", noReg.Select(pd => pd.UserEmail));
-            }
-            catch
-            {
-                ;
-            }
+            string noRegstr = string.Join(";", noReg.Select(pd => pd.UserEmail));
         }
 
         public async Task<PlayerDto[]> GetMissingPayments()
@@ -269,34 +281,27 @@ namespace LeagueManager.Services
 
         protected PaymentDataDto[] ParsePaymentData(DataTable table)
         {
-            try
-            {
-                var paymentData = new List<PaymentDataDto>();
+            var paymentData = new List<PaymentDataDto>();
 
-                foreach (DataRow row in table.Rows)
-                {
-                    var newPaymentData = new PaymentDataDto();
-
-                    var dateString = row.Field<string>("Date");
-                    newPaymentData.DateTime = DateTime.Parse(dateString);
-                    newPaymentData.BillingEmail = row.Field<string>("Billing Email") ?? "";
-                    newPaymentData.USD = double.Parse(row.Field<string>("USD"));
-                    newPaymentData.UserEmail = row.Field<string>("User Email") ?? "";
-                    newPaymentData.UserId = int.Parse(row.Field<string>("User ID"));
-                    newPaymentData.UserName = row.Field<string>("User Name") ?? "";
-                    newPaymentData.BillingName = row.Field<string>("Billing Name") ?? "";
-                    newPaymentData.Product = row.Field<string>("Product") ?? "";
-                    paymentData.Add(newPaymentData);
-                }
-                return paymentData.ToArray();
-            }
-            catch (Exception e)
+            foreach (DataRow row in table.Rows)
             {
-                throw e;
+                var newPaymentData = new PaymentDataDto();
+
+                var dateString = row.Field<string>("Date");
+                newPaymentData.DateTime = DateTime.Parse(dateString);
+                newPaymentData.BillingEmail = row.Field<string>("Billing Email") ?? "";
+                newPaymentData.USD = double.Parse(row.Field<string>("USD"));
+                newPaymentData.UserEmail = row.Field<string>("User Email") ?? "";
+                newPaymentData.UserId = int.Parse(row.Field<string>("User ID"));
+                newPaymentData.UserName = row.Field<string>("User Name") ?? "";
+                newPaymentData.BillingName = row.Field<string>("Billing Name") ?? "";
+                newPaymentData.Product = row.Field<string>("Product") ?? "";
+                paymentData.Add(newPaymentData);
             }
+            return paymentData.ToArray();
         }
 
-        public async Task SendNotification()
+        public async Task SendUpcomingMatchesNotification()
         {
             var command = new CommandMessage()
             {
@@ -349,7 +354,7 @@ namespace LeagueManager.Services
             }
             catch (Exception e)
             {
-                ;
+                HandleException(e);
             }
             try
             {
@@ -357,7 +362,7 @@ namespace LeagueManager.Services
             }
             catch (Exception e)
             {
-                ;
+                HandleException(e);
             }
         }
 

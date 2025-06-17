@@ -4,13 +4,14 @@ using Discord;
 using LeagoService;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
 using Shared.Settings;
 
 namespace LeagueCoreService.Services
 {
-    public class MainService
+    public class MainService : ServiceBase
     {
         private readonly LeagoMainService _leagoService;
 
@@ -58,15 +59,22 @@ namespace LeagueCoreService.Services
 
         public async Task SendUpcomingMatchesNotification()
         {
-            var resm = await GetUpcomingMatches();
-
-            if (resm.Length == 0)
-                return;
-
-            await _discordService.SendUpcomingMatchesNotification(new SendUpcomingMatchesNotificationInDto()
+            try
             {
-                Matches = resm.Select(mm => mm.ToMatchDto()).ToArray()
-            });
+                var resm = await GetUpcomingMatches();
+
+                if (resm.Length == 0)
+                    return;
+
+                await _discordService.SendUpcomingMatchesNotification(new SendUpcomingMatchesNotificationInDto()
+                {
+                    Matches = resm.Select(mm => mm.ToMatchDto()).ToArray()
+                });
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
         }
 
         public async Task UpdateActiveSeason()
@@ -123,99 +131,112 @@ namespace LeagueCoreService.Services
 
         public async Task SyncMatches()
         {
-            var activeSeason = GetActiveSeason();
-            if (activeSeason == null)
-                return;
-
-            var getMatchesRes = await _leagoService.GetMatches(new GetMatchesInDto()
+            try
             {
-                RoundKey = 3,
-                TournamentKey = activeSeason.LeagoL2Key,
-                MatchesCount = 100
-            });
 
-            if (getMatchesRes != null)
-            {
-                using (var context = _leagueContextFactory.CreateDbContext())
+                var activeSeason = GetActiveSeason();
+                if (activeSeason == null)
+                    return;
+
+                var getMatchesRes = await _leagoService.GetMatches(new GetMatchesInDto()
                 {
-                    var toAdd = new List<Data.Model.Match>();
-                    foreach (var currentMatch in getMatchesRes.Matches)
+                    RoundKey = 3,
+                    TournamentKey = activeSeason.LeagoL2Key,
+                    MatchesCount = 100
+                });
+
+                if (getMatchesRes != null)
+                {
+                    using (var context = _leagueContextFactory.CreateDbContext())
                     {
-                        if (currentMatch.Players == null)
-                            throw new InvalidOperationException("Players is null");
-
-                        var existingMatch = context.Matches.Include(mm => mm.PlayerMatches)
-                            .ThenInclude(pm => pm.Player)
-                            .FirstOrDefault(mm => mm.LeagoKey == currentMatch.LeagoKey);
-
-                        if (existingMatch == null)
+                        var toAdd = new List<Data.Model.Match>();
+                        foreach (var currentMatch in getMatchesRes.Matches)
                         {
-                            var newMatch = new Data.Model.Match()
+                            if (currentMatch.Players == null)
+                                throw new InvalidOperationException("Players is null");
+
+                            var existingMatch = context.Matches.Include(mm => mm.PlayerMatches)
+                                .ThenInclude(pm => pm.Player)
+                                .FirstOrDefault(mm => mm.LeagoKey == currentMatch.LeagoKey);
+
+                            if (existingMatch == null)
                             {
-                                LeagoKey = currentMatch.LeagoKey,
-                                SeasonId = activeSeason.Id,
-                                Round = 2,
-                                Link = currentMatch.GameLink,
-                                GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime(),
-                                PlayerMatches = new List<PlayerMatch>()
-                            };
-
-                            foreach (PlayerMatchDto playerMatch in currentMatch.Players)
-                            {
-                                if (playerMatch?.Player == null)
-                                    continue;
-
-                                var existingPlayer = context.Players.FirstOrDefault(pp => pp.LeagoKey == playerMatch.Player.LeagoKey);
-
-                                if (existingPlayer == null)
-                                    continue;
-
-                                var newPlayerMatch = new PlayerMatch()
+                                var newMatch = new Data.Model.Match()
                                 {
-                                    Color = playerMatch.Color,
-                                    PlayerId = existingPlayer.Id,
-                                    HasConfirmed = playerMatch.HasConfirmed,
-                                    Outcome = playerMatch.Outcome,
+                                    LeagoKey = currentMatch.LeagoKey,
+                                    SeasonId = activeSeason.Id,
+                                    Round = 2,
+                                    Link = currentMatch.GameLink,
+                                    GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime(),
+                                    PlayerMatches = new List<PlayerMatch>()
                                 };
 
-                                newMatch.PlayerMatches.Add(newPlayerMatch);
+                                foreach (PlayerMatchDto playerMatch in currentMatch.Players)
+                                {
+                                    if (playerMatch?.Player == null)
+                                        continue;
+
+                                    var existingPlayer = context.Players.FirstOrDefault(pp => pp.LeagoKey == playerMatch.Player.LeagoKey);
+
+                                    if (existingPlayer == null)
+                                        continue;
+
+                                    var newPlayerMatch = new PlayerMatch()
+                                    {
+                                        Color = playerMatch.Color,
+                                        PlayerId = existingPlayer.Id,
+                                        HasConfirmed = playerMatch.HasConfirmed,
+                                        Outcome = playerMatch.Outcome,
+                                    };
+
+                                    newMatch.PlayerMatches.Add(newPlayerMatch);
+                                }
+
+                                toAdd.Add(newMatch);
                             }
-
-                            toAdd.Add(newMatch);
-                        }
-                        else
-                        {
-                            existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
-                            existingMatch.Link = currentMatch.GameLink;
-                            existingMatch.IsComplete = currentMatch.IsPlayed;
-
-                            foreach (PlayerMatchDto playerMatch in currentMatch.Players)
+                            else
                             {
-                                var existingPlayerMatch = existingMatch.PlayerMatches?.FirstOrDefault(pm => pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
+                                existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
+                                existingMatch.Link = currentMatch.GameLink;
+                                existingMatch.IsComplete = currentMatch.IsPlayed;
 
-                                if (existingPlayerMatch == null)
-                                    continue;
+                                foreach (PlayerMatchDto playerMatch in currentMatch.Players)
+                                {
+                                    var existingPlayerMatch = existingMatch.PlayerMatches?.FirstOrDefault(pm => pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
 
-                                existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
-                                existingPlayerMatch.Outcome = playerMatch.Outcome;
-                                existingPlayerMatch.Color = playerMatch.Color;
+                                    if (existingPlayerMatch == null)
+                                        continue;
+
+                                    existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
+                                    existingPlayerMatch.Outcome = playerMatch.Outcome;
+                                    existingPlayerMatch.Color = playerMatch.Color;
+                                }
                             }
                         }
-                    }
 
-                    await context.AddRangeAsync(toAdd);
-                    await context.SaveChangesAsync();
+                        await context.AddRangeAsync(toAdd);
+                        await context.SaveChangesAsync();
+                    }
                 }
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
             }
         }
 
         public async Task SendRoundStartNotification()
         {
-            await _discordService.SendRoundStartNotification(new SendRoundStartNotificationInDto()
+            try
             {
-                RoundEnd = DateTime.Parse("2025-06-23 12:00:00"),
-                RoundNumber = 1
-            });
+                await _discordService.SendRoundStartNotification(new SendRoundStartNotificationInDto()
+                {
+                    RoundEnd = DateTime.Parse("2025-06-23 12:00:00"),
+                    RoundNumber = 1
+                });
+            }
+            catch(Exception ex) 
+            { HandleException(ex); }
         }
     }
 }

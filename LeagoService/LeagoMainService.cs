@@ -1,10 +1,11 @@
 ﻿using LeagoClient;
+using Shared;
 using Shared.Dto;
 using Shared.Enum;
 
 namespace LeagoService
 {
-    public class LeagoMainService
+    public class LeagoMainService : ServiceBase
     {
         private readonly AccountClient _accountClient;
         private readonly ArenaMembersClient _arenaMembersClient;

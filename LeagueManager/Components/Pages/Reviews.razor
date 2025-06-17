@@ -9,10 +9,16 @@
 <p role="status">@message</p>
 
 <button class="btn btn-primary" @onclick="GenerateReviews">Generate Reviews</button>
+<button class="btn btn-primary" @onclick="LinkReviewMatches">Link Review Matches</button>
 
 @code {
     private string message = "Loading...";
-    
+
+    private async void LinkReviewMatches()
+    {
+        await MainService.LinkReviewMatches();
+    }
+
     private async void GenerateReviews()
     {
         try
