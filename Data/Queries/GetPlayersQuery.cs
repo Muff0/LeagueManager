@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Model;
+﻿using Data.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data.Queries
 {
-    public class GetPlayersQuery : Query<LeagueContext,Player>
+    public class GetPlayersQuery : Query<LeagueContext, Player>
     {
         public bool IncludePlayerSeasons { get; set; } = false;
         public bool IncludePlayerMatches { get; set; } = false;
@@ -32,6 +27,5 @@ namespace Data.Queries
 
             return query;
         }
-
     }
 }

@@ -9,10 +9,24 @@
 <p role="status">@message</p>
 
 <button class="btn btn-primary" @onclick="UpdatePlayerRole">Update Player Role</button>
+<button class="btn btn-primary" @onclick="UpdateMissingDiscordIds">Update Discord Ids</button>
 
 @code {
     private string message = "Loading...";
-    
+
+    private async void UpdateMissingDiscordIds()
+    {
+        try
+        {
+
+            await MainService.FetchMissingDiscordIds();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+
     private async void UpdatePlayerRole()
     {
         try

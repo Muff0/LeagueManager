@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Data
 {
@@ -56,14 +54,13 @@ namespace Data
             return query;
         }
 
-
         /// <summary>
         /// Asynchronously reates an IQueryable for the specified entity type and applies the given
         /// AsNoTracking and LazyLoadingEnabled settings
         /// </summary>
         /// <param name="context">The DbContext to query</param>
         /// <returns>An IQueryable<T></returns>
-        public virtual ICollection<T2> Execute(T context)
+        public virtual IList<T2> Execute(T context)
         {
             var query = BuildQuery(context);
 
@@ -73,13 +70,12 @@ namespace Data
             return query.ToList();
         }
 
-
         /// <summary>
-        /// Asynchronously 
+        /// Asynchronously
         /// </summary>
         /// <param name="context">The DbContext to query</param>
         /// <returns>An IQueryable<T></returns>
-        public async virtual Task<ICollection<T2>> ExecuteAsync(T context)
+        public virtual async Task<IList<T2>> ExecuteAsync(T context)
         {
             var query = BuildQuery(context);
             return await query.ToListAsync();

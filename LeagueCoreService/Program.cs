@@ -13,15 +13,12 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.Configure<LeagoSettings>(builder.Configuration.GetSection("Leago"));
 builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("Discord"));
 
-
 // Needed to handle bad datetime values without altering the generated code
 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
 {
     Converters = { new FallbackDateTimeOffsetConverter() },
     NullValueHandling = NullValueHandling.Ignore
 };
-
-
 
 builder.Services.AddHttpClient<LeagoTokenProvider>();
 builder.Services.AddTransient<LeagoAuthenticatedHttpHandler>();
@@ -47,14 +44,9 @@ builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<Discord.DiscordService>();
 builder.Services.AddHostedService<Worker>();
 
-
-// Start the Discord service 
-
+// Start the Discord service
 
 builder.Services.AddDiscordGateway();
-
-
-
 
 var host = builder.Build();
 host.Run();

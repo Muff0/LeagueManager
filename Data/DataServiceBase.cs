@@ -1,10 +1,9 @@
 ﻿using Data.Commands;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Design;
 
 namespace Data
 {
-    public class DataServiceBase<T> : IDataService<T> where T : DbContext 
+    public class DataServiceBase<T> : IDataService<T> where T : DbContext
     {
         #region Fields
 
@@ -56,7 +55,7 @@ namespace Data
             return queryObject.Execute(GetDbContext());
         }
 
-        public ICollection<T2> RunQuery<T2>(Query<T, T2> queryObject) where T2 : class
+        public IList<T2> RunQuery<T2>(Query<T, T2> queryObject) where T2 : class
         {
             return queryObject.Execute(GetDbContext());
         }
@@ -66,7 +65,7 @@ namespace Data
             return await queryObject.ExecuteAsync(GetDbContext());
         }
 
-        public async Task<ICollection<T2>> RunQueryAsync<T2>(Query<T, T2> queryObject) where T2 : class
+        public async Task<IList<T2>> RunQueryAsync<T2>(Query<T, T2> queryObject) where T2 : class
         {
             return await queryObject.ExecuteAsync(GetDbContext());
         }

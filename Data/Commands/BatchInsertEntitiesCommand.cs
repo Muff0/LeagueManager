@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace Data.Commands
 {
@@ -18,7 +17,7 @@ namespace Data.Commands
 
         #region Methods
 
-        protected override Command<T> GetCommandForSingleBatch(IEnumerable<object> batch) => new InsertEntitiesCommand<T,T2>(batch as IEnumerable<T2>);  
+        protected override Command<T> GetCommandForSingleBatch(IEnumerable<object> batch) => new InsertEntitiesCommand<T, T2>(batch as IEnumerable<T2>);
 
         #endregion Methods
     }

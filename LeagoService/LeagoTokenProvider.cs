@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
-using System.Text;
-using System.Text.Json.Serialization;
-using System.Threading.Tasks;
+﻿using System.Net.Http.Headers;
 using Duende.IdentityModel.OidcClient;
 using Microsoft.Extensions.Options;
 using Shared.Settings;
@@ -28,9 +21,9 @@ namespace LeagoService
             return await base.SendAsync(request, cancellationToken);
         }
     }
+
     public class LeagoTokenProvider : ITokenProvider
     {
-
         private readonly OidcClient _oidcClient;
         private readonly IOptions<LeagoSettings> _leagoOptions;
         private string? _accessToken;

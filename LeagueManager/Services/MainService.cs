@@ -1,7 +1,5 @@
 ﻿using System.Data;
-using System.Drawing;
 using System.Globalization;
-using System.Numerics;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Data;
@@ -11,17 +9,13 @@ using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
 using Discord;
-using LeagoClient;
 using LeagoService;
-using LeagueCoreService.Services;
-using Microsoft.AspNetCore.Identity.Data;
-using Microsoft.EntityFrameworkCore;
+using Mail;
 using Microsoft.Extensions.Options;
 using Shared.Dto;
 using Shared.Dto.Discord;
 using Shared.Enum;
 using Shared.Settings;
-using static System.Net.WebRequestMethods;
 
 namespace LeagueManager.Services
 {
@@ -32,62 +26,25 @@ namespace LeagueManager.Services
         private readonly LeagoMainService _leagoService;
         private readonly IOptions<LeagoSettings> _leagoOptions;
         private readonly DiscordService _discordService;
+        private readonly ReviewService _reviewService;
+        private readonly MailService _mailService;
 
-        public MainService(QueueDataService queueDataService, 
+        public MainService(QueueDataService queueDataService,
             LeagueDataService leagueDataService,
             LeagoMainService leagoService,
             IOptions<LeagoSettings> leagoOptions,
-            DiscordService discordService)
+            DiscordService discordService,
+            ReviewService reviewService,
+            MailService mailService)
         {
             _queueDataService = queueDataService;
             _leagueDataService = leagueDataService;
             _leagoService = leagoService;
             _leagoOptions = leagoOptions;
             _discordService = discordService;
+            _reviewService = reviewService;
+            _mailService = mailService;
         }
-
-        public async Task BuildReviews()
-        {
-            var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-            var resGetPlayers = await _leagueDataService.RunQueryAsync(
-                new GetPlayerSeasonsQuery() 
-                { 
-                    IncludePlayer = true, 
-                    IncludeReviews = true,
-                    SeasonId = activeSeason.Id,
-                    ParticipationTiers = [PlayerParticipationTier.DojoTier2, PlayerParticipationTier.DojoTier3]
-                });
-
-            var toAdd = new List<Review>();
-
-            foreach (var player in resGetPlayers)
-            {
-                var reviewCount = GetReviewCount(player.ParticipationTier);
-                int revDiff = reviewCount - player.Reviews.Count;
-
-                if (revDiff <= 0)
-                    continue;
-
-                for (int i = 0; i < revDiff; i++)
-                {
-                    var review = new Review();
-                    review.OwnerPlayerId = player.PlayerId;
-                    review.SeasonId = player.SeasonId;
-                    toAdd.Add(review);
-                }
-            }
-            _leagueDataService.Execute(new InsertEntitiesCommand<LeagueContext,Review>(toAdd));
-        }
-
-        private int GetReviewCount(PlayerParticipationTier tier)
-        {
-            if (tier == PlayerParticipationTier.DojoTier2)
-                return 2;
-            if (tier == PlayerParticipationTier.DojoTier3)
-                return 5;
-            return 0;
-        }
-
 
         public async Task<DataTable> BuildOrderDataTable(Stream csvStream)
         {
@@ -136,7 +93,7 @@ namespace LeagueManager.Services
             using var contentStream = new StreamReader(content);
 
             var table = await BuildOrderDataTable(content);
-                        
+
             var payments = ParsePaymentData(table);
 
             await ProcessPaymentData(payments);
@@ -144,16 +101,80 @@ namespace LeagueManager.Services
             return true;
         }
 
+        public async Task BuildReviews()
+        {
+            await _reviewService.BuildReviews();
+            await _reviewService.AssignRoundsToReviews();
+        }
+
+        public async Task FetchMissingDiscordIds()
+        {
+            try
+            {
+                var players = await _leagueDataService.RunQueryAsync(new GetPlayersQuery());
+
+                var missingIds = players.Where(pl => pl.DiscordHandle != null
+                    && pl.DiscordHandle != ""
+                    && pl.DiscordId == null);
+
+                var updateList = new List<PlayerDto>();
+
+                foreach (var player in missingIds)
+                {
+                    var id = await _discordService.GetDiscordUserId(player.DiscordHandle);
+                    if (id != null)
+                        updateList.Add(new PlayerDto()
+                        {
+                            Id = player.Id,
+                            DiscordId = id
+                        });
+                }
+
+                await _leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand() { Players = updateList.ToArray() });
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        private void HandleException(Exception ex)
+        {
+            //lol
+            return;
+        }
+
         public async Task UpdateDiscordPlayerRole()
         {
-            await _discordService.UpdatePlayerRole();
+            try
+            {
+                var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+                var currentPlayers = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery()
+                {
+                    IncludePlayer = true,
+                    SeasonId = activeSeason.Id,
+                });
+
+                await _discordService.UpdatePlayerRole(new UpdatePlayerRoleInDto()
+                {
+                    CurrentPlayers = currentPlayers.Select(ps => ps.Player)
+                        .Where(pl => pl!.DiscordId != null)
+                        .Select(pl => pl!.DiscordId)
+                        .Cast<ulong>()
+                        .ToArray()
+                });
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
         }
 
         protected async Task ProcessPaymentData(PaymentDataDto[] payments)
         {
-            var cutoffDate = new DateTime(2025,05,10);
+            var cutoffDate = new DateTime(2025, 05, 10);
 
-            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery() { IncludePlayerSeasons = true});
+            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery() { IncludePlayerSeasons = true });
             var players = await _leagueDataService.RunQueryAsync(new GetPlayersQuery());
 
             var noMatch = new List<PaymentDataDto>();
@@ -195,7 +216,7 @@ namespace LeagueManager.Services
                 if (currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.Refunded || currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.Cancelled)
                     continue;
 
-                if (currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.None 
+                if (currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.None
                     || currentPlayerSeason.ParticipationTier != partTier)
                     toUpdate.Add(new PlayerRegistrationDto()
                     {
@@ -203,7 +224,7 @@ namespace LeagueManager.Services
                         PlayerId = player.Id,
                         PlayerParticipationTier = partTier,
                         SeasonId = season.Id,
-                        PlayerPaymentStatus = PlayerPaymentStatus.Paid                       
+                        PlayerPaymentStatus = PlayerPaymentStatus.Paid
                     });
             }
 
@@ -214,16 +235,15 @@ namespace LeagueManager.Services
 
                 string noRegstr = string.Join(";", noReg.Select(pd => pd.UserEmail));
             }
-            catch 
+            catch
             {
                 ;
             }
-
         }
 
         public async Task<PlayerDto[]> GetMissingPayments()
         {
-            var resGetMP = await _leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery() { SeasonId = 2});
+            var resGetMP = await _leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery() { SeasonId = 2 });
 
             return resGetMP.Select(pl => new PlayerDto()
             {
@@ -234,14 +254,13 @@ namespace LeagueManager.Services
             }).ToArray();
         }
 
-
         private Data.Model.Player TryFindPlayer(ICollection<Data.Model.Player> players, PaymentDataDto payment)
         {
-            // First let's try the mail 
+            // First let's try the mail
 
             var output = players.FirstOrDefault(pl =>
-                pl.GoMagicUserId == payment.UserId || 
-                pl.EmailAddress.Equals(payment.UserEmail,StringComparison.InvariantCultureIgnoreCase) ||
+                pl.GoMagicUserId == payment.UserId ||
+                pl.EmailAddress.Equals(payment.UserEmail, StringComparison.InvariantCultureIgnoreCase) ||
                 pl.EmailAddress == payment.BillingEmail ||
                 (payment.BillingName.Contains(pl.FirstName, StringComparison.InvariantCultureIgnoreCase) && payment.BillingName.Contains(pl.LastName, StringComparison.InvariantCultureIgnoreCase)));
 
@@ -291,6 +310,7 @@ namespace LeagueManager.Services
                 NewCommand = command,
             });
         }
+
         public async Task SendRoundStartNotification()
         {
             var command = new CommandMessage()
@@ -321,10 +341,8 @@ namespace LeagueManager.Services
             });
         }
 
-
         public async Task UpdatePlayers()
         {
-
             try
             {
                 await UpdatePlayersList();
@@ -335,7 +353,6 @@ namespace LeagueManager.Services
             }
             try
             {
-
                 await UpdatePlayersPublicProfiles();
             }
             catch (Exception e)
@@ -346,7 +363,6 @@ namespace LeagueManager.Services
 
         public async Task UpdatePlayersList()
         {
-
             var activeSeason = _leagueDataService.RunQuery(new GetActiveSeasonQuery());
 
             if (activeSeason == null)
@@ -359,16 +375,13 @@ namespace LeagueManager.Services
 
             List<Data.Model.Player> toAdd = new List<Data.Model.Player>();
 
-
             _leagueDataService.Execute(new UpdatePlayersDataCommand() { Players = getPlayersRes.Players });
 
             _leagueDataService.Execute(new AddPlayersToSeason() { Players = getPlayersRes.Players, SeasonId = activeSeason.Id });
         }
 
-
         public async Task UpdatePlayersPublicProfiles()
         {
-
             var players = _leagueDataService.RunQuery(new GetPlayersQuery());
 
             List<PlayerDto> toAdd = new List<PlayerDto>();
@@ -388,7 +401,6 @@ namespace LeagueManager.Services
                     EmailAddress = pres.Email,
                 });
             }
-
 
             _leagueDataService.Execute(new UpdatePlayersDataCommand() { Players = toAdd.ToArray() });
         }

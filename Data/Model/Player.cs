@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Shared.Enum;
 
 namespace Data.Model
@@ -14,10 +9,13 @@ namespace Data.Model
         [Key]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int Id { get; set; }
+
         [Required]
-        public required string FirstName { get; set; }
+        public string FirstName { get; set; }
+
         [Required]
-        public required string LastName { get; set; }
+        public string LastName { get; set; }
+
         public string EmailAddress { get; set; } = String.Empty;
         public string DiscordHandle { get; set; } = String.Empty;
         public string OGSHandle { get; set; } = String.Empty;
@@ -28,5 +26,6 @@ namespace Data.Model
         public string LeagoKey { get; set; } = string.Empty;
         public ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
+        public ulong? DiscordId { get; set; }
     }
 }

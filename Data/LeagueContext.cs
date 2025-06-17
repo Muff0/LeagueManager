@@ -1,16 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Model;
+﻿using Data.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data
 {
     public class LeagueContext : DbContext
     {
-        public LeagueContext(DbContextOptions<LeagueContext> options) : base(options) { }
+        public LeagueContext(DbContextOptions<LeagueContext> options) : base(options)
+        {
+        }
 
         public DbSet<Player> Players { get; set; }
         public DbSet<Season> Seasons { get; set; }
@@ -34,7 +31,7 @@ namespace Data
                 .HasForeignKey(ps => ps.PlayerId);
 
             modelBuilder.Entity<PlayerMatch>()
-                .HasKey(pm => new {pm.PlayerId,pm.MatchId});
+                .HasKey(pm => new { pm.PlayerId, pm.MatchId });
 
             modelBuilder.Entity<PlayerMatch>()
                 .HasOne(pm => pm.Match)
@@ -47,7 +44,7 @@ namespace Data
                 .HasForeignKey(pm => pm.PlayerId);
 
             modelBuilder.Entity<PlayerSeason>()
-                .HasKey(ps => new { ps.PlayerId,ps.SeasonId});
+                .HasKey(ps => new { ps.PlayerId, ps.SeasonId });
 
             modelBuilder.Entity<Review>()
                 .HasOne(re => re.OwnerPlayer)

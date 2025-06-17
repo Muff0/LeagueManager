@@ -1,5 +1,4 @@
-﻿
-namespace Shared.Enum
+﻿namespace Shared.Enum
 {
     public enum PlayerParticipationTier
     {

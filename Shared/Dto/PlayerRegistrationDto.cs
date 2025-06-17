@@ -1,13 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shared.Enum;
+﻿using Shared.Enum;
 
 namespace Shared.Dto
 {
-    public  class PlayerRegistrationDto
+    public class PlayerRegistrationDto
     {
         public int PlayerId { get; set; }
         public int SeasonId { get; set; }

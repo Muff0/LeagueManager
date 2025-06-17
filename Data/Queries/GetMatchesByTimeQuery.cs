@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Model;
+﻿using Data.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data.Queries
 {
-    public class GetMatchesByTimeQuery : Query<LeagueContext,Match>
+    public class GetMatchesByTimeQuery : Query<LeagueContext, Match>
     {
         public DateTime? TimeFrom { get; set; }
         public DateTime? TimeTo { get; set; }
@@ -38,9 +33,7 @@ namespace Data.Queries
 
             query = query.OrderBy(mm => mm.GameTimeUTC);
 
-
             return query;
         }
-
     }
 }

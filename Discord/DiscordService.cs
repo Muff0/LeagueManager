@@ -1,14 +1,10 @@
-﻿using Shared.Dto.Discord;
-using Microsoft.Extensions.Hosting;
-
-using NetCord.Hosting.Gateway;
-using NetCord.Rest;
-using Shared.Settings;
+﻿using Microsoft.Extensions.Options;
 using NetCord;
-using Microsoft.Extensions.Options;
+using NetCord.Rest;
 using Shared.Dto;
+using Shared.Dto.Discord;
 using Shared.Enum;
-using System;
+using Shared.Settings;
 
 namespace Discord
 {
@@ -16,7 +12,6 @@ namespace Discord
     {
         private readonly RestClient _client;
         private readonly IOptions<DiscordSettings> _settings;
-
 
         public DiscordService(IOptions<DiscordSettings> settings)
         {
@@ -53,12 +48,11 @@ namespace Discord
             return res;
         }
 
-
-
         protected MessageProperties BuildRoundStartNotification(int round, DateTime endDate)
         {
-            string content = string.Format(DiscordTemplates.RoundStartMessage, round, BuildTimeTag(endDate), $"@{_settings.Value.AdminUsername}") + Environment.NewLine
-                + $"<@&{_settings.Value.LeagueAnnouncementRoleId}>";
+            string content = string.Format(DiscordTemplates.RoundStartMessage, round, BuildTimeTag(endDate), $"<@{_settings.Value.AdminId}>") + Environment.NewLine
+                + $"<@&{_settings.Value.LeagueAnnouncementRoleId}>" + Environment.NewLine
+                + $"<@&{_settings.Value.PlayerRoleId}>";
 
             return new MessageProperties()
                 .WithContent(content)
@@ -72,7 +66,7 @@ namespace Discord
 
             string content = DiscordTemplates.UpcomingMatchesIntroMessage + Environment.NewLine
                 + matchList + Environment.NewLine + Environment.NewLine
-                + $"<@&{_settings.Value.MatchAnnouncementRoleId}>" ;
+                + $"<@&{_settings.Value.MatchAnnouncementRoleId}>";
 
             return new MessageProperties()
                 .WithContent(content)
@@ -80,12 +74,56 @@ namespace Discord
                 .WithFlags(MessageFlags.SuppressEmbeds);
         }
 
-        public async Task UpdatePlayerRole()
+        public async Task UpdatePlayerRole(UpdatePlayerRoleInDto inDto)
         {
             var role = await _client.GetGuildRoleAsync(_settings.Value.ServerId, _settings.Value.PlayerRoleId);
+            var orderedUsers = inDto.CurrentPlayers.Order().ToList();
 
+            await foreach (var user in _client.GetGuildUsersAsync(_settings.Value.ServerId))
+            {
+                var existingIndex = orderedUsers.BinarySearch(user.Id);
+                if (user.RoleIds.Contains(role.Id))
+                {
+                    if (existingIndex >= 0)
+                        continue;
 
-            _client.SearchGuildUsersAsync(_settings.Value.ServerId, new GuildUsersSearchPaginationProperties());
+                    await user.RemoveRoleAsync(role.Id);
+                }
+                else if (existingIndex >= 0)
+                    await user.AddRoleAsync(role.Id);
+            }
+        }
+
+        public async Task<ulong?> GetDiscordUserId(string username)
+        {
+            await foreach (var user in _client.GetGuildUsersAsync(_settings.Value.ServerId))
+            {
+                if (user.Username.Equals(username) || (user.Nickname?.Equals(username) ?? false))
+                {
+                    return user.Id;
+                }
+            }
+            return null;
+        }
+
+        public async Task RemoveRolesFromUsers(RemoveRoleFromUsersInDto inDto)
+        {
+            foreach (var userId in inDto.UserIds)
+            {
+                await _client.RemoveGuildUserRoleAsync(_settings.Value.ServerId, userId, inDto.RoleId);
+            }
+        }
+
+        public async Task<ulong[]> FindUsersWithRole(ulong roleId)
+        {
+            var res = new List<ulong>();
+            await foreach (var user in _client.GetGuildUsersAsync(_settings.Value.ServerId))
+            {
+                if (user.RoleIds.Contains(roleId))
+                    res.Add(user.Id);
+            }
+
+            return res.ToArray();
         }
 
         public async Task AssignRoleToUsers(AssignRoleToUsersInDto inDto)
@@ -108,7 +146,7 @@ namespace Discord
         {
             try
             {
-                var msg = BuildRoundStartNotification(inDto.RoundNumber,inDto.RoundEnd);
+                var msg = BuildRoundStartNotification(inDto.RoundNumber, inDto.RoundEnd);
 
                 await _client.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
             }
@@ -117,6 +155,7 @@ namespace Discord
                 return;
             }
         }
+
         public async Task SendUpcomingMatchesNotification(SendUpcomingMatchesNotificationInDto inDto)
         {
             try
@@ -130,6 +169,5 @@ namespace Discord
                 return;
             }
         }
-
     }
 }

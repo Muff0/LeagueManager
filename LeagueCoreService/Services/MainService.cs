@@ -1,14 +1,8 @@
-﻿using System.Drawing;
-using Data;
-using Data.Commands.Player;
-using Data.Commands.Queue;
+﻿using Data;
 using Data.Model;
-using Data.Queries;
 using Discord;
-using LeagoClient;
 using LeagoService;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.Options;
 using Shared.Dto;
 using Shared.Dto.Discord;
@@ -25,9 +19,9 @@ namespace LeagueCoreService.Services
         private readonly LeagueDataService _leagueDataService;
         private readonly DiscordService _discordService;
 
-        public MainService(LeagoMainService leagoService, 
+        public MainService(LeagoMainService leagoService,
             IOptions<LeagoSettings> leagoOptions,
-            IDbContextFactory<LeagueContext> leagueContextFactory, 
+            IDbContextFactory<LeagueContext> leagueContextFactory,
             LeagueDataService dataService,
             DiscordService discordService)
         {
@@ -77,23 +71,20 @@ namespace LeagueCoreService.Services
 
         public async Task UpdateActiveSeason()
         {
-
             var res2 = await _leagoService.GetLeague(new Shared.Dto.GetLeagueInDto()
             {
                 ArenaKey = _leagoOptions.Value.ArenaKey,
                 LeagueKey = _leagoOptions.Value.LeagueKey
             });
 
-            if (res2?.Result == null) 
+            if (res2?.Result == null)
                 throw new InvalidOperationException();
 
             var activeSeason = res2.Result.Seasons.OrderByDescending(x => x.StartDate).FirstOrDefault();
             using (var context = _leagueContextFactory.CreateDbContext())
             {
-
                 if (activeSeason != null)
                 {
-
                     var existingSeason = context.Seasons.FirstOrDefault(ss => ss.LeagoL1Key == activeSeason.LeagoL1Key);
                     if (existingSeason == null)
                     {
@@ -171,7 +162,6 @@ namespace LeagueCoreService.Services
 
                             foreach (PlayerMatchDto playerMatch in currentMatch.Players)
                             {
-
                                 if (playerMatch?.Player == null)
                                     continue;
 
@@ -211,7 +201,6 @@ namespace LeagueCoreService.Services
                                 existingPlayerMatch.Color = playerMatch.Color;
                             }
                         }
-
                     }
 
                     await context.AddRangeAsync(toAdd);
@@ -220,13 +209,12 @@ namespace LeagueCoreService.Services
             }
         }
 
-
         public async Task SendRoundStartNotification()
         {
             await _discordService.SendRoundStartNotification(new SendRoundStartNotificationInDto()
-            { 
-                RoundEnd = DateTime.Parse("2025-04-28 10:00:00"),
-                RoundNumber = 5
+            {
+                RoundEnd = DateTime.Parse("2025-06-23 12:00:00"),
+                RoundNumber = 1
             });
         }
     }

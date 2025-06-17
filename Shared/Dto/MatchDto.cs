@@ -1,5 +1,4 @@
-﻿
-namespace Shared.Dto
+﻿namespace Shared.Dto
 {
     public class MatchDto
     {
@@ -17,7 +16,5 @@ namespace Shared.Dto
         public int Round { get; set; }
         public int SeasonId { get; set; }
         public SeasonDto? Season { get; set; }
-
-
     }
 }

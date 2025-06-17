@@ -1,17 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Model;
+﻿using Data.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data
 {
     public class QueueContext : DbContext
     {
-
-        public QueueContext(DbContextOptions<QueueContext> options) : base(options) { }
+        public QueueContext(DbContextOptions<QueueContext> options) : base(options)
+        {
+        }
 
         public DbSet<CommandMessage> CommandQueue { get; set; }
         public DbSet<DomainEvent> EventQueue { get; set; }

@@ -1,12 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Commands;
-using Shared.Dto;
-using Shared.Enum;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+﻿using Shared.Dto;
 
 namespace Data.Commands.Player
 {

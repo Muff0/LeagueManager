@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Threading.Tasks;
 
 namespace Data
 {
@@ -48,19 +47,17 @@ namespace Data
             return query.FirstOrDefault();
         }
 
-
         /// <summary>
-        /// Asynchronously 
+        /// Asynchronously
         /// </summary>
         /// <param name="context">The DbContext to query</param>
         /// <returns>An IQueryable<T></returns>
-        public async virtual Task<T2?> ExecuteAsync(T context)
+        public virtual async Task<T2?> ExecuteAsync(T context)
         {
             var query = BuildQuery(context);
 
             return await query.FirstOrDefaultAsync();
         }
-
 
         #endregion Methods
     }

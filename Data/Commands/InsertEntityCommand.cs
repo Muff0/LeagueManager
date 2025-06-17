@@ -30,7 +30,6 @@ namespace Data.Commands
             context.SaveChanges();
         }
 
-
         #endregion Methods
     }
 }

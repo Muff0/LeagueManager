@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Commands;
-using Shared.Dto;
+﻿using Shared.Dto;
 
 namespace Data.Commands.Player
 {
@@ -21,7 +15,6 @@ namespace Data.Commands.Player
                 var existingPlayer = context.Players.FirstOrDefault(pl => pl.Id == player.Id
                     || pl.LeagoKey == player.LeagoKey
                     || (pl.FirstName == player.FirstName && pl.LastName == player.LastName));
-
 
                 if (existingPlayer == null)
                 {
@@ -40,8 +33,8 @@ namespace Data.Commands.Player
                 }
                 else
                 {
-                    if (player.Rank != Shared.Enum.PlayerRank.MinValue) 
-                        existingPlayer.Rank = player.Rank;                    
+                    if (player.Rank != Shared.Enum.PlayerRank.MinValue)
+                        existingPlayer.Rank = player.Rank;
                     if (player.OGSHandle != null)
                         existingPlayer.OGSHandle = player.OGSHandle;
                     if (player.LeagoMemberId != null)
@@ -54,6 +47,8 @@ namespace Data.Commands.Player
                         existingPlayer.EmailAddress = player.EmailAddress;
                     if (player.GoMagicUserId != null)
                         existingPlayer.GoMagicUserId = (int)player.GoMagicUserId;
+                    if (player.DiscordId != null)
+                        existingPlayer.DiscordId = player.DiscordId;
 
                     context.Entry(existingPlayer).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
                 }

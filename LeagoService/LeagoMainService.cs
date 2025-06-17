@@ -1,15 +1,11 @@
-﻿using Microsoft.Extensions.Options;
+﻿using LeagoClient;
 using Shared.Dto;
-using Shared.Settings;
-using LeagoClient;
 using Shared.Enum;
 
 namespace LeagoService
 {
     public class LeagoMainService
     {
-
-
         private readonly AccountClient _accountClient;
         private readonly ArenaMembersClient _arenaMembersClient;
         private readonly ArenasClient _arenasClient;
@@ -22,7 +18,6 @@ namespace LeagoService
         private readonly RoundsClient _roundsClient;
         private readonly TournamentsClient _tournamentsClient;
         private readonly UsersClient _usersClient;
-
 
         public LeagoMainService(AccountClient accountClient,
             ArenaMembersClient arenaMembersClient,
@@ -37,7 +32,6 @@ namespace LeagoService
             TournamentsClient tournamentsClient,
             UsersClient usersClient)
         {
-
             _accountClient = accountClient;
             _arenaMembersClient = arenaMembersClient;
             _arenasClient = arenasClient;
@@ -59,7 +53,6 @@ namespace LeagoService
 
         public async Task<GetTournamentOutDto> GetTournament(GetTournamentInDto inDto)
         {
-
             var res = new GetTournamentOutDto();
             try
             {
@@ -73,10 +66,8 @@ namespace LeagoService
             }
             catch
             {
-
             }
             return res;
-
         }
 
         public async Task<GetMatchesOutDto> GetMatches(GetMatchesInDto inDto)
@@ -112,16 +103,13 @@ namespace LeagoService
                         HasConfirmed = pp.IsMatchTimeAccepted,
                         HasForfeited = false,
                         Outcome = (Shared.Enum.PlayerMatchOutcome)pp.Outcome
-
                     }).ToArray()
                 }).ToArray();
-
             }
             catch (Exception ex)
             {
                 throw ex;
             }
-
 
             return res;
         }
@@ -131,8 +119,7 @@ namespace LeagoService
             var res = new GetPlayersOutDto();
             try
             {
-                var ires = await _eventsClient.ListTournamentsAsync(inDto.TournamentKey,false);
-
+                var ires = await _eventsClient.ListTournamentsAsync(inDto.TournamentKey, false);
 
                 var pres = await _tournamentsClient.ListTournamentPlayersAsync(ires.FirstOrDefault()?.Key ?? "");
 
@@ -146,23 +133,20 @@ namespace LeagoService
                         Rank = (PlayerRank)p.RankId,
                         OGSHandle = p.OnlineHandle ?? ""
                     }).ToArray();
-
             }
             catch
             {
-                // k 
+                // k
             }
             return res;
         }
 
-
         public async Task<GetEventsOutDto> GetEvents(GetEventsInDto inDto)
         {
-
             var res = new GetEventsOutDto();
             try
             {
-                var ires = await _leaguesClient.GetLeaguePageAsync(0,10);
+                var ires = await _leaguesClient.GetLeaguePageAsync(0, 10);
 
                 res.Events = ires.Items.Select(i => new EventDto()
                 {
@@ -171,15 +155,12 @@ namespace LeagoService
             }
             catch
             {
-
             }
             return res;
         }
 
-
         public async Task<GetLeagueOutDto> GetLeague(GetLeagueInDto inDto)
         {
-
             var res = new GetLeagueOutDto();
             try
             {
@@ -189,7 +170,7 @@ namespace LeagoService
                 {
                     LeagueKey = inDto.LeagueKey
                 };
-                    
+
                 league.Seasons = sres.Items.Select(ii => new Shared.Dto.SeasonDto()
                 {
                     LeagoL1Key = ii.Key,
@@ -202,14 +183,12 @@ namespace LeagoService
             }
             catch
             {
-
             }
             return res;
         }
 
         public async Task<GetArenaOutDto> GetArena(GetArenaInDto inDto)
         {
-
             var res = new GetArenaOutDto();
             try
             {
@@ -217,32 +196,27 @@ namespace LeagoService
 
                 res.Result = new ArenaDto()
                 {
-
                 };
             }
             catch
             {
-
             }
             return res;
         }
 
-
         public async Task<GetProfileOutDto> GetProfile(GetProfileInDto inDto)
         {
-
             var res = new GetProfileOutDto();
             try
             {
                 var ires = await _profilesClient.GetPublicProfileAsync(inDto.ProfileKey);
-                var rres = await _arenasClient.GetMemberAsync(inDto.ArenaKey, inDto.ArenaKey + "-" +inDto.ProfileKey);
+                var rres = await _arenasClient.GetMemberAsync(inDto.ArenaKey, inDto.ArenaKey + "-" + inDto.ProfileKey);
                 res.Timezone = ires.Timezone;
                 res.Email = rres.Email;
                 res.DiscordHandle = ires.Discord;
             }
             catch
             {
-
             }
             return res;
         }

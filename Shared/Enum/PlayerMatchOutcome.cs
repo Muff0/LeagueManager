@@ -1,14 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Shared.Enum
+﻿namespace Shared.Enum
 {
     public enum PlayerMatchOutcome
     {
-
         NotReported = 0,
 
         Win = 1,
@@ -20,6 +13,5 @@ namespace Shared.Enum
         Forfeit = 4,
 
         ReportNoResult = 5,
-
     }
 }

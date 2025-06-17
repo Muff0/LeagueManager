@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace LeagoClient
+﻿namespace LeagoClient
 {
     public partial class ArenasClient
     {
@@ -13,5 +7,4 @@ namespace LeagoClient
             settings.Converters.Add(new Shared.Converter.FallbackDateTimeOffsetConverter());
         }
     }
-
 }

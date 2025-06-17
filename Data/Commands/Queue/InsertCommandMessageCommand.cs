@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Commands;
-using Data.Model;
-using Shared.Enum;
+﻿using Data.Model;
 
 namespace Data.Commands.Queue
 {
@@ -17,9 +10,8 @@ namespace Data.Commands.Queue
         {
             base.RunAction(context);
 
-            if (NewCommand != null) 
+            if (NewCommand != null)
                 context.Add(NewCommand);
-
         }
     }
 }

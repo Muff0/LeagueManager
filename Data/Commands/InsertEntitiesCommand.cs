@@ -1,12 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
 
 namespace Data.Commands
 {
     /// <summary>
     /// Command Object that updates the database values of a set of entities in a single transaction
     /// </summary>
-    public class InsertEntitiesCommand<T,T2> : Command<T> where T : DbContext where T2: class
+    public class InsertEntitiesCommand<T, T2> : Command<T> where T : DbContext where T2 : class
     {
         #region Fields
 

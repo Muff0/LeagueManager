@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Model;
+﻿using Data.Model;
 using Microsoft.EntityFrameworkCore;
 
 namespace Data.Queries
 {
-    public class GetMissingPaymentsQuery : Query<LeagueContext,Player>
+    public class GetMissingPaymentsQuery : Query<LeagueContext, Player>
     {
         public int SeasonId { get; set; }
-
 
         protected override IQueryable<Player> BuildQuery(LeagueContext context)
         {
@@ -22,6 +16,5 @@ namespace Data.Queries
 
             return query;
         }
-
     }
 }

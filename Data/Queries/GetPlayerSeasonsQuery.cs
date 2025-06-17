@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Model;
+﻿using Data.Model;
 using Microsoft.EntityFrameworkCore;
 using Shared.Enum;
 
 namespace Data.Queries
 {
-    public class GetPlayerSeasonsQuery : Query<LeagueContext,PlayerSeason>
+    public class GetPlayerSeasonsQuery : Query<LeagueContext, PlayerSeason>
     {
         public bool IncludePlayer { get; set; } = false;
         public bool IncludeSeason { get; set; } = false;
@@ -37,9 +32,7 @@ namespace Data.Queries
             if (ParticipationTiers.Length > 0)
                 query = query.Where(ps => ParticipationTiers.Contains(ps.ParticipationTier));
 
-
             return query;
         }
-
     }
 }

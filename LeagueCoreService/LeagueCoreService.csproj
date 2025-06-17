@@ -16,9 +16,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\Discord\Discord.csproj" />
-    <ProjectReference Include="..\GoMagic\GoMagic.csproj" />
     <ProjectReference Include="..\LeagoService\LeagoService.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
-    <ProjectReference Include="..\YouTube\YouTube.csproj" />
   </ItemGroup>
 </Project>

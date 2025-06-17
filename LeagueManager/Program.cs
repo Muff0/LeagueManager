@@ -1,17 +1,15 @@
+using Data;
+using LeagoClient;
+using LeagoService;
+using LeagueCoreService;
 using LeagueManager.Components;
 using LeagueManager.Services;
-using Shared.Settings;
+using Mail;
+using Microsoft.EntityFrameworkCore;
+using NetCord.Hosting.Gateway;
 using Newtonsoft.Json;
 using Shared.Converter;
-using System;
-using Microsoft.EntityFrameworkCore;
-using Data;
-using NetCord.Hosting.Gateway;
-using LeagueCoreService;
-using Microsoft.EntityFrameworkCore.Query;
-using LeagoClient;
-using System.Net.Http;
-using LeagoService;
+using Shared.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,7 +19,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.Configure<LeagoSettings>(builder.Configuration.GetSection("Leago"));
 builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("Discord"));
-
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
 
 // Needed to handle bad datetime values without altering the generated code
 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -30,7 +28,7 @@ JsonConvert.DefaultSettings = () => new JsonSerializerSettings
     NullValueHandling = NullValueHandling.Ignore
 };
 
-builder.Services.AddSingleton<ITokenProvider,LeagoTokenProvider>();
+builder.Services.AddSingleton<ITokenProvider, LeagoTokenProvider>();
 builder.Services.AddTransient<LeagoAuthenticatedHttpHandler>();
 
 // Clients registration
@@ -75,10 +73,12 @@ builder.Services.AddDbContextFactory<QueueContext>(options =>
 builder.Services.AddScoped<LeagueDataService>();
 builder.Services.AddScoped<QueueDataService>();
 builder.Services.AddScoped<LeagoService.LeagoMainService>();
+builder.Services.AddScoped<MailService>();
+builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<Discord.DiscordService>();
 
-// Start the Discord service 
+// Start the Discord service
 builder.Services.AddDiscordGateway();
 
 // Temp service init for debug -- REMOVE SERVICE REFERENCE  WHEN DELETING

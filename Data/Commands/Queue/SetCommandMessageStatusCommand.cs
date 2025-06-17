@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Commands;
-using Shared.Enum;
+﻿using Shared.Enum;
 
 namespace Data.Commands.Queue
 {
@@ -20,7 +14,7 @@ namespace Data.Commands.Queue
         {
             base.RunAction(context);
             var command = context.CommandQueue.FirstOrDefault(cm => cm.Id == CommandMessageId);
-            
+
             if (command == null)
                 throw new InvalidOperationException("Invalid Queue Id");
 
@@ -32,7 +26,6 @@ namespace Data.Commands.Queue
                 command.ProcessedAtUtc = DateTime.UtcNow;
 
             context.Entry(command).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-
         }
     }
 }

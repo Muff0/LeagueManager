@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Shared.Enum;
+﻿using Shared.Enum;
 
 namespace Data.Model
 {
@@ -16,7 +11,7 @@ namespace Data.Model
 
         public Player? Player { get; set; }
 
-        public ICollection<Match>? Matches { get; set; } 
+        public ICollection<Match>? Matches { get; set; }
 
         public PlayerParticipationTier ParticipationTier { get; set; } = PlayerParticipationTier.None;
         public PlayerPaymentStatus PaymentStatus { get; set; } = PlayerPaymentStatus.None;

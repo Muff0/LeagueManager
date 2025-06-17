@@ -1,6 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using System;
-using System.Threading.Tasks;
 
 namespace Data.Commands
 {
@@ -12,14 +10,12 @@ namespace Data.Commands
 
         #endregion Events
 
-
         public bool AutoDetectChangesEnabled { get; set; } = true;
 
         #region Methods
 
         protected virtual void RunAction(T context)
         {
-
         }
 
         public virtual void Execute(T context)
@@ -33,7 +29,7 @@ namespace Data.Commands
             {
                 RunAction(context);
                 context.SaveChanges();
-            }            
+            }
             catch (Exception e)
             {
                 throw new DbUpdateException("Command Execution Failed: " + e.Message, e);
@@ -49,7 +45,6 @@ namespace Data.Commands
 
         public virtual async Task ExecuteAsync(T context)
         {
-
             if (context == null)
                 throw new ArgumentNullException("Context");
 

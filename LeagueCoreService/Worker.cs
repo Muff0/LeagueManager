@@ -1,4 +1,3 @@
-using System.Security.Principal;
 using Data;
 using Data.Commands.Queue;
 using Data.Model;
@@ -27,7 +26,6 @@ namespace LeagueCoreService
             return await _queueDataService.RunQueryAsync(
                 new GetNextCommandMessageQuery()
                 {
-
                 });
         }
 
@@ -42,7 +40,6 @@ namespace LeagueCoreService
                     RaiseRetriesCounter = updateMetadata
                 });
         }
-
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -66,29 +63,22 @@ namespace LeagueCoreService
                 return;
             try
             {
-
                 await SetCommandStatus(cmd, QueueStatus.Processing, false);
 
                 if (cmd.Type == "SendUpcomingMatchesNotification")
                 {
-
                     await _mainService.SendUpcomingMatchesNotification();
                     await SetCommandStatus(cmd, QueueStatus.Completed);
-
                 }
                 else if (cmd.Type == "SendRoundStartNotification")
                 {
-
                     await _mainService.SendRoundStartNotification();
                     await SetCommandStatus(cmd, QueueStatus.Completed);
-
                 }
                 else if (cmd.Type == "SyncMatches")
                 {
-
                     await _mainService.SyncMatches();
                     await SetCommandStatus(cmd, QueueStatus.Completed);
-
                 }
                 else
                 {

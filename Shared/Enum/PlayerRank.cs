@@ -1,11 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Shared.Enum
 {
@@ -24,7 +18,6 @@ namespace Shared.Enum
 
     public enum PlayerRank
     {
-
         [Display(Name = "30k")]
         Kyu30 = 0,
 
@@ -172,6 +165,5 @@ namespace Shared.Enum
         Pro9 = 47,
 
         MaxValue = 47,
-
     }
 }

@@ -25,6 +25,7 @@ namespace Data.Commands
         {
             context.Update(_entity);
         }
+
         #endregion Methods
     }
 }
