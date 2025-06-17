@@ -10,6 +10,9 @@
 
 <button class="btn btn-primary" @onclick="UpdatePlayerRole">Update Player Role</button>
 <button class="btn btn-primary" @onclick="UpdateMissingDiscordIds">Update Discord Ids</button>
+<button class="btn btn-primary" @onclick="SendReviewSchedule">Send Review Schedule</button>
+
+
 
 @code {
     private string message = "Loading...";
@@ -25,6 +28,12 @@
         {
             message = "Error";
         }
+    }
+
+
+    private async void SendReviewSchedule()
+    {
+        await MainService.SendReviewSchedule();
     }
 
     private async void UpdatePlayerRole()

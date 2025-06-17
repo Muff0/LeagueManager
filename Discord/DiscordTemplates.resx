@@ -131,7 +131,23 @@
 The pairings for Round {0} have been published! 
 You have until {1} to play your games, please contact your opponent as soon as possible. 
  
-For any issues or questions you DM or ping {2}.
+For any issues or questions you can DM or ping {2}.
 </value>
+  </data>
+
+	<data name="ReviewScheduleMessage" xml:space="preserve">
+    <value>
+Hello players!
+This is the review schedule for the current Season. 
+
+{0}
+
+As before the video reviews will be posted in {1} and you will be pinged if you added your Discord handle to the contact info in your Leago profile.
+An email notification will also be sent out when a batch of reviews is published.
+
+Some reviews will be done live, in which case you will be notified ahead of time.
+
+If you wish to change your reviewed games or have any questions you can DM or ping {2}.
+	</value>
   </data>
 </root>

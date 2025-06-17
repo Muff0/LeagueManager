@@ -129,18 +129,15 @@ namespace LeagueCoreService.Services
             }
         }
 
-        public async Task SyncMatches()
+        public async Task SyncMatchesForRound(int round)
         {
-            try
-            {
-
                 var activeSeason = GetActiveSeason();
                 if (activeSeason == null)
                     return;
 
                 var getMatchesRes = await _leagoService.GetMatches(new GetMatchesInDto()
                 {
-                    RoundKey = 3,
+                    RoundKey = round,
                     TournamentKey = activeSeason.LeagoL2Key,
                     MatchesCount = 100
                 });
@@ -165,8 +162,8 @@ namespace LeagueCoreService.Services
                                 {
                                     LeagoKey = currentMatch.LeagoKey,
                                     SeasonId = activeSeason.Id,
-                                    Round = 2,
-                                    Link = currentMatch.GameLink,
+                                    Round = round,
+                                    MatchUrl = currentMatch.GameLink,
                                     GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime(),
                                     PlayerMatches = new List<PlayerMatch>()
                                 };
@@ -197,7 +194,7 @@ namespace LeagueCoreService.Services
                             else
                             {
                                 existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
-                                existingMatch.Link = currentMatch.GameLink;
+                                existingMatch.MatchUrl = currentMatch.GameLink;
                                 existingMatch.IsComplete = currentMatch.IsPlayed;
 
                                 foreach (PlayerMatchDto playerMatch in currentMatch.Players)
@@ -218,6 +215,14 @@ namespace LeagueCoreService.Services
                         await context.SaveChangesAsync();
                     }
                 }
+        }
+
+        public async Task SyncMatches()
+        {
+            try
+            {
+                for (int ii = 0; ii <5;ii++) 
+                    await SyncMatchesForRound(ii+1);
             }
             catch (Exception ex)
             {

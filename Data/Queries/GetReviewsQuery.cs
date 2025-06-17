@@ -6,6 +6,13 @@ namespace Data.Queries
 {
     public class GetReviewsQuery : Query<LeagueContext, Review>
     {
+        public enum ReviewMatchQueryMode
+        {
+            AllReviews,
+            WithoutMatchOnly,
+            WithMatchOnly
+        }
+
         public bool IncludeOwner { get; set; } = false;
         public bool IncludeMatch { get; set; } = false;
         public bool IncludeTeacher { get; set; } = false;
@@ -13,6 +20,8 @@ namespace Data.Queries
         public int? SeasonId { get; set; }
         public ReviewStatus[]? Status { get; set; }
         public int[]? Round { get; set; }
+
+        public ReviewMatchQueryMode MatchQueryMode { get; set; } = ReviewMatchQueryMode.AllReviews;
 
 
         protected override IQueryable<Review> BuildQuery(LeagueContext context)
@@ -23,7 +32,9 @@ namespace Data.Queries
                 query = query.Include(re => re.OwnerPlayer);
 
             if (IncludeMatch)
-                query = query.Include(re => re.Match);
+                query = query.Include(re => re.Match)
+                    .ThenInclude(mm => mm!.PlayerMatches)
+                    .ThenInclude(pm => pm.Player);
 
             if (IncludeTeacher)
                 query = query.Include(re => re.Teacher);
@@ -39,6 +50,11 @@ namespace Data.Queries
 
             if (Round != null && Round.Length > 0)
                 query = query.Where(re => Round.Contains(re.Round));
+
+            if (MatchQueryMode == ReviewMatchQueryMode.WithoutMatchOnly)
+                query = query.Where(re => re.MatchId == null);
+            else if (MatchQueryMode == ReviewMatchQueryMode.WithMatchOnly)
+                query = query.Where(re => re.MatchId != null);
 
             return query;
         }

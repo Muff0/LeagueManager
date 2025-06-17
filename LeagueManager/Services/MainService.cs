@@ -10,6 +10,8 @@ using Data.Model;
 using Data.Queries;
 using Discord;
 using LeagoService;
+using LeagueManager.Extensions;
+using LeagueManager.ViewModel;
 using Mail;
 using Microsoft.Extensions.Options;
 using Shared;
@@ -301,6 +303,32 @@ namespace LeagueManager.Services
             return paymentData.ToArray();
         }
 
+        public async Task<List<ReviewViewModel>> GetReviews()
+        {
+            try
+            {
+                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
+                { 
+                    IncludeMatch = true,
+                    IncludeOwner = true,
+                    IncludeTeacher = true,
+                    Round = [1,2,3,4,5],
+                    SeasonId = season.Id,
+                    Status = [ReviewStatus.Planned],
+                    MatchQueryMode = GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly
+                });
+
+                return res.Select(re => re.ToViewModel()).ToList();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return new List<ReviewViewModel> { };
+            }
+        }
+
+
         public async Task SendUpcomingMatchesNotification()
         {
             var command = new CommandMessage()
@@ -344,6 +372,42 @@ namespace LeagueManager.Services
             {
                 NewCommand = command,
             });
+        }
+
+        public async Task SendReviewSchedule(bool sendDiscordMessage = true, bool sendMail = true)
+        {
+            ReviewScheduleDto[] reviews;
+            try
+            {
+                reviews = await _reviewService.GetReviewSchedule();                                
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return;
+            }
+            if (sendDiscordMessage)
+            {
+                try
+                {
+                    await _discordService.SendReviewSchedule(reviews);
+                }
+                catch (Exception ex)
+                {
+                    HandleException(ex);
+                }
+            }
+            if (sendMail)
+            {
+                try
+                {
+
+                }
+                catch (Exception ex)
+                {
+                    HandleException(ex);
+                }
+            }
         }
 
         public async Task UpdatePlayers()

@@ -1,4 +1,6 @@
 ﻿@page "/reviews"
+@using LeagueManager.ViewModel
+@using Shared.Dto
 @inject Services.MainService MainService
 @rendermode InteractiveServer
 
@@ -10,13 +12,85 @@
 
 <button class="btn btn-primary" @onclick="GenerateReviews">Generate Reviews</button>
 <button class="btn btn-primary" @onclick="LinkReviewMatches">Link Review Matches</button>
+<button class="btn btn-primary" @onclick="GetReviews">GetReviews</button>
+
+@if (ReviewList != null)
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Round</th>
+                <th>Owner</th>
+                <th>Teacher</th>
+                <th>Black</th>
+                <th></th>
+                <th>White</th>
+                <th></th>
+                <th>Game Url</th>
+                <th>Video Url</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var review in ReviewList)
+            {
+
+                <tr>
+                    <td>
+                        @review.Round.ToString()
+                    </td>
+                    <td>
+                        @review.OwnerName
+                    </td>
+                    <td>
+                        @review.TeacherName
+                    </td>
+                    <td>
+                        @review.BlackPlayerName
+                    </td>
+                    <td>
+                        @review.BlackPlayerRank
+                    </td>
+                    <td>
+                        @review.WhitePlayerName
+                    </td>
+                    <td>
+                        @review.WhitePlayerRank
+                    </td>
+                    <td>
+                        @review.MatchUrl
+                    </td>
+                    <td>
+                        <InputText @bind-Value="review.ReviewUrl" class="form-control" />
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+}
+
 
 @code {
+    private List<ReviewViewModel>? ReviewList;
     private string message = "Loading...";
 
     private async void LinkReviewMatches()
     {
         await MainService.LinkReviewMatches();
+    }
+
+
+    private async void GetReviews()
+    {
+        try
+        {
+
+            ReviewList = await MainService.GetReviews();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
     }
 
     private async void GenerateReviews()

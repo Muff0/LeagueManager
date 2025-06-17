@@ -12,7 +12,7 @@ namespace Data
                 Id = match.Id,
                 LeagoKey = match.LeagoKey,
                 ScheduleTime = match.GameTimeUTC.GetValueOrDefault(),
-                GameLink = match.Link,
+                GameLink = match.MatchUrl,
                 IsPlayed = match.IsComplete,
                 Players = match.PlayerMatches?.Select(pm => pm.ToPlayerMatchDto(skipMatch: true)).ToArray(),
                 Round = match.Round,

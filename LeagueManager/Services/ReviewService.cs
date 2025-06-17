@@ -109,6 +109,33 @@ namespace LeagueManager.Services
             _leagueDataService.Execute(new InsertEntitiesCommand<LeagueContext, Review>(toAdd));
         }
 
+        public async Task<ReviewScheduleDto[]> GetReviewSchedule()
+        {
+            var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var resGetReviews = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
+            {
+                SeasonId = activeSeason.Id,
+                IncludeOwner = true                
+            });
+
+            var groupedRev = resGetReviews.GroupBy(re => re.OwnerPlayerId);
+            var res = new List<ReviewScheduleDto>();
+
+            foreach (var group in groupedRev)
+            {
+                var owner = group.First().OwnerPlayer;
+
+                res.Add(new ReviewScheduleDto()
+                {
+                    DiscordId = owner!.DiscordId,
+                    OwnerEmail = owner!.EmailAddress,
+                    OwnerName = owner.FirstName + " " + owner.LastName,
+                    ReviewedRounds = group.Select(gr =>  gr.Round).Order().ToArray(),
+                });
+            }
+            return res.ToArray();
+        }
+
         private int GetReviewCount(PlayerParticipationTier tier)
         {
             if (tier == PlayerParticipationTier.DojoTier2)

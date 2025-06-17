@@ -5,7 +5,7 @@
         public string AppId { get; set; } = string.Empty;
         public string PublicKey { get; set; } = string.Empty;
         public string Token { get; set; } = string.Empty;
-        public ulong TestChannelId { get; set; }
+        public ulong ReviewChannelId { get; set; }
         public ulong MatchAnnouncementChannelId { get; set; }
         public ulong MatchAnnouncementRoleId { get; set; }
         public ulong LeagueAnnouncementRoleId { get; set; }

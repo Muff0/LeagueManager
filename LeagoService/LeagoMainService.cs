@@ -79,9 +79,7 @@ namespace LeagoService
             {
                 var rres = await _roundsClient.ListRoundsAsync(inDto.TournamentKey);
 
-                var targetround = rres.FirstOrDefault(rr => rr.Status == RoundStatus.MatchesInProgress);
-
-                var mres = await _roundsClient.ListRoundMatchesAsync(inDto.TournamentKey, targetround.Ordinal, inDto.MatchesOffset, inDto.MatchesCount);
+                var mres = await _roundsClient.ListRoundMatchesAsync(inDto.TournamentKey, inDto.RoundKey, inDto.MatchesOffset, inDto.MatchesCount);
 
                 res.Matches = mres.Select(mm => new MatchDto()
                 {

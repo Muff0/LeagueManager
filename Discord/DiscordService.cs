@@ -170,5 +170,33 @@ namespace Discord
                 return;
             }
         }
+
+        protected string MentionChannel(ulong channelId) => $"<@&{channelId}>";
+        protected string MentionUser(ulong userId) => $"<@{userId}>";
+
+        protected MessageProperties BuildMessageProperties(string content) => new MessageProperties()
+                .WithContent(content)
+                .WithAllowedMentions(new AllowedMentionsProperties().WithAllowedRoles(null).WithAllowedUsers(null));
+
+
+        protected string BuildPlayerScheduleString(ReviewScheduleDto reviewSchedule)
+        {
+            string playerName = reviewSchedule.DiscordId == null ? reviewSchedule.OwnerName : MentionUser((ulong)reviewSchedule.DiscordId);
+            return playerName + " : Rounds " + string.Join(",", reviewSchedule.ReviewedRounds);
+        }
+
+        public async Task SendReviewSchedule(ReviewScheduleDto[] reviews)
+        {
+            var scheduleText = string.Join(Environment.NewLine, reviews.Select(BuildPlayerScheduleString));
+
+            var content = string.Format(DiscordTemplates.ReviewScheduleMessage, 
+                scheduleText,
+                MentionChannel(_settings.Value.ReviewChannelId), 
+                MentionUser(_settings.Value.AdminId));
+
+            var msg = BuildMessageProperties(content);
+
+            await _client.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
+        }
     }
 }
