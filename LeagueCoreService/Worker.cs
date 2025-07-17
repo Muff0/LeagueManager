@@ -70,11 +70,6 @@ namespace LeagueCoreService
                     await _mainService.SendUpcomingMatchesNotification();
                     await SetCommandStatus(cmd, QueueStatus.Completed);
                 }
-                else if (cmd.Type == "SendRoundStartNotification")
-                {
-                    await _mainService.SendRoundStartNotification();
-                    await SetCommandStatus(cmd, QueueStatus.Completed);
-                }
                 else if (cmd.Type == "SyncMatches")
                 {
                     await _mainService.SyncMatches();

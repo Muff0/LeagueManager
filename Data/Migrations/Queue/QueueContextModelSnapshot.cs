@@ -31,14 +31,14 @@ namespace Data.Migrations.Queue
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Payload")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("ProcessedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Retries")
                         .HasColumnType("integer");
@@ -69,14 +69,14 @@ namespace Data.Migrations.Queue
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Payload")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("ProcessedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Retries")
                         .HasColumnType("integer");
@@ -107,14 +107,14 @@ namespace Data.Migrations.Queue
                         .HasColumnType("integer");
 
                     b.Property<DateTime>("CreatedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<string>("Payload")
                         .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<DateTime>("ProcessedAtUtc")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("Retries")
                         .HasColumnType("integer");

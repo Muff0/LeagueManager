@@ -1,0 +1,15 @@
+﻿
+.grid-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* 2 equal-width columns */
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.grid-item {
+    background-color: #f0f0f0;
+    padding: 1rem;
+    border: 1px solid #ccc;
+    border-radius: 0.5rem;
+    text-align: center;
+}

@@ -3,9 +3,9 @@ using System.Globalization;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Data;
-using Data.Commands;
 using Data.Commands.Player;
 using Data.Commands.Queue;
+using Data.Commands.Review;
 using Data.Model;
 using Data.Queries;
 using Discord;
@@ -165,6 +165,8 @@ namespace LeagueManager.Services
             }
         }
 
+
+
         public async Task UpdateDiscordPlayerRole()
         {
             try
@@ -268,17 +270,59 @@ namespace LeagueManager.Services
             }).ToArray();
         }
 
-        private Data.Model.Player TryFindPlayer(ICollection<Data.Model.Player> players, PaymentDataDto payment)
+        private Data.Model.Player? TryFindPlayer(ICollection<Data.Model.Player> players, PaymentDataDto payment)
         {
             // First let's try the mail
+            Player? res = players.FirstOrDefault(pl => pl.GoMagicUserId == payment.UserId);
 
-            var output = players.FirstOrDefault(pl =>
-                pl.GoMagicUserId == payment.UserId ||
-                pl.EmailAddress.Equals(payment.UserEmail, StringComparison.InvariantCultureIgnoreCase) ||
-                pl.EmailAddress == payment.BillingEmail ||
-                (payment.BillingName.Contains(pl.FirstName, StringComparison.InvariantCultureIgnoreCase) && payment.BillingName.Contains(pl.LastName, StringComparison.InvariantCultureIgnoreCase)));
+            if (res == null)
+                res = players.FirstOrDefault(pl => pl.EmailAddress.Equals(payment.UserEmail, StringComparison.InvariantCultureIgnoreCase)
+                    || pl.EmailAddress == payment.BillingEmail);
 
-            return output;
+            if (res == null)
+            {
+                var countSameNames = players.Where(pl => payment.BillingName.Contains(pl.FirstName, StringComparison.InvariantCultureIgnoreCase) && payment.BillingName.Contains(pl.LastName, StringComparison.InvariantCultureIgnoreCase));
+
+                if (countSameNames.Count() == 1)
+                    res = countSameNames.First();
+            }
+
+            return res;
+        }
+
+
+        public async Task PostReviews(List<ReviewViewModel> reviews)
+        {
+            try
+            {
+                var unposted = reviews.Where(re => !string.IsNullOrEmpty(re.ReviewUrl) && re.ReviewStatus != ReviewStatus.Notified).ToList();
+                List<ReviewDto> posted = new List<ReviewDto>();
+                foreach (var review in unposted)
+                {
+                    var match = await _leagueDataService.RunQueryAsync(new GetMatchQuery() { Id = (int)review.MatchId!, IncludePlayers = true });
+                    if (review.TeacherId == null)
+                        continue;
+                    var teacher = await _leagueDataService.RunQueryAsync(new GetTeacherQuery() { Id = (int)review.TeacherId! });
+                    if (teacher == null)
+                        continue;
+                    var reviewDto = review.ToReviewDto();
+                    await _discordService.PostReviewThread(new PostReviewThreadInDto()
+                    {
+                        Review = reviewDto,
+                        Match = match.ToMatchDto(),
+                        Teacher = teacher.ToTeacherDto()
+                    });
+
+                    reviewDto.ReviewStatus = ReviewStatus.Notified;
+                    posted.Add(reviewDto);
+                }
+
+                await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand() { Reviews = posted.ToArray() });
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
         }
 
         protected PaymentDataDto[] ParsePaymentData(DataTable table)
@@ -309,11 +353,11 @@ namespace LeagueManager.Services
             {
                 var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
                 var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
-                { 
+                {
                     IncludeMatch = true,
                     IncludeOwner = true,
                     IncludeTeacher = true,
-                    Round = [1,2,3,4,5],
+                    Round = [1, 2, 3, 4, 5],
                     SeasonId = season.Id,
                     Status = [ReviewStatus.Planned],
                     MatchQueryMode = GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly
@@ -328,6 +372,108 @@ namespace LeagueManager.Services
             }
         }
 
+        public async Task SaveReviewChanges(List<ReviewViewModel> reviews)
+        {
+            var updateList = reviews.Select(re => re.ToReviewDto());
+
+            await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand()
+            {
+                Reviews = updateList.ToArray(),
+            });
+
+        }
+
+
+
+        public async Task<List<ReviewViewModel>> GetReviewsToSchedule(int? startIndex, int? count, CancellationToken cancellationToken)
+        {
+
+            try
+            {
+                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
+                {
+                    IncludeMatch = true,
+                    IncludeOwner = true,
+                    IncludeTeacher = true,
+                    Round = [1, 2, 3, 4, 5],
+                    SeasonId = season.Id,
+                    Status = [ReviewStatus.Planned],
+                    MatchQueryMode = GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly,
+                    Count = count ?? 0,
+                    StartIndex = startIndex ?? 0,
+                });
+                return res.Select(rev => rev.ToViewModel()).ToList();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return new List<ReviewViewModel>();
+            }
+        }
+
+
+        public async Task<List<ReviewViewModel>> GetReviewsToRecord(int? startIndex, int? count, CancellationToken cancellationToken)
+        {
+
+            try
+            {
+                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
+                {
+                    IncludeMatch = true,
+                    IncludeOwner = true,
+                    IncludeTeacher = true,
+                    Round = [1, 2, 3, 4, 5],
+                    SeasonId = season.Id,
+                    Status = [ReviewStatus.Planned],
+                    MatchQueryMode = GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly,
+                    Count = count ?? 0,
+                    StartIndex = startIndex ?? 0,
+                });
+                return res.Select(rev => rev.ToViewModel()).ToList();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return new List<ReviewViewModel>();
+            }
+        }
+
+        public async Task ScheduleReviews(IEnumerable<ReviewViewModel> reviews, DateTime reviewEventDate, int teacherId)
+        {
+            try
+            {
+                var teacher = await _leagueDataService.RunQueryAsync(new GetTeacherQuery() { Id = teacherId });
+                if (teacher == null)
+                    return;
+
+                var games = new List<MatchDto>();
+
+                foreach (var review in reviews)
+                {
+                    var toAdd = await _leagueDataService.RunQueryAsync(new GetMatchQuery() { Id = (int)review.MatchId!, IncludePlayers = true });
+                    games.Add(toAdd.ToMatchDto());
+                }
+
+                await _discordService.SendReviewEventNotification(new SendReviewEventNotificationInDto()
+                {
+                    DateTimeUTC = reviewEventDate,
+                    Reviews = games.ToArray(),
+                    Teacher = teacher.ToTeacherDto()
+                });
+
+                await _reviewService.SetReviewStatus(new SetReviewStatusInDto()
+                {
+                    Reviews = reviews.Select(re => re.ToReviewDto()),
+                    NewStatus = ReviewStatus.Allocated
+                });
+            }
+            catch (Exception e)
+            {
+                HandleException(e);
+            }
+        }
 
         public async Task SendUpcomingMatchesNotification()
         {
@@ -344,20 +490,35 @@ namespace LeagueManager.Services
             });
         }
 
-        public async Task SendRoundStartNotification()
+        public async Task SendRoundStartNotification(int round, DateTime roundDeadline)
         {
-            var command = new CommandMessage()
+            try
             {
-                CreatedAtUtc = DateTime.UtcNow,
-                Type = "SendRoundStartNotification",
-                Payload = ""
-            };
-
-            await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
-            {
-                NewCommand = command,
-            });
+                await _discordService.SendRoundStartNotification(new SendRoundStartNotificationInDto()
+                {
+                    RoundEnd = roundDeadline,
+                    RoundNumber = round
+                });
+            }
+            catch (Exception ex)
+            { HandleException(ex); }
         }
+
+        public async Task<List<TeacherViewModel>> GetTeachers()
+        {
+            try
+            {
+                var res = await _leagueDataService.RunQueryAsync(new GetTeachersQuery());
+                return res.Select(te => te.ToTeacherViewModel()).OrderBy(te => te.Name).ToList();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return new List<TeacherViewModel>();
+            }
+        }
+
+        public async Task AssignTeacherToReviews(IEnumerable<ReviewViewModel> reviews, int teacherId) => await _reviewService.AssignTeacherToReviews(reviews.Select(re => re.ToReviewDto()), teacherId);
 
         public async Task SyncMatches()
         {
@@ -379,7 +540,7 @@ namespace LeagueManager.Services
             ReviewScheduleDto[] reviews;
             try
             {
-                reviews = await _reviewService.GetReviewSchedule();                                
+                reviews = await _reviewService.GetReviewSchedule();
             }
             catch (Exception ex)
             {

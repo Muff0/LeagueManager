@@ -1,4 +1,6 @@
+
 using Data;
+using Havit.Blazor.Components.Web;
 using LeagoClient;
 using LeagoService;
 using LeagueCoreService;
@@ -16,6 +18,8 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHxServices();
 
 builder.Services.Configure<LeagoSettings>(builder.Configuration.GetSection("Leago"));
 builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("Discord"));

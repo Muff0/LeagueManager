@@ -23,5 +23,7 @@ namespace Data.Model
         public Teacher? Teacher { get; set; }
         public int Round { get; set; } = 0;
         public string ReviewUrl { get; set; } = "";
+
+        public ReviewSchedule? ReviewSchedule { get; set; }
     }
 }

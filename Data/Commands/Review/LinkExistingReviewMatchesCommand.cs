@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Data.Model;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 
 namespace Data.Commands.Review
 {
@@ -28,7 +22,7 @@ namespace Data.Commands.Review
                         && pm.Match!.Round == review.Round
                         && pm.Match!.SeasonId == review.SeasonId);
 
-                if (match != null) 
+                if (match != null)
                     review.MatchId = match.MatchId;
             }
         }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Shared.Enum;
 
 namespace Data.Model
 {
@@ -12,11 +13,11 @@ namespace Data.Model
         public string Name { get; set; } = string.Empty;
 
         public float Rate { get; set; } = 0;
-        public int MaxRank { get; set; }
-        public int Rank { get; set; }
+        public PlayerRank MaxRank { get; set; }
+        public PlayerRank Rank { get; set; }
 
         public string MailAddress { get; set; } = string.Empty;
-        public string DiscordHandle { get; set; } = string.Empty;
+        public ulong? DiscordId { get; set; }
 
         public ICollection<Review>? Reviews { get; set; }
     }

@@ -11,7 +11,6 @@ namespace Data.Model
         public Match? Match { get; set; }
         public PlayerColor Color { get; set; }
         public bool HasConfirmed { get; set; }
-        public PlayerMatchOutcome MatchOutcome { get; set; } = PlayerMatchOutcome.NotReported;
-        public PlayerMatchOutcome Outcome { get; set; }
+        public PlayerMatchOutcome Outcome { get; set; } = PlayerMatchOutcome.NotReported;
     }
 }

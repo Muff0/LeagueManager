@@ -24,10 +24,10 @@ namespace Data.Migrations
                 nullable: false,
                 defaultValue: false);
 
-            migrationBuilder.AddColumn<DateTimeOffset>(
+            migrationBuilder.AddColumn<DateTime>(
                 name: "GameTime",
                 table: "Matches",
-                type: "timestamp with time zone",
+                type: "timestamp without time zone",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(

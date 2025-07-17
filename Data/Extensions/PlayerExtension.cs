@@ -13,6 +13,7 @@ namespace Data
                 LeagoMemberId = player.LeagoMemberId,
                 OGSHandle = player.OGSHandle,
                 DiscordHandle = player.DiscordHandle,
+                DiscordId = player.DiscordId,
                 EmailAddress = player.EmailAddress,
                 FirstName = player.FirstName,
                 LastName = player.LastName,

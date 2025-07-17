@@ -1,4 +1,5 @@
 ﻿@page "/notifications"
+@using LeagueManager.ViewModel
 @inject Services.MainService MainService
 @rendermode InteractiveServer
 
@@ -8,12 +9,23 @@
 
 <p role="status">@message</p>
 
+
 <button class="btn btn-primary" @onclick="SendNotification">Test Notification</button>
-<button class="btn btn-primary" @onclick="SendRoundStartNotification">Round Start Notification</button>
+
+
+<div class="grid-container">
+    <EditForm Model="@notificationModel">
+        <DateTimeInput TValue="DateTime?" @bind-Value="notificationModel.Deadline"></DateTimeInput>
+        <InputNumber @bind-Value="notificationModel.Round" />
+        <button type="button" @onclick="SendRoundStartNotification">Send</button>
+    </EditForm>
+</div>
 
 @code {
+
+    private NotificationViewModel notificationModel = new();
     private string message = "Loading...";
-    private async void SendNotification()
+    private async Task SendNotification()
     {
         try
         {
@@ -25,12 +37,12 @@
             message = "Error";
         }
     }
-    private async void SendRoundStartNotification()
+    private async Task SendRoundStartNotification()
     {
         try
         {
 
-            await MainService.SendRoundStartNotification();
+            await MainService.SendRoundStartNotification(notificationModel.Round, notificationModel.Deadline.GetValueOrDefault());
         }
         catch (Exception e)
         {

@@ -1,0 +1,50 @@
+﻿@using System.Globalization
+@typeparam TValue
+
+<input type="datetime-local"
+       class="@CssClass"
+       value="@CurrentValueAsString"
+       @onchange="OnChange" />
+
+@code {
+    [Parameter] public TValue Value { get; set; } = default!;
+    [Parameter] public EventCallback<TValue> ValueChanged { get; set; }
+    [Parameter] public string CssClass { get; set; } = "";
+
+    private string CurrentValueAsString
+    {
+        get
+        {
+            if (typeof(TValue) == typeof(DateTime))
+            {
+                var dt = (DateTime)(object)Value!;
+                return dt.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
+            }
+            else if (typeof(TValue) == typeof(DateTime?))
+            {
+                var dt = (DateTime?)(object?)Value;
+                return dt?.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture) ?? "";
+            }
+
+            return string.Empty;
+        }
+    }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        var strValue = e.Value?.ToString();
+        if (DateTime.TryParse(strValue, CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+        {
+            if (typeof(TValue) == typeof(DateTime))
+                await ValueChanged.InvokeAsync((TValue)(object)parsed);
+            else if (typeof(TValue) == typeof(DateTime?))
+                await ValueChanged.InvokeAsync((TValue)(object?)parsed);
+        }
+        else if (typeof(TValue) == typeof(DateTime?))
+        {
+            // User cleared the input
+            await ValueChanged.InvokeAsync((TValue)(object?)null);
+        }
+    }
+}
+

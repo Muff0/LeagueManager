@@ -18,6 +18,8 @@ namespace Data.Commands.Review
                     throw new InvalidOperationException("Invalid Review Id");
 
                 existingReview.Round = currentReview.Round;
+                existingReview.ReviewStatus = currentReview.ReviewStatus;
+                existingReview.ReviewUrl = currentReview.ReviewUrl ?? "";
             }
         }
     }

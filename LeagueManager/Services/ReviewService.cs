@@ -1,11 +1,11 @@
-﻿using Data.Commands;
+﻿using Data;
+using Data.Commands;
+using Data.Commands.Review;
 using Data.Model;
 using Data.Queries;
-using Data;
-using Shared.Enum;
-using Shared.Dto;
-using Data.Commands.Review;
 using Shared;
+using Shared.Dto;
+using Shared.Enum;
 
 namespace LeagueManager.Services
 {
@@ -14,8 +14,7 @@ namespace LeagueManager.Services
 
         private readonly LeagueDataService _leagueDataService;
 
-        private readonly int[][] _reviewPattern = [[1, 3],[2, 4], [3, 5],[1,4],[2,5]];
-
+        private readonly int[][] _reviewPattern = [[1, 3], [2, 4], [3, 5], [1, 4], [2, 5]];
 
         public ReviewService(LeagueDataService leagueDataService)
         {
@@ -71,7 +70,7 @@ namespace LeagueManager.Services
         /// Links reviews to the corresponding Matches, if they exist
         /// </summary>
         public async Task LinkExistingReviewMatches()
-        { 
+        {
             await _leagueDataService.ExecuteAsync(
                 new LinkExistingReviewMatchesCommand());
         }
@@ -115,7 +114,7 @@ namespace LeagueManager.Services
             var resGetReviews = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
             {
                 SeasonId = activeSeason.Id,
-                IncludeOwner = true                
+                IncludeOwner = true
             });
 
             var groupedRev = resGetReviews.GroupBy(re => re.OwnerPlayerId);
@@ -130,7 +129,7 @@ namespace LeagueManager.Services
                     DiscordId = owner!.DiscordId,
                     OwnerEmail = owner!.EmailAddress,
                     OwnerName = owner.FirstName + " " + owner.LastName,
-                    ReviewedRounds = group.Select(gr =>  gr.Round).Order().ToArray(),
+                    ReviewedRounds = group.Select(gr => gr.Round).Order().ToArray(),
                 });
             }
             return res.ToArray();
@@ -143,6 +142,25 @@ namespace LeagueManager.Services
             if (tier == PlayerParticipationTier.DojoTier3)
                 return 5;
             return 0;
+        }
+
+        internal async Task AssignTeacherToReviews(IEnumerable<ReviewDto> reviews, int teacherId)
+        {
+            await _leagueDataService.ExecuteAsync(new AssignTeacherToReviewsCommand()
+            {
+                TeacherId = teacherId,
+                ReviewIds = reviews.Select(re => re.Id).ToArray()
+            });
+
+        }
+
+        public async Task SetReviewStatus(SetReviewStatusInDto setReviewStatusInDto)
+        {
+            await _leagueDataService.ExecuteAsync(new SetReviewStatusCommand()
+            {
+                ReviewList = setReviewStatusInDto.Reviews,
+                NewStatus = setReviewStatusInDto.NewStatus
+            });
         }
     }
 }

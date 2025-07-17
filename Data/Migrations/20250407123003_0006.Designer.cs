@@ -40,7 +40,7 @@ namespace Data.Migrations
                         .HasColumnType("integer");
 
                     b.Property<DateTime?>("GameTimeUTC")
-                        .HasColumnType("timestamp with time zone");
+                        .HasColumnType("timestamp without time zone");
 
                     b.Property<bool>("IsComplete")
                         .HasColumnType("boolean");

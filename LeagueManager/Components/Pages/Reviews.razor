@@ -1,5 +1,7 @@
 ﻿@page "/reviews"
+@using LeagueManager.Extensions
 @using LeagueManager.ViewModel
+@using Havit.Blazor.Components.Web;
 @using Shared.Dto
 @inject Services.MainService MainService
 @rendermode InteractiveServer
@@ -12,75 +14,235 @@
 
 <button class="btn btn-primary" @onclick="GenerateReviews">Generate Reviews</button>
 <button class="btn btn-primary" @onclick="LinkReviewMatches">Link Review Matches</button>
-<button class="btn btn-primary" @onclick="GetReviews">GetReviews</button>
 
-@if (ReviewList != null)
-{
-    <table class="table table-striped">
-        <thead>
-            <tr>
-                <th>Round</th>
-                <th>Owner</th>
-                <th>Teacher</th>
-                <th>Black</th>
-                <th></th>
-                <th>White</th>
-                <th></th>
-                <th>Game Url</th>
-                <th>Video Url</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var review in ReviewList)
+
+<HxTabPanel InitialActiveTabId="tab2">
+    <HxTab Title="Scheduling">
+        <Content>
+            <div class="grid-container">
+
+
+                <div class="grid-item">
+                    <InputSelect @bind-Value="selectedTeacherId">
+                        @foreach (var opt in TeacherList)
+                        {
+                            <option value="@opt.Id">@opt.Name</option>
+                        }
+                    </InputSelect>
+                    <button class="btn btn-primary" @onclick="AssignTeacher">AssignTeacher</button>
+                </div>
+                <div class="grid-item">
+
+                    <DateTimeInput TValue="DateTime?" @bind-Value="reviewEventDate"></DateTimeInput>
+                    <button class="btn btn-primary grid-item" @onclick="SendReviewNotice">Send Notice</button>
+                </div>
+
+            </div>
+
+            <button class="btn btn-primary" @onclick="RefreshScheduleGrid">Refresh</button>
+                <HxGrid @ref="schedulingGrid" TItem="ReviewViewModel" DataProvider="GetSchedulingGridData"
+                @bind-SelectedDataItems="selectedSchedulingReviews"
+                MultiSelectionEnabled="true" PageSize="20" Responsive="true">
+                    <Columns>
+                        <HxGridColumn HeaderText="Black" ItemTextSelector="rev => rev.BlackPlayerName + ' '+  rev.BlackPlayerRank " />
+                        <HxGridColumn HeaderText="White" ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank " />
+                        <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName"/>
+                        <HxGridColumn HeaderText="Link" ItemTextSelector="rev => rev.MatchUrl" />
+                        <HxGridColumn HeaderText="IsPlayed">
+                            <ItemTemplate Context="rev">
+                                <HxCheckbox @bind-Value="rev.IsPlayed" Enabled="false" />
+                            </ItemTemplate>
+                        </HxGridColumn>
+                    </Columns>
+                </HxGrid>
+        </Content>
+    </HxTab>
+    <HxTab Id="tab2">
+        <TitleTemplate>Posting</TitleTemplate>
+        <Content>
+
+            <button class="btn btn-primary" @onclick="SaveChanges">Save Video Url</button>
+
+            <div class="grid-container">
+                <div class="grid-item">
+                    <button class="btn btn-primary" @onclick="PostReviews">Post Reviews</button>
+                </div>
+            </div>
+            @if (ReviewList != null)
             {
-
-                <tr>
-                    <td>
-                        @review.Round.ToString()
-                    </td>
-                    <td>
-                        @review.OwnerName
-                    </td>
-                    <td>
-                        @review.TeacherName
-                    </td>
-                    <td>
-                        @review.BlackPlayerName
-                    </td>
-                    <td>
-                        @review.BlackPlayerRank
-                    </td>
-                    <td>
-                        @review.WhitePlayerName
-                    </td>
-                    <td>
-                        @review.WhitePlayerRank
-                    </td>
-                    <td>
-                        @review.MatchUrl
-                    </td>
-                    <td>
-                        <InputText @bind-Value="review.ReviewUrl" class="form-control" />
-                    </td>
-                </tr>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Round</th>
+                            <th>Owner</th>
+                            <th>Owner Handle</th>
+                            <th>Teacher</th>
+                            <th>Black</th>
+                            <th></th>
+                            <th>White</th>
+                            <th></th>
+                            <th>Game Url</th>
+                            <th>Video Url</th>
+                            <th>Match String</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var review in ReviewList)
+                        {
+                            <tr>
+                                <td>
+                                    @review.Round.ToString()
+                                </td>
+                                <td>
+                                    @review.OwnerName
+                                </td>
+                                <td>
+                                    @review.OwnerHandle
+                                </td>
+                                <td>
+                                    @review.TeacherName
+                                </td>
+                                <td>
+                                    @review.BlackPlayerName
+                                </td>
+                                <td>
+                                    @review.BlackPlayerRank
+                                </td>
+                                <td>
+                                    @review.WhitePlayerName
+                                </td>
+                                <td>
+                                    @review.WhitePlayerRank
+                                </td>
+                                <td>
+                                    @review.MatchUrl
+                                </td>
+                                <td>
+                                    <InputText @bind-Value="review.ReviewUrl" class="form-control" />
+                                </td>
+                                <td>
+                                    @review.BuildLongMatchTitle()
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
             }
-        </tbody>
-    </table>
-
-}
-
+        </Content>
+    </HxTab>
+</HxTabPanel>
 
 @code {
+
+    private HxGrid<ReviewViewModel> schedulingGrid;
     private List<ReviewViewModel>? ReviewList;
+    private HashSet<ReviewViewModel>? selectedSchedulingReviews;
     private string message = "Loading...";
+    private DateTime? reviewEventDate;
+    private int  selectedTeacherId;
+    private List<TeacherViewModel> TeacherList = new List<TeacherViewModel>();
 
     private async void LinkReviewMatches()
     {
         await MainService.LinkReviewMatches();
     }
 
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        TeacherList = await MainService.GetTeachers();
+    }
 
-    private async void GetReviews()
+    private async void PostReviews()
+    {
+        try
+        {
+            if (ReviewList == null)
+                return;
+
+            await MainService.PostReviews(ReviewList);
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+
+    private async void SaveChanges()
+    {
+        try
+        {
+            if (ReviewList == null)
+                return;
+
+            await MainService.SaveReviewChanges(ReviewList);
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+
+    private async void SendReviewNotice()
+    {
+        try
+        {
+            if (selectedSchedulingReviews == null)
+                return;
+
+            if (selectedSchedulingReviews.Count > 0)
+                await MainService.ScheduleReviews(selectedSchedulingReviews, reviewEventDate.GetValueOrDefault(), selectedTeacherId);
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+
+    private async void AssignTeacher()
+    {
+        try
+        {
+            if (selectedSchedulingReviews == null)
+                return;
+
+            if (selectedSchedulingReviews.Count > 0)
+                await MainService.AssignTeacherToReviews(selectedSchedulingReviews, selectedTeacherId);
+
+            RefreshScheduleGrid();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+
+    private async Task<GridDataProviderResult<ReviewViewModel>> GetSchedulingGridData(GridDataProviderRequest<ReviewViewModel> request)
+    {
+        var response = await MainService.GetReviewsToSchedule(request.StartIndex, request.Count, request.CancellationToken);
+        return new GridDataProviderResult<ReviewViewModel>()
+            {
+                Data = response,
+                TotalCount = response.Count
+            };
+    }
+
+    private async void RefreshScheduleGrid()
+    {
+        try
+        {
+            if (schedulingGrid == null)
+                return;
+            await schedulingGrid.RefreshDataAsync();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+
+    private async void RefreshRecordGrid()
     {
         try
         {

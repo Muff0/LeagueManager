@@ -16,6 +16,7 @@ namespace Data
 
         public DbSet<Review> Reviews { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
+        public DbSet<ReviewSchedule> ReviewSchedules { get; set; }
         public DbSet<Match> Matches { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -50,6 +51,11 @@ namespace Data
                 .HasOne(re => re.OwnerPlayer)
                 .WithMany(pl => pl.Reviews)
                 .HasForeignKey(re => re.OwnerPlayerId);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(re => re.ReviewSchedule)
+                .WithOne(rs => rs.Review)
+                .HasForeignKey(nameof(ReviewSchedule), nameof(ReviewSchedule.ReviewId));
 
             modelBuilder.Entity<Review>()
                 .HasOne(re => re.PlayerSeason)

@@ -12,5 +12,6 @@
         public ulong ServerId { get; set; }
         public ulong AdminId { get; set; }
         public ulong PlayerRoleId { get; set; } = 0;
+        public ulong LiveReviewChannelId { get; set; }
     }
 }

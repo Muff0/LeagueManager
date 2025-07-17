@@ -61,11 +61,37 @@ namespace Discord {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to R{0} - (B){1} {2} vs (W){3} {4}  .
+        ///   Looks up a localized string similar to 
+        ///
+        ///{0} will review the following games:
+        ///
+        ///{1} 
+        /// 
+        /// If you can&apos;t attend live, the recorded reviews will be published in {2}
+        ///	.
         /// </summary>
-        internal static string MatchTitleTemplate {
+        internal static string ReviewEventBodyMessage {
             get {
-                return ResourceManager.GetString("MatchTitleTemplate", resourceCulture);
+                return ResourceManager.GetString("ReviewEventBodyMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 
+        ///Hello {0}!
+        ///A new Live Review Event has been scheduled!
+        ///
+        ///{1} will review the following games:
+        ///
+        ///{2} 
+        /// 
+        ///If you can&apos;t attend live, the recorded reviews will be published in {3}
+        ///{4}
+        ///	.
+        /// </summary>
+        internal static string ReviewEventNoticeMessage {
+            get {
+                return ResourceManager.GetString("ReviewEventNoticeMessage", resourceCulture);
             }
         }
         
@@ -91,6 +117,21 @@ namespace Discord {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 
+        ///Reviewer: {0} 
+        ///{1}
+        ///{2}
+        /// 
+        ///{3}
+        ///	.
+        /// </summary>
+        internal static string ReviewThreadMessage {
+            get {
+                return ResourceManager.GetString("ReviewThreadMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Hello everyone!
         ///The pairings for Round {0} have been published! 
         ///You have until {1} to play your games, please contact your opponent as soon as possible. 
@@ -106,7 +147,7 @@ namespace Discord {
         
         /// <summary>
         ///   Looks up a localized string similar to Hey players!
-        ///	These League Matches will be played soon, come watch them!
+        ///These League Matches will be played soon, come watch them!
         ///	
         ///.
         /// </summary>

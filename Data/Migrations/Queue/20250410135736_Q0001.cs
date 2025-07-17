@@ -20,8 +20,8 @@ namespace Data.Migrations.Queue
                     Status = table.Column<int>(type: "integer", nullable: false),
                     Type = table.Column<string>(type: "text", nullable: false),
                     Payload = table.Column<string>(type: "text", nullable: false),
-                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProcessedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    ProcessedAtUtc = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Retries = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -38,8 +38,8 @@ namespace Data.Migrations.Queue
                     Status = table.Column<int>(type: "integer", nullable: false),
                     Type = table.Column<string>(type: "text", nullable: false),
                     Payload = table.Column<string>(type: "text", nullable: false),
-                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProcessedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    ProcessedAtUtc = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     CorrelationId = table.Column<int>(type: "integer", nullable: false),
                     Retries = table.Column<int>(type: "integer", nullable: false)
                 },
@@ -58,8 +58,8 @@ namespace Data.Migrations.Queue
                     Type = table.Column<string>(type: "text", nullable: false),
                     Payload = table.Column<string>(type: "text", nullable: false),
                     CorrelationId = table.Column<int>(type: "integer", nullable: false),
-                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
-                    ProcessedAtUtc = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    CreatedAtUtc = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
+                    ProcessedAtUtc = table.Column<DateTime>(type: "timestamp without time zone", nullable: false),
                     Retries = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>

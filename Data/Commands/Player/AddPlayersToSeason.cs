@@ -15,7 +15,8 @@ namespace Data.Commands.Player
             foreach (var player in Players)
             {
                 var existingPlayer = context.Players.Include(pl => pl.PlayerSeasons)
-                    .FirstOrDefault(pl => pl.FirstName == player.FirstName && pl.LastName == player.LastName);
+                    .FirstOrDefault(pl => pl.Id == player.Id
+                        || pl.LeagoKey == player.LeagoKey);
 
                 if (existingPlayer == null)
                     continue;

@@ -28,9 +28,11 @@ namespace Data
 
         /// <summary>
         /// Max number of results to return
-        /// If 0, no max limit is applied
         /// </summary>
-        public int MaxCount { get; set; } = 0;
+        public int Count { get; set; }
+
+        public int StartIndex { get; set; }
+
 
         #endregion Properties
 
@@ -64,10 +66,21 @@ namespace Data
         {
             var query = BuildQuery(context);
 
-            if (MaxCount > 0)
-                query = query.Take(MaxCount);
+            query = OnQueryBuilt(query);
 
             return query.ToList();
+        }
+
+        protected virtual IQueryable<T2> OnQueryBuilt(IQueryable<T2> query)
+        {
+            var outQuery = query;
+            if (StartIndex > 0)
+                outQuery = outQuery.Skip(StartIndex);
+
+            if (Count > 0)
+                outQuery = outQuery.Take(Count);
+
+            return outQuery;
         }
 
         /// <summary>
@@ -78,6 +91,7 @@ namespace Data
         public virtual async Task<IList<T2>> ExecuteAsync(T context)
         {
             var query = BuildQuery(context);
+            query = OnQueryBuilt(query);
             return await query.ToListAsync();
         }
 

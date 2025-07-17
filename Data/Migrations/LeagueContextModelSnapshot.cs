@@ -134,9 +134,6 @@ namespace Data.Migrations
                     b.Property<bool>("HasConfirmed")
                         .HasColumnType("boolean");
 
-                    b.Property<int>("MatchOutcome")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Outcome")
                         .HasColumnType("integer");
 
@@ -209,6 +206,31 @@ namespace Data.Migrations
                     b.ToTable("Reviews");
                 });
 
+            modelBuilder.Entity("Data.Model.ReviewSchedule", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("DiscordEventId")
+                        .HasColumnType("numeric(20,0)");
+
+                    b.Property<int>("ReviewId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("UTCSchedule")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReviewId")
+                        .IsUnique();
+
+                    b.ToTable("ReviewSchedules");
+                });
+
             modelBuilder.Entity("Data.Model.Season", b =>
                 {
                     b.Property<int>("Id")
@@ -245,9 +267,8 @@ namespace Data.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("DiscordHandle")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<decimal?>("DiscordId")
+                        .HasColumnType("numeric(20,0)");
 
                     b.Property<string>("MailAddress")
                         .IsRequired()
@@ -355,6 +376,17 @@ namespace Data.Migrations
                     b.Navigation("Teacher");
                 });
 
+            modelBuilder.Entity("Data.Model.ReviewSchedule", b =>
+                {
+                    b.HasOne("Data.Model.Review", "Review")
+                        .WithOne("ReviewSchedule")
+                        .HasForeignKey("Data.Model.ReviewSchedule", "ReviewId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Review");
+                });
+
             modelBuilder.Entity("Data.Model.Match", b =>
                 {
                     b.Navigation("PlayerMatches");
@@ -374,6 +406,11 @@ namespace Data.Migrations
                     b.Navigation("Matches");
 
                     b.Navigation("Reviews");
+                });
+
+            modelBuilder.Entity("Data.Model.Review", b =>
+                {
+                    b.Navigation("ReviewSchedule");
                 });
 
             modelBuilder.Entity("Data.Model.Season", b =>
