@@ -1,4 +1,5 @@
 ﻿using Shared.Dto;
+using Shared.Enum;
 
 namespace Data.Commands.Review
 {
@@ -17,9 +18,18 @@ namespace Data.Commands.Review
                 if (existingReview == null)
                     throw new InvalidOperationException("Invalid Review Id");
 
-                existingReview.Round = currentReview.Round;
-                existingReview.ReviewStatus = currentReview.ReviewStatus;
-                existingReview.ReviewUrl = currentReview.ReviewUrl ?? "";
+                if (currentReview.Round != null)
+                    existingReview.Round = (int)currentReview.Round;
+                if(currentReview.ReviewStatus != null)
+                    existingReview.ReviewStatus = (ReviewStatus)currentReview.ReviewStatus;
+
+                if(currentReview.ReviewUrl != null)
+                    existingReview.ReviewUrl = currentReview.ReviewUrl;
+
+                if (currentReview.MatchId != 0)
+                    existingReview.MatchId = currentReview.MatchId;
+
+                context.Entry(existingReview).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
             }
         }
     }

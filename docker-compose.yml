@@ -1,0 +1,38 @@
+version: "3.9"
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: LeagueCoreService/Dockerfile
+    container_name: LeagueService
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__PostgreSQL: Host=postgres;Port=5432;Database=LeagueManager;Username=postgres;Password=muff0
+    networks:
+      - appnet
+
+  postgres:
+    image: postgres:16
+    container_name: postgresdb
+    restart: always
+    environment:
+      POSTGRES_DB: LeagueManager
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: muff0
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - appnet
+
+volumes:
+  pgdata:
+
+networks:
+  appnet:

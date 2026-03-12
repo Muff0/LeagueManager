@@ -27,6 +27,7 @@ namespace Data.Commands.Player
                     existingPlayer.PlayerSeasons.Add(new Model.PlayerSeason()
                     {
                         SeasonId = SeasonId,
+                        PlayerId = existingPlayer.Id
                     });
             }
         }

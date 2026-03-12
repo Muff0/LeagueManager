@@ -14,6 +14,7 @@ using LeagueManager.Extensions;
 using LeagueManager.ViewModel;
 using Mail;
 using Microsoft.Extensions.Options;
+using OGS;
 using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
@@ -30,6 +31,7 @@ namespace LeagueManager.Services
         private readonly IOptions<LeagoSettings> _leagoOptions;
         private readonly DiscordService _discordService;
         private readonly ReviewService _reviewService;
+        private readonly OGSService _ogsService;
         private readonly MailService _mailService;
 
         public MainService(QueueDataService queueDataService,
@@ -38,7 +40,8 @@ namespace LeagueManager.Services
             IOptions<LeagoSettings> leagoOptions,
             DiscordService discordService,
             ReviewService reviewService,
-            MailService mailService)
+            MailService mailService, 
+            OGSService ogsService)
         {
             _queueDataService = queueDataService;
             _leagueDataService = leagueDataService;
@@ -47,6 +50,7 @@ namespace LeagueManager.Services
             _discordService = discordService;
             _reviewService = reviewService;
             _mailService = mailService;
+            _ogsService = ogsService;
         }
 
         public async Task<DataTable> BuildOrderDataTable(Stream csvStream)
@@ -195,7 +199,7 @@ namespace LeagueManager.Services
 
         protected async Task ProcessPaymentData(PaymentDataDto[] payments)
         {
-            var cutoffDate = new DateTime(2025, 05, 10);
+            var cutoffDate = new DateTime(2025, 12, 1);
 
             var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery() { IncludePlayerSeasons = true });
             var players = await _leagueDataService.RunQueryAsync(new GetPlayersQuery());
@@ -259,7 +263,9 @@ namespace LeagueManager.Services
 
         public async Task<PlayerDto[]> GetMissingPayments()
         {
-            var resGetMP = await _leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery() { SeasonId = 2 });
+
+            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var resGetMP = await _leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery() { SeasonId = season.Id });
 
             return resGetMP.Select(pl => new PlayerDto()
             {
@@ -290,27 +296,59 @@ namespace LeagueManager.Services
             return res;
         }
 
-
-        public async Task PostReviews(List<ReviewViewModel> reviews)
+        public async Task CheckRanks()
         {
             try
             {
-                var unposted = reviews.Where(re => !string.IsNullOrEmpty(re.ReviewUrl) && re.ReviewStatus != ReviewStatus.Notified).ToList();
+                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+                var players = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery()
+                {
+                    IncludePlayer = true,
+                    SeasonId = season.Id,
+                });
+
+                foreach (var player in players)
+                {
+                    if (player.Player == null || player.Player.OGSHandle == "")
+                        continue;
+
+                    var ogsPl = await _ogsService.GetPlayer(player.Player.OGSHandle);
+
+                    if (ogsPl == null)
+                        continue;
+
+                    string ranks = player.Player.FirstName + " " + player.Player.LastName + " " + player.Player.Rank.GetDisplayName() + " - " + (30-_ogsService.RatingToRank(ogsPl.Rating)).ToString();
+                    ranks = "";
+                }
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+            }
+        }
+
+        public async Task PostReviews()
+        {
+            try
+            {
+                var unposted = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
+                {
+                    IncludeMatch = true,
+                    IncludeTeacher = true,
+                    HasReviewUrl = true,
+                    IncludePlayerSeasons = true,
+                    Status = [ReviewStatus.Allocated]
+                });
+
                 List<ReviewDto> posted = new List<ReviewDto>();
                 foreach (var review in unposted)
                 {
-                    var match = await _leagueDataService.RunQueryAsync(new GetMatchQuery() { Id = (int)review.MatchId!, IncludePlayers = true });
-                    if (review.TeacherId == null)
-                        continue;
-                    var teacher = await _leagueDataService.RunQueryAsync(new GetTeacherQuery() { Id = (int)review.TeacherId! });
-                    if (teacher == null)
-                        continue;
                     var reviewDto = review.ToReviewDto();
                     await _discordService.PostReviewThread(new PostReviewThreadInDto()
                     {
                         Review = reviewDto,
-                        Match = match.ToMatchDto(),
-                        Teacher = teacher.ToTeacherDto()
+                        Match = review.Match!.ToMatchDto(),
+                        Teacher = review.Teacher!.ToTeacherDto()
                     });
 
                     reviewDto.ReviewStatus = ReviewStatus.Notified;
@@ -383,9 +421,24 @@ namespace LeagueManager.Services
 
         }
 
+        public async Task AddReviewToPlayer(PlayerViewModel player)
+        {
+            await _reviewService.AddReviewToPlayer(player.ToPlayerDto());
+        }
+
+        public async Task SavePlayerChanges(List<PlayerViewModel> players)
+        {
+            var updateList = players.Select(pl => pl.ToPlayerDto());
+
+            await _leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand()
+            {
+                Players = updateList.ToArray(),
+            });
+
+        }
 
 
-        public async Task<List<ReviewViewModel>> GetReviewsToSchedule(int? startIndex, int? count, CancellationToken cancellationToken)
+        public async Task<List<ReviewViewModel>> GetReviewsToSchedule(int? startIndex, int? count, CancellationToken cancellationToken, bool includeNoMatch)
         {
 
             try
@@ -399,7 +452,111 @@ namespace LeagueManager.Services
                     Round = [1, 2, 3, 4, 5],
                     SeasonId = season.Id,
                     Status = [ReviewStatus.Planned],
+                    MatchQueryMode = includeNoMatch ? GetReviewsQuery.ReviewMatchQueryMode.AllReviews : GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly,
+                    Count = count ?? 0,
+                    StartIndex = startIndex ?? 0,
+                });
+                return res.Select(rev => rev.ToViewModel()).ToList();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return new List<ReviewViewModel>();
+            }
+        }
+        public async Task<List<PlayerViewModel>> GetPlayers(int? startIndex, int? count, CancellationToken cancellationToken)
+        {
+
+            try
+            {
+                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+                var res = await _leagueDataService.RunQueryAsync(new GetPlayersQuery()
+                {
+                    IncludePlayerSeasons =true,
+                    SeasonId = season.Id,
+                    Count = count ?? 0,
+                    StartIndex = startIndex ?? 0,
+                    OrderResults = true
+                });
+                return res.Select(rev => rev.ToPlayerViewModel()).ToList();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return new List<PlayerViewModel>();
+            }
+        }
+
+
+        public async Task<List<ReviewViewModel>> GetOverviewReviews(int? startIndex, int? count, CancellationToken cancellationToken)
+        {
+
+            try
+            {
+                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
+                {
+                    IncludeMatch = true,
+                    IncludeOwner = true,
+                    IncludeTeacher = true,
+                    IncludePlayerSeasons = true,
+                    Count = count ?? 0,
+                    StartIndex = startIndex ?? 0,
+                });
+                return res.Select(rev => rev.ToViewModel())
+                    .OrderBy(rev => rev.SeasonName)
+                    .ThenBy(rev => rev.Round)
+                    .ThenBy(rev => rev.OwnerName)
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return new List<ReviewViewModel>();
+            }
+        }
+
+        public async Task<List<ReviewViewModel>> GetReviewsToPost(int? startIndex, int? count, CancellationToken cancellationToken)
+        {
+
+            try
+            {
+                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
+                {
+                    IncludeMatch = true,
+                    IncludeOwner = true,
+                    IncludeTeacher = true,
+                    IncludePlayerSeasons = true,
+                    Round = [1, 2, 3, 4, 5],
+                    SeasonId = season.Id,
+                    Status = [ReviewStatus.Allocated],
                     MatchQueryMode = GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly,
+                    Count = count ?? 0,
+                    StartIndex = startIndex ?? 0,
+                });
+                return res.Select(rev => rev.ToViewModel()).ToList();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return new List<ReviewViewModel>();
+            }
+        }
+        public async Task<List<ReviewViewModel>> GetMissedReviews(int? startIndex, int? count, CancellationToken cancellationToken)
+        {
+
+            try
+            {
+                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
+                {
+                    IncludeMatch = true,
+                    IncludeOwner = true,
+                    IncludeTeacher = true,
+                    Round = [1, 2, 3, 4, 5],
+                    ExcludeSeasonIds = [season.Id],
+                    Status = [ReviewStatus.Planned,ReviewStatus.Allocated],
                     Count = count ?? 0,
                     StartIndex = startIndex ?? 0,
                 });
@@ -413,30 +570,76 @@ namespace LeagueManager.Services
         }
 
 
-        public async Task<List<ReviewViewModel>> GetReviewsToRecord(int? startIndex, int? count, CancellationToken cancellationToken)
-        {
 
+        public async Task DeleteReviews(IEnumerable<ReviewViewModel> reviews)
+        {
             try
             {
-                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
-                {
-                    IncludeMatch = true,
-                    IncludeOwner = true,
-                    IncludeTeacher = true,
-                    Round = [1, 2, 3, 4, 5],
-                    SeasonId = season.Id,
-                    Status = [ReviewStatus.Planned],
-                    MatchQueryMode = GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly,
-                    Count = count ?? 0,
-                    StartIndex = startIndex ?? 0,
-                });
-                return res.Select(rev => rev.ToViewModel()).ToList();
+                await _leagueDataService.ExecuteAsync(new DeleteReviewsCommand() { Reviews = reviews.Select(re => re.ToReviewDto()).ToArray() });
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-                HandleException(ex);
-                return new List<ReviewViewModel>();
+                HandleException(e);
+            }
+        }
+        public async Task UnlinkMatchFromReviews(IEnumerable<ReviewViewModel> reviews, bool deleteMatch = false)
+        {
+            try
+            {
+                await _reviewService.UnlinkMatch(reviews.Select(re => re.ToReviewDto()).ToArray(), deleteMatch);
+            }
+            catch (Exception e)
+            {
+                HandleException(e);
+            }
+        }
+        public async Task MoveToAllocated(IEnumerable<ReviewViewModel> reviews)
+        {
+            try
+            {
+                await _reviewService.SetReviewStatus(new SetReviewStatusInDto()
+                {
+                    Reviews = reviews.Select(re => re.ToReviewDto()),
+                    NewStatus = ReviewStatus.Allocated
+                });
+            }
+            catch (Exception e)
+            {
+                HandleException(e);
+            }
+        }
+
+
+        public async Task SetDuplicateReview(IEnumerable<ReviewViewModel> reviews)
+        {
+            try
+            {
+                await _reviewService.SetReviewStatus(new SetReviewStatusInDto()
+                {
+                    Reviews = reviews.Select(re => re.ToReviewDto()),
+                    NewStatus = ReviewStatus.Duplicate
+                });
+            }
+            catch (Exception e)
+            {
+                HandleException(e);
+            }
+        }
+
+
+        public async Task SetCanceledReview(IEnumerable<ReviewViewModel> reviews)
+        {
+            try
+            {
+                await _reviewService.SetReviewStatus(new SetReviewStatusInDto()
+                {
+                    Reviews = reviews.Select(re => re.ToReviewDto()),
+                    NewStatus = ReviewStatus.Canceled
+                });
+            }
+            catch (Exception e)
+            {
+                HandleException(e);
             }
         }
 
@@ -461,12 +664,6 @@ namespace LeagueManager.Services
                     DateTimeUTC = reviewEventDate,
                     Reviews = games.ToArray(),
                     Teacher = teacher.ToTeacherDto()
-                });
-
-                await _reviewService.SetReviewStatus(new SetReviewStatusInDto()
-                {
-                    Reviews = reviews.Select(re => re.ToReviewDto()),
-                    NewStatus = ReviewStatus.Allocated
                 });
             }
             catch (Exception e)
@@ -629,6 +826,7 @@ namespace LeagueManager.Services
                     Id = player.Id,
                     DiscordHandle = pres.DiscordHandle,
                     EmailAddress = pres.Email,
+                    TimeZone = pres.Timezone
                 });
             }
 

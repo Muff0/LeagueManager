@@ -7,5 +7,7 @@
         Recorded = 2,
         Uploaded = 3,
         Notified = 4,
+        Duplicate = 5,
+        Canceled = 6,
     }
 }

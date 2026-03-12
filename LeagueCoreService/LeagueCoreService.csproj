@@ -10,13 +10,22 @@
 
   <ItemGroup>
     <PackageReference Include="Duende.IdentityModel.OidcClient" Version="6.0.1" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.22.1" />
   </ItemGroup>
+
+
 
   <ItemGroup>
     <ProjectReference Include="..\Data\Data.csproj" />
     <ProjectReference Include="..\Discord\Discord.csproj" />
     <ProjectReference Include="..\LeagoService\LeagoService.csproj" />
+    <ProjectReference Include="..\Mail\Mail.csproj" />
+    <ProjectReference Include="..\OGS\OGS.csproj" />
     <ProjectReference Include="..\Shared\Shared.csproj" />
   </ItemGroup>
 </Project>

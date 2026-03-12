@@ -1,0 +1,88 @@
+﻿@page "/players"
+@using LeagueManager.Extensions
+@using LeagueManager.ViewModel
+@using Havit.Blazor.Components.Web;
+@using Shared.Dto
+@inject Services.MainService MainService
+@rendermode InteractiveServer
+
+<PageTitle>Players</PageTitle>
+
+<h1>Players</h1>
+
+
+<div class="grid-container">
+    <div class="grid-item">
+        <button class="btn btn-primary" @onclick="AddReviewToSelectedPlayer">Add Review</button>
+    </div>
+
+</div>
+
+<HxGrid @ref="playersGrid" TItem="PlayerViewModel" DataProvider="GetPlayersGridData"
+        SelectedDataItem="selectedPlayer"
+        SelectedDataItemChanged="HandleSelectePlayerChanged"
+        MultiSelectionEnabled="true" PageSize="500" Responsive="true" >
+    <Columns>
+        <HxGridColumn HeaderText="First Name" ItemTextSelector="rev => rev.FirstName" />
+        <HxGridColumn HeaderText="Last Name" ItemTextSelector="rev => rev.LastName" />
+    </Columns>
+</HxGrid>
+
+@code {
+
+    private HxGrid<PlayerViewModel> playersGrid;
+    private List<PlayerViewModel>? PlayersList;
+    private HashSet<PlayerViewModel>? selectedPlayers;
+    private PlayerViewModel? selectedPlayer;
+    private string message = "Loading...";
+
+
+    private async Task HandleSelectePlayerChanged(PlayerViewModel newSelectedDataItem)
+    {
+        if (selectedPlayer != null)
+        {
+            // save the changes to original selectedDataItem first
+            await MainService.SavePlayerChanges(new List<PlayerViewModel>() { selectedPlayer });
+        }
+        // update selectedDataItem to new selection
+        selectedPlayer = newSelectedDataItem;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+
+    private async Task AddReviewToSelectedPlayer()
+    {
+
+        if (selectedPlayer != null)
+        {
+            await MainService.AddReviewToPlayer(selectedPlayer);
+        }
+    }
+
+    private async Task<GridDataProviderResult<PlayerViewModel>> GetPlayersGridData(GridDataProviderRequest<PlayerViewModel> request)
+    {
+        var response = await MainService.GetPlayers(request.StartIndex, request.Count, request.CancellationToken);
+        return new GridDataProviderResult<PlayerViewModel>()
+        {
+            Data = response,
+            TotalCount = response.Count
+        };
+    }
+    private async void RefreshPlayersGrid()
+    {
+        try
+        {
+            if (playersGrid == null)
+                return;
+            await playersGrid.RefreshDataAsync();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+}

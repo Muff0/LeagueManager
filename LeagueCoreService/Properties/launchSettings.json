@@ -1,12 +1,15 @@
 {
-    "profiles": {
-        "LeagueCoreService": {
-            "commandName": "Project",
-            "environmentVariables": {
-                "DOTNET_ENVIRONMENT": "Development"
-            },
-            "dotnetRunMessages": true
-        }
+  "profiles": {
+    "LeagueCoreService": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
     },
-    "$schema": "https://json.schemastore.org/launchsettings.json"
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json"
 }

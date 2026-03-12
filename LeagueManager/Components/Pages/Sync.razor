@@ -10,6 +10,7 @@
 
 <button class="btn btn-primary" @onclick="SyncPlayers">Sync Players</button>
 <button class="btn btn-primary" @onclick="SyncMatches">Sync Matches</button>
+<button class="btn btn-primary" @onclick="CheckOGSRanks">Check Ranks</button>
 
 @code {
     private string message = "Loading...";
@@ -32,6 +33,17 @@
         {
 
             await MainService.UpdatePlayers();
+        }
+        catch (Exception e)
+        {
+            message = "Error";
+        }
+    }
+    private async void CheckOGSRanks()
+    {
+        try
+        {
+            await MainService.CheckRanks();
         }
         catch (Exception e)
         {

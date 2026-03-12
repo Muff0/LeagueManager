@@ -15,15 +15,16 @@ namespace Data.Queries
             var query = base.BuildQuery(context);
 
             if (IncludePlayerSeasons)
-                query = query.Include(mm => mm.PlayerSeasons)
-                    .ThenInclude(pm => pm.Player);
+                query = query.Include(mm => mm.PlayerSeasons);
 
             if (IncludePlayerMatches)
-                query = query.Include(mm => mm.PlayerMatches)
-                    .ThenInclude(pm => pm.Player);
+                query = query.Include(mm => mm.PlayerMatches);
 
             if (SeasonId != 0)
                 query = query.Where(pl => pl.PlayerSeasons.Any(pl => pl.SeasonId == SeasonId));
+
+            if (OrderResults)
+                query = query.OrderBy(pl => pl.LastName).ThenBy(pl => pl.LastName);
 
             return query;
         }

@@ -1,8 +1,8 @@
 ﻿using Shared.Enum;
 
-namespace Shared.Dto
+namespace LeagueManager.ViewModel
 {
-    public class PlayerDto
+    public class PlayerViewModel
     {
         public int? Id { get; set; }
         public string? FirstName { get; set; }

@@ -8,8 +8,10 @@ using LeagueManager.Components;
 using LeagueManager.Services;
 using Mail;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
 using NetCord.Hosting.Gateway;
 using Newtonsoft.Json;
+using OGS;
 using Shared.Converter;
 using Shared.Settings;
 
@@ -62,6 +64,8 @@ builder.Services.AddHttpClient<TournamentsClient>()
 builder.Services.AddHttpClient<UsersClient>()
     .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
 
+builder.Services.AddHttpClient<OGSClient>();
+
 // Read connection string from appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
 
@@ -79,6 +83,7 @@ builder.Services.AddScoped<QueueDataService>();
 builder.Services.AddScoped<LeagoService.LeagoMainService>();
 builder.Services.AddScoped<MailService>();
 builder.Services.AddScoped<ReviewService>();
+builder.Services.AddScoped<OGSService>();
 builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<Discord.DiscordService>();
 
@@ -91,6 +96,7 @@ builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
 builder.Services.AddHostedService<Worker>();
 
 var app = builder.Build();
+
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

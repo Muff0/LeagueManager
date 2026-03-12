@@ -1,4 +1,6 @@
-﻿using Data.Model;
+﻿
+using Data;
+using Data.Model;
 using LeagueManager.ViewModel;
 using Shared.Dto;
 using Shared.Enum;
@@ -47,10 +49,11 @@ namespace LeagueManager.Extensions
             return new ReviewViewModel()
             {
                 Id = review.Id,
-                SeasonName = "Season 8",
+                SeasonName = review.PlayerSeason?.Season?.Title ?? "",
                 ReviewStatus = review.ReviewStatus,
                 MatchId = review.MatchId,
                 OwnerName = review.OwnerPlayer?.FirstName + " " + review.OwnerPlayer?.LastName,
+                OwnerTimezone = review.OwnerPlayer?.Timezone ?? "",
                 OwnerHandle = review.OwnerPlayer?.OGSHandle ?? "",
                 ReviewUrl = review.ReviewUrl,
                 Round = review.Round,
@@ -61,7 +64,7 @@ namespace LeagueManager.Extensions
                 BlackPlayerRank = blackPlayer?.Rank.GetDisplayName() ?? string.Empty,
                 WhitePlayerRank = whitePlayer?.Rank.GetDisplayName() ?? string.Empty,
                 MatchUrl = review.Match?.MatchUrl ?? string.Empty,
-                IsPlayed = review.Match?.IsComplete ?? false,
+                IsPlayed = review.Match?.IsPlayed() ?? false,
                 MatchTime = review.Match?.GameTimeUTC ?? DateTime.MinValue,
             };
         }

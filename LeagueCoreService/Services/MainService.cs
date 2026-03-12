@@ -195,7 +195,8 @@ namespace LeagueCoreService.Services
                         {
                             existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
                             existingMatch.MatchUrl = currentMatch.GameLink ?? "";
-                            existingMatch.IsComplete = currentMatch.IsPlayed;
+
+                            existingMatch.IsComplete = currentMatch.Players.Any(pl => pl.Outcome != Shared.Enum.PlayerMatchOutcome.NotReported);
 
                             foreach (PlayerMatchDto playerMatch in currentMatch.Players)
                             {

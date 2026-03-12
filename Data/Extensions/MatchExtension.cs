@@ -1,5 +1,6 @@
 ﻿using Data.Model;
 using Shared.Dto;
+using Shared.Enum;
 
 namespace Data
 {
@@ -19,5 +20,8 @@ namespace Data
                 SeasonId = match.SeasonId
             };
         }
+
+        public static bool IsPlayed(this Match match)
+            => match.PlayerMatches.Any(pm => pm.Outcome == Shared.Enum.PlayerMatchOutcome.Win);
     }
 }

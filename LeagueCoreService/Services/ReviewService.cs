@@ -9,7 +9,7 @@ using Shared;
 using Shared.Dto;
 using Shared.Enum;
 
-namespace LeagueManager.Services
+namespace LeagueCoreService.Services
 {
     public class ReviewService : ServiceBase
     {

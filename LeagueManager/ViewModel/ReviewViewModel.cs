@@ -12,6 +12,7 @@ namespace LeagueManager.ViewModel
         public int? MatchId { get; set; }
         public string? ReviewUrl { get; set; }
         public string OwnerName { get; set; } = string.Empty;
+        public string OwnerTimezone { get; set; } = string.Empty;
         public string TeacherName { get; set; } = string.Empty;
         public string MatchUrl { get; set; } = string.Empty;
         public string WhitePlayerName { get; set; } = string.Empty;

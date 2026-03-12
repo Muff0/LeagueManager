@@ -13,8 +13,14 @@ namespace Data.Commands.Player
             foreach (var player in Players)
             {
                 var existingPlayer = context.Players.FirstOrDefault(pl => pl.Id == player.Id
-                    || pl.LeagoKey == player.LeagoKey
-                    || (pl.FirstName == player.FirstName && pl.LastName == player.LastName));
+                    || pl.LeagoKey == player.LeagoKey);
+
+                if(existingPlayer == null)
+                {
+                    var sameName = context.Players.Where(pl => pl.FirstName == player.FirstName && pl.LastName == player.LastName).ToArray();
+                    if (sameName.Length == 1)
+                        existingPlayer = sameName[0];
+                }
 
                 if (existingPlayer == null)
                 {
@@ -28,6 +34,7 @@ namespace Data.Commands.Player
                         LeagoKey = player.LeagoKey ?? string.Empty,
                         Rank = player.Rank,
                         EmailAddress = player.EmailAddress ?? string.Empty,
+                        Timezone = player.TimeZone ?? string.Empty,
                     };
                     context.Players.Add(existingPlayer);
                 }
@@ -49,6 +56,8 @@ namespace Data.Commands.Player
                         existingPlayer.GoMagicUserId = (int)player.GoMagicUserId;
                     if (player.DiscordId != null)
                         existingPlayer.DiscordId = player.DiscordId;
+                    if (player.TimeZone != null)
+                        existingPlayer.Timezone = player.TimeZone;
 
                     context.Entry(existingPlayer).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
                 }

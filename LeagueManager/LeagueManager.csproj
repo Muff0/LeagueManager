@@ -24,6 +24,7 @@
     <ProjectReference Include="..\LeagoService\LeagoService.csproj" />
     <ProjectReference Include="..\LeagueCoreService\LeagueCoreService.csproj" />
     <ProjectReference Include="..\Mail\Mail.csproj" />
+    <ProjectReference Include="..\OGS\OGS.csproj" />
   </ItemGroup>
 
 </Project>

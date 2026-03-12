@@ -8,20 +8,22 @@
 
   <ItemGroup>
     <PackageReference Include="Azure.Identity" Version="1.11.4" />
-    <PackageReference Include="Duende.IdentityModel.OidcClient" Version="6.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Hosting" Version="2.3.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Http" Version="2.3.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel" Version="2.3.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Server.Kestrel.Core" Version="2.3.0" />
-    <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
+    <PackageReference Include="JsonSubTypes" Version="1.9.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
     <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="5.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="NSwag.CodeGeneration" Version="14.5.0" />
+    <PackageReference Include="NSwag.Generation" Version="14.5.0" />
     <PackageReference Include="System.Threading.Channels" Version="8.0.0" />
+	  
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Shared\Shared.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<OpenApiReference Include="api_v1_doc.yaml" ClassName="OGSClient" Namespace="OGS" OperationGenerationMode="SingleClientFromOperationId" />
+	</ItemGroup>
 
+	<ItemGroup>
+	  <ProjectReference Include="..\Shared\Shared.csproj" />
+	</ItemGroup>
 </Project>

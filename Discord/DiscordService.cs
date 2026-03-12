@@ -42,7 +42,7 @@ namespace Discord
                 (match.Players?[1]?.Player?.DiscordId == null) ? "" : MentionUser((ulong)match.Players?[1]?.Player?.DiscordId!),
                 inDto.Review.ReviewUrl);
 
-            string title = "GM League Season 8 - " + match.BuildMatchTitle();
+            string title = "GM League - " + inDto.Review.SeasonTitle + " "  + match.BuildMatchTitle();
 
             var msg = BuildThreadProperties(title, content);
 
@@ -76,7 +76,7 @@ namespace Discord
 
             await _client.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
         }
-        protected string BuildEventUrl(GuildScheduledEvent guildEvent) => $"https://discord.gg/aQuDEqw4?event={guildEvent.Id}";
+        protected string BuildEventUrl(GuildScheduledEvent guildEvent) => $"https://discord.com/events/{guildEvent.GuildId}/{guildEvent.Id}";
 
         public async Task SendReviewSchedule(ReviewScheduleDto[] reviews)
         {

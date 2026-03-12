@@ -27,5 +27,6 @@ namespace Data.Model
         public ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
         public ulong? DiscordId { get; set; }
+        public string Timezone { get; internal set; }
     }
 }
