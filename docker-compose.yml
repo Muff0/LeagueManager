@@ -12,7 +12,12 @@ services:
       - postgres
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__PostgreSQL: Host=postgres;Port=5432;Database=LeagueManager;Username=postgres;Password=muff0
+      ConnectionStrings__PostgreSQL: ${DB_CONNECTION}
+      Leago__ClientId: ${LEAGO_ID}
+      Leago__ClientSecret: ${LEAGO_SECRET}
+      Discord__AppId: ${DISCORD_APPID}
+      Discord__PublicKey: ${DISCORD_PUBLICKEY}
+      Discord__Token: ${DISCORD_TOKEN}
     networks:
       - appnet
 
