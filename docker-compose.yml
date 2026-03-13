@@ -16,21 +16,6 @@ services:
     networks:
       - appnet
 
-  postgres:
-    image: postgres:16
-    container_name: postgresdb
-    restart: always
-    environment:
-      POSTGRES_DB: LeagueManager
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: muff0
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    networks:
-      - appnet
-
 volumes:
   pgdata:
 
