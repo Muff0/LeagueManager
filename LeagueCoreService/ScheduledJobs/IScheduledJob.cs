@@ -1,6 +1,6 @@
 using Data;
 
-namespace LeagueCoreService.Interfaces;
+namespace LeagueCoreService.ScheduledJobs;
 
 public interface IScheduledJob
 {

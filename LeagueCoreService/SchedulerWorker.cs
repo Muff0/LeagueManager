@@ -2,8 +2,7 @@ using Data;
 using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
-using LeagueCoreService.Interfaces;
-using LeagueCoreService.Jobs;
+using LeagueCoreService.ScheduledJobs;
 using LeagueCoreService.Services;
 using Shared.Enum;
 
@@ -23,21 +22,18 @@ namespace LeagueCoreService
 
             _scheduledJobs = new[]
             {
-                new ScheduledJobBase(),
-                new ScheduledJobBase(),
+                new SyncMatchesScheduledJob(),
             };
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+                _logger.LogInformation("SchedulerWorker starting at: {time}", DateTimeOffset.Now);
+            
             while (!stoppingToken.IsCancellationRequested)
             {
                 await DoWork();
 
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-                    _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                }
 
                 await Task.Delay(60000, stoppingToken);
             }
@@ -45,12 +41,23 @@ namespace LeagueCoreService
 
         private async Task DoWork()
         {
-            var iterationTimestamp = DateTime.Now;
-            foreach (var job in _scheduledJobs)
+            try
             {
-                if (job.ShouldRun(iterationTimestamp))
-                    job.Enqueue(_queueDataService);
+                var iterationTimestamp = DateTime.Now;
+                foreach (var job in _scheduledJobs)
+                {
+                    if (job.ShouldRun(iterationTimestamp))
+                    {
+                            _logger.LogInformation("Running Scheduled Job " + job.GetType());
+                        
+                        await job.Enqueue(_queueDataService);   
+                    }
 
+                }
+            }
+            catch(Exception e)
+            {
+                _logger.LogError(e,e.Message);
             }
         }
     }

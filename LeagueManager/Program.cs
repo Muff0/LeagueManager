@@ -3,12 +3,10 @@ using Data;
 using Havit.Blazor.Components.Web;
 using LeagoClient;
 using LeagoService;
-using LeagueCoreService;
 using LeagueManager.Components;
 using LeagueManager.Services;
 using Mail;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Hosting;
 using NetCord.Hosting.Gateway;
 using Newtonsoft.Json;
 using OGS;
@@ -89,11 +87,6 @@ builder.Services.AddScoped<Discord.DiscordService>();
 
 // Start the Discord service
 builder.Services.AddDiscordGateway();
-
-// Temp service init for debug -- REMOVE SERVICE REFERENCE  WHEN DELETING
-
-builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
-builder.Services.AddHostedService<QueueWorker>();
 
 var app = builder.Build();
 

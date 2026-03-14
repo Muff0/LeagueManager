@@ -2,8 +2,6 @@ using Data;
 using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
-using LeagueCoreService.Interfaces;
-using LeagueCoreService.Jobs;
 using LeagueCoreService.Services;
 using Shared.Enum;
 
@@ -46,15 +44,16 @@ namespace LeagueCoreService
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
+            
+            if (_logger.IsEnabled(LogLevel.Information))
+            {
+                _logger.LogInformation("QueueWorker starting at: {time}", DateTimeOffset.Now);
+            }
             while (!stoppingToken.IsCancellationRequested)
             {
                 await DoWork();
 
-                if (_logger.IsEnabled(LogLevel.Information))
-                {
-                    _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
-                }
-                await Task.Delay(5000, stoppingToken);
+                await Task.Delay(10000, stoppingToken);
             }
         }
 

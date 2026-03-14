@@ -57,6 +57,11 @@ builder.Services.AddHttpClient<UsersClient>()
 
 builder.Services.AddHttpClient<OGSClient>();
 
+// Logging
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+
 // Read connection string from appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
 

@@ -1,9 +1,8 @@
 using Data;
 using Data.Commands.Queue;
 using Data.Model;
-using LeagueCoreService.Interfaces;
 
-namespace LeagueCoreService.Jobs;
+namespace LeagueCoreService.ScheduledJobs;
 
 public class ScheduledJobBase : IScheduledJob
 {
