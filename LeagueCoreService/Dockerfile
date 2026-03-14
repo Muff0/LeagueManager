@@ -13,6 +13,8 @@ WORKDIR /src
 COPY ["LeagueCoreService/LeagueCoreService.csproj", "LeagueCoreService/"]
 COPY ["Data/Data.csproj", "Data/"]
 COPY ["Shared/Shared.csproj", "Shared/"]
+COPY ["OGS/OGS.csproj", "OGS/"]
+COPY ["Mail/Mail.csproj", "Mail/"]
 COPY ["Discord/Discord.csproj", "Discord/"]
 COPY ["LeagoService/LeagoService.csproj", "LeagoService/"]
 RUN dotnet restore "./LeagueCoreService/LeagueCoreService.csproj"
