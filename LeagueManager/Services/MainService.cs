@@ -41,7 +41,8 @@ namespace LeagueManager.Services
             DiscordService discordService,
             ReviewService reviewService,
             MailService mailService, 
-            OGSService ogsService)
+            OGSService ogsService,
+            ILogger<MainService> logger) : base(logger)
         {
             _queueDataService = queueDataService;
             _leagueDataService = leagueDataService;

@@ -4,7 +4,7 @@ public class SyncMatchesScheduledJob : ScheduledJobBase
 {
     public SyncMatchesScheduledJob() : base()
     {
-        Command = "SyncMatches";
     }
-    
+
+    public override string Command => "SyncMatches";
 }

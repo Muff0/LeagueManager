@@ -4,21 +4,21 @@ using Data.Model;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class ScheduledJobBase : IScheduledJob
+public abstract class ScheduledJobBase : IScheduledJob
 {
     public ScheduledJobBase()
     {
     }
     
-    protected DateTime lastRun;
+    public DateTime LastRun { get; protected set; }
     public TimeSpan Interval { get; } = TimeSpan.FromHours(1);
 
     public bool ShouldRun(DateTime now)
     {
-        return now > lastRun.Add(Interval);
+        return now > LastRun.Add(Interval);
     }
 
-    public string Command { get; set; }
+    public abstract string Command { get; }
 
     protected virtual string BuildPayload()
     {
@@ -38,5 +38,7 @@ public class ScheduledJobBase : IScheduledJob
         {
             NewCommand = command,
         });
+
+        LastRun = DateTime.Now;
     }
 }

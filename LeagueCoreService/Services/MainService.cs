@@ -24,7 +24,8 @@ namespace LeagueCoreService.Services
             IOptions<LeagoSettings> leagoOptions,
             IDbContextFactory<LeagueContext> leagueContextFactory,
             LeagueDataService dataService,
-            DiscordService discordService)
+            DiscordService discordService,
+            ILogger<MainService> logger) : base(logger)
         {
             _leagueContextFactory = leagueContextFactory;
             _leagoService = leagoService;

@@ -1,4 +1,5 @@
 ﻿using LeagoClient;
+using Microsoft.Extensions.Logging;
 using Shared;
 using Shared.Dto;
 using Shared.Enum;
@@ -31,7 +32,8 @@ namespace LeagoService
             ProfilesClient profilesClient,
             RoundsClient roundsClient,
             TournamentsClient tournamentsClient,
-            UsersClient usersClient)
+            UsersClient usersClient,
+            ILogger<LeagoMainService> logger) : base(logger)
         {
             _accountClient = accountClient;
             _arenaMembersClient = arenaMembersClient;

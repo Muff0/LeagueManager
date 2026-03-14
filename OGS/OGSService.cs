@@ -1,4 +1,5 @@
-﻿using Newtonsoft.Json;
+﻿using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 using Shared;
 using Shared.Dto.OGS;
 
@@ -14,7 +15,8 @@ namespace OGS
         private double A = 525;
         private double C = 23.15;
 
-        public OGSService(HttpClient httpClient)
+        public OGSService(HttpClient httpClient,
+            ILogger<OGSService> logger) : base(logger)
         {
 
             _client = httpClient;

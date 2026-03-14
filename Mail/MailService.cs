@@ -1,4 +1,5 @@
 ﻿using MailKit.Net.Smtp;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using Shared;
@@ -10,10 +11,10 @@ namespace Mail
     {
         private readonly IOptions<MailSettings> _settings;
 
-        public MailService(IOptions<MailSettings> settings)
+        public MailService(IOptions<MailSettings> settings,
+            ILogger<MailService> logger) : base(logger)
         {
             _settings = settings;
-
         }
 
 

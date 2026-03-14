@@ -11,7 +11,7 @@ services:
     depends_on:
       - postgres
     environment:
-      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_ENVIRONMENT: Release
       ConnectionStrings__PostgreSQL: ${DB_CONNECTION}
       Leago__ClientId: ${LEAGO_ID}
       Leago__ClientSecret: ${LEAGO_SECRET}

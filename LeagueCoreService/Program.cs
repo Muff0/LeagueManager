@@ -6,6 +6,7 @@ using LeagueCoreService.Services;
 using Mail;
 using Microsoft.EntityFrameworkCore;
 using NetCord.Hosting.Gateway;
+using NetCord.Hosting.Services.ApplicationCommands;
 using Newtonsoft.Json;
 using OGS;
 using Shared.Converter;
@@ -30,30 +31,18 @@ builder.Services.AddTransient<LeagoAuthenticatedHttpHandler>();
 
 // Clients registration
 
-builder.Services.AddHttpClient<AccountClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<ArenaMembersClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<ArenasClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<EventsClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<HealthClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<LeaguesClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<MatchesClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<PaymentsClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<ProfilesClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<RoundsClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<TournamentsClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
-builder.Services.AddHttpClient<UsersClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<AccountClient>();
+builder.Services.AddHttpClient<ArenaMembersClient>();
+builder.Services.AddHttpClient<ArenasClient>();
+builder.Services.AddHttpClient<EventsClient>();
+builder.Services.AddHttpClient<HealthClient>();
+builder.Services.AddHttpClient<LeaguesClient>();
+builder.Services.AddHttpClient<MatchesClient>();
+builder.Services.AddHttpClient<PaymentsClient>();
+builder.Services.AddHttpClient<ProfilesClient>();
+builder.Services.AddHttpClient<RoundsClient>();
+builder.Services.AddHttpClient<TournamentsClient>();
+builder.Services.AddHttpClient<UsersClient>();
 
 builder.Services.AddHttpClient<OGSClient>();
 
@@ -95,13 +84,16 @@ builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<Discord.DiscordService>();
 
 // Start the Discord service
-builder.Services.AddDiscordGateway();
+builder.Services.AddDiscordGateway()
+    .AddApplicationCommands();
 
 builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
 builder.Services.AddHostedService<QueueWorker>();
 builder.Services.AddHostedService<SchedulerWorker>();
 
 var host = builder.Build();
+
+
 using (var scope = host.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

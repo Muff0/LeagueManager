@@ -13,8 +13,8 @@ namespace LeagueCoreService.Services
 {
     public class ReviewService : ServiceBase
     {
-
-        public ReviewService(LeagueDataService leagueDataService)
+        public ReviewService(LeagueDataService leagueDataService
+            , ILogger<ReviewService> logger) : base(logger)
         {
             _leagueDataService = leagueDataService;
         }

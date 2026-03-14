@@ -1,6 +1,14 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NetCord;
+using NetCord.Gateway;
+using NetCord.Hosting.Gateway;
+using NetCord.Hosting.Services;
+using NetCord.Hosting.Services.ApplicationCommands;
+using NetCord.Logging;
 using NetCord.Rest;
+using NetCord.Services.ApplicationCommands;
+using NetCord.Services.ComponentInteractions;
 using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
@@ -11,16 +19,40 @@ namespace Discord
 {
     public class DiscordService : ServiceBase
     {
-        public DiscordService(IOptions<DiscordSettings> settings)
+        public DiscordService(IOptions<DiscordSettings> settings,
+            ILogger<DiscordService> logger) : base(logger)
         {
             _settings = settings;
             var to = new BotToken(_settings.Value.Token);
-            _client = new RestClient(to);
+            _restClient = new RestClient(to);
+            _gatewayClient = new GatewayClient(to,
+                new GatewayClientConfiguration()
+                {
+                    Intents = default,
+                    Logger = new ConsoleLogger()
+                });
+
+            StartClient();
+        }
+
+        public async void StartClient()
+        {
+            var interactionService = new ApplicationCommandService<ApplicationCommandContext>();
+            interactionService.AddModules(typeof(DiscordService).Assembly);
+            
+            var manager = new ApplicationCommandServiceManager();
+            manager.AddService(interactionService);
+
+            // Start the client
+            await _gatewayClient.StartAsync();
+
+            // Once ready, register commands
+            await manager.RegisterCommandsAsync(_gatewayClient.Rest, _settings.Value.AppId);
         }
 
         public async Task<ulong?> GetDiscordUserId(string username)
         {
-            await foreach (var user in _client.GetGuildUsersAsync(_settings.Value.ServerId))
+            await foreach (var user in _restClient.GetGuildUsersAsync(_settings.Value.ServerId))
             {
                 if (user.Username.Equals(username) || (user.Nickname?.Equals(username) ?? false))
                 {
@@ -46,7 +78,7 @@ namespace Discord
 
             var msg = BuildThreadProperties(title, content);
 
-            await _client.CreateForumGuildThreadAsync(
+            await _restClient.CreateForumGuildThreadAsync(
                 _settings.Value.ReviewChannelId,
                 msg);
         }
@@ -55,7 +87,7 @@ namespace Discord
         {
             foreach (var userId in inDto.UserIds)
             {
-                await _client.RemoveGuildUserRoleAsync(_settings.Value.ServerId, userId, inDto.RoleId);
+                await _restClient.RemoveGuildUserRoleAsync(_settings.Value.ServerId, userId, inDto.RoleId);
             }
         }
 
@@ -74,7 +106,7 @@ namespace Discord
 
             var msg = BuildMessageProperties(content);
 
-            await _client.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
+            await _restClient.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
         }
         protected string BuildEventUrl(GuildScheduledEvent guildEvent) => $"https://discord.com/events/{guildEvent.GuildId}/{guildEvent.Id}";
 
@@ -89,7 +121,7 @@ namespace Discord
 
             var msg = BuildMessageProperties(content);
 
-            await _client.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
+            await _restClient.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
         }
 
         public async Task SendRoundStartNotification(SendRoundStartNotificationInDto inDto)
@@ -98,7 +130,7 @@ namespace Discord
             {
                 var msg = BuildRoundStartNotification(inDto.RoundNumber, inDto.RoundEnd);
 
-                await _client.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
+                await _restClient.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
             }
             catch (Exception ex)
             {
@@ -112,7 +144,7 @@ namespace Discord
             {
                 var msg = BuildUpcomingMatchesNotification(inDto.Matches);
 
-                await _client.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
+                await _restClient.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
             }
             catch (Exception ex)
             {
@@ -122,10 +154,10 @@ namespace Discord
 
         public async Task UpdatePlayerRole(UpdatePlayerRoleInDto inDto)
         {
-            var role = await _client.GetGuildRoleAsync(_settings.Value.ServerId, _settings.Value.PlayerRoleId);
+            var role = await _restClient.GetGuildRoleAsync(_settings.Value.ServerId, _settings.Value.PlayerRoleId);
             var orderedUsers = inDto.CurrentPlayers.Order().ToList();
 
-            await foreach (var user in _client.GetGuildUsersAsync(_settings.Value.ServerId))
+            await foreach (var user in _restClient.GetGuildUsersAsync(_settings.Value.ServerId))
             {
                 var existingIndex = orderedUsers.BinarySearch(user.Id);
                 if (user.RoleIds.Contains(role.Id))
@@ -207,7 +239,7 @@ namespace Discord
                 .WithChannelId(_settings.Value.LiveReviewChannelId)
                 .WithDescription(content);
 
-            var resEvent = await _client.CreateGuildScheduledEventAsync(_settings.Value.ServerId, eventProperties);
+            var resEvent = await _restClient.CreateGuildScheduledEventAsync(_settings.Value.ServerId, eventProperties);
 
             return resEvent;
         }
@@ -218,7 +250,8 @@ namespace Discord
 
         protected string MentionUser(ulong userId) => $"<@{userId}>";
 
-        private readonly RestClient _client;
+        private readonly RestClient _restClient;
+        private readonly GatewayClient _gatewayClient;
         private readonly IOptions<DiscordSettings> _settings;
         private ForumGuildThreadProperties BuildThreadProperties(string title, string content) => new ForumGuildThreadProperties(
             title,

@@ -2,7 +2,7 @@
 {
     public class DiscordSettings
     {
-        public string AppId { get; set; } = string.Empty;
+        public ulong AppId { get; set; } 
         public string PublicKey { get; set; } = string.Empty;
         public string Token { get; set; } = string.Empty;
         public ulong ReviewChannelId { get; set; }
