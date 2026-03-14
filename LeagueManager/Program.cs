@@ -93,7 +93,7 @@ builder.Services.AddDiscordGateway();
 // Temp service init for debug -- REMOVE SERVICE REFERENCE  WHEN DELETING
 
 builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
-builder.Services.AddHostedService<Worker>();
+builder.Services.AddHostedService<QueueWorker>();
 
 var app = builder.Build();
 

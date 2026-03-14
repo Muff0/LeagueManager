@@ -92,6 +92,10 @@ builder.Services.AddScoped<Discord.DiscordService>();
 // Start the Discord service
 builder.Services.AddDiscordGateway();
 
+builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
+builder.Services.AddHostedService<QueueWorker>();
+builder.Services.AddHostedService<SchedulerWorker>();
+
 var host = builder.Build();
 using (var scope = host.Services.CreateScope())
 {
