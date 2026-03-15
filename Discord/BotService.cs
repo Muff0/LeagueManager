@@ -60,28 +60,6 @@ public class BotService :BackgroundService
         // Once ready, register commands
         _gatewayClient.Ready += async args =>
         {
-            var commands = await _gatewayClient.Rest.GetGlobalApplicationCommandsAsync(_settings.Value.AppId, cancellationToken:stoppingToken);
-
-            foreach (var command in commands)
-            {
-                await _gatewayClient.Rest.DeleteGlobalApplicationCommandAsync(
-                    _settings.Value.AppId,
-                    command.Id,
-                    cancellationToken: stoppingToken);
-            }
-            
-            
-            var guildCommands = await _gatewayClient.Rest.GetGuildApplicationCommandsAsync(_settings.Value.AppId, _settings.Value.ServerId, cancellationToken:stoppingToken);
-
-            foreach (var command in guildCommands)
-            {
-                await _gatewayClient.Rest.DeleteGuildApplicationCommandAsync(
-                    _settings.Value.AppId,
-                    command.Id,
-                    _settings.Value.ServerId,
-                    cancellationToken: stoppingToken);
-            }
-
             
             await manager.RegisterCommandsAsync(_gatewayClient.Rest, 
                 _settings.Value.AppId,
