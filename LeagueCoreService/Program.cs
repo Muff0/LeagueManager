@@ -1,4 +1,5 @@
 using Data;
+using Discord;
 using LeagoClient;
 using LeagoService;
 using LeagueCoreService;
@@ -26,8 +27,6 @@ JsonConvert.DefaultSettings = () => new JsonSerializerSettings
     NullValueHandling = NullValueHandling.Ignore
 };
 
-builder.Services.AddSingleton<ITokenProvider, LeagoTokenProvider>();
-builder.Services.AddTransient<LeagoAuthenticatedHttpHandler>();
 
 // Clients registration
 
@@ -86,6 +85,7 @@ builder.Services.AddScoped<Discord.DiscordService>();
 // Start the Discord service
 builder.Services.AddDiscordGateway()
     .AddApplicationCommands();
+builder.Services.AddHostedService<BotService>();
 
 builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
 builder.Services.AddHostedService<QueueWorker>();

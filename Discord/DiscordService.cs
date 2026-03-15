@@ -25,29 +25,7 @@ namespace Discord
             _settings = settings;
             var to = new BotToken(_settings.Value.Token);
             _restClient = new RestClient(to);
-            _gatewayClient = new GatewayClient(to,
-                new GatewayClientConfiguration()
-                {
-                    Intents = default,
-                    Logger = new ConsoleLogger()
-                });
 
-            StartClient();
-        }
-
-        public async void StartClient()
-        {
-            var interactionService = new ApplicationCommandService<ApplicationCommandContext>();
-            interactionService.AddModules(typeof(DiscordService).Assembly);
-            
-            var manager = new ApplicationCommandServiceManager();
-            manager.AddService(interactionService);
-
-            // Start the client
-            await _gatewayClient.StartAsync();
-
-            // Once ready, register commands
-            await manager.RegisterCommandsAsync(_gatewayClient.Rest, _settings.Value.AppId);
         }
 
         public async Task<ulong?> GetDiscordUserId(string username)
@@ -251,7 +229,6 @@ namespace Discord
         protected string MentionUser(ulong userId) => $"<@{userId}>";
 
         private readonly RestClient _restClient;
-        private readonly GatewayClient _gatewayClient;
         private readonly IOptions<DiscordSettings> _settings;
         private ForumGuildThreadProperties BuildThreadProperties(string title, string content) => new ForumGuildThreadProperties(
             title,
