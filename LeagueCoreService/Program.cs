@@ -73,8 +73,8 @@ builder.Services.AddDbContextFactory<QueueContext>(options =>
 
 // Custom services registrations
 
-builder.Services.AddScoped<LeagueDataService>();
-builder.Services.AddScoped<QueueDataService>();
+builder.Services.AddSingleton<LeagueDataService>();
+builder.Services.AddSingleton<QueueDataService>();
 builder.Services.AddScoped<LeagoService.LeagoMainService>();
 builder.Services.AddScoped<MailService>();
 builder.Services.AddScoped<ReviewService>();
