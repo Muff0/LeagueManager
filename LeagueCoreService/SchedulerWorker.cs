@@ -11,19 +11,20 @@ namespace LeagueCoreService
     public class SchedulerWorker : BackgroundService
     {
         private readonly ILogger<SchedulerWorker> _logger;
-        private readonly QueueDataService _queueDataService;
         private readonly IScheduledJob[] _scheduledJobs;
-
-        public SchedulerWorker(ILogger<SchedulerWorker> logger, IServiceScopeFactory scopeFactory)
+    
+        
+        public SchedulerWorker(ILogger<SchedulerWorker> logger, 
+            QueueDataService queueDataService,
+            LeagueDataService leagueDataService)
         {
-            using var scope = scopeFactory.CreateScope();
-            _queueDataService = scope.ServiceProvider.GetRequiredService<QueueDataService>();
             _logger = logger;
 
-            _scheduledJobs = new[]
-            {
-                new SyncMatchesScheduledJob(),
-            };
+            _scheduledJobs =
+            [
+                new SyncMatchesScheduledJob(queueDataService),
+                new PostUpcomingMatchScheduledJob(queueDataService, leagueDataService)
+            ];
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -46,11 +47,12 @@ namespace LeagueCoreService
                 var iterationTimestamp = DateTime.Now;
                 foreach (var job in _scheduledJobs)
                 {
-                    if (job.ShouldRun(iterationTimestamp))
+                    var shouldRun = await job.ShouldRun(iterationTimestamp);
+                    if (shouldRun)
                     {
                             _logger.LogInformation("Running Scheduled Job " + job.GetType());
                         
-                        await job.Enqueue(_queueDataService);   
+                        await job.Enqueue();   
                     }
 
                 }
