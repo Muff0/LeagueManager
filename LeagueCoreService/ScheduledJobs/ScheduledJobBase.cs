@@ -11,8 +11,8 @@ public abstract class ScheduledJobBase : IScheduledJob
     {
         _queueDataService = queueDataService;
     }
-    
-    public DateTime LastRun { get; protected set; }
+
+    public DateTime LastRun { get; protected set; } = DateTime.Now;
     public virtual TimeSpan Interval { get; } = TimeSpan.FromHours(1);
 
     public virtual async Task<bool> ShouldRun(DateTime now)

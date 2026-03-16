@@ -1,3 +1,5 @@
+using Data;
+using Discord.Dto;
 using NetCord.Services.ApplicationCommands;
 using NetCord;
 using NetCord.Rest;
@@ -7,7 +9,30 @@ namespace Discord;
 
 public class BotCommandModule : ApplicationCommandModule<ApplicationCommandContext>
 {
+    private CommandOrchestrator _commandOrchestrator;
+
+    private async Task DeferAsync()
+    {
+        await Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
+    }
     
+    public BotCommandModule(CommandOrchestrator commandOrchestrator)
+    {
+        _commandOrchestrator = commandOrchestrator;
+    }
+    [SlashCommand("my-opponent", "Get your opponent for a specific round")]
+    public async Task MyOpponent(int round)
+    {
+        await DeferAsync();
+        var response = await _commandOrchestrator.GetOpponentAsync(
+            new GetOpponentAsyncInDto()
+            {
+                PlayerDiscordId = Context.Interaction.User.Id,
+                PlayerDiscordHandle = Context.Interaction.User.Username,
+                Round = round
+            });
+        await FollowupAsync(response);
+    }
     
     [SlashCommand("ping", "Ping command")]
     public async Task Ping()
@@ -17,9 +42,9 @@ public class BotCommandModule : ApplicationCommandModule<ApplicationCommandConte
     }
     
     [SlashCommand("change-rank", "Request a rank Change")]
-    public async Task ChangeRank(string rank)
+    public static string ChangeRank(string rank)
     {
-        await this.Context.Interaction.SendResponseAsync(InteractionCallback.Message("Your rank change request has been submitted!"));
+        return "Your rank change request has been submitted!";
     }
     
     [SlashCommand("report-forfeit", "Report a forfeit")]

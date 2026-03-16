@@ -222,11 +222,11 @@ namespace Discord
             return resEvent;
         }
 
-        protected string MentionChannel(ulong channelId) => $"<#{channelId}>";
+        public string MentionChannel(ulong channelId) => $"<#{channelId}>";
 
-        protected string MentionRole(ulong roleId) => $"<@&{roleId}>";
+        public string MentionRole(ulong roleId) => $"<@&{roleId}>";
 
-        protected string MentionUser(ulong userId) => $"<@{userId}>";
+        public string MentionUser(ulong userId) => $"<@{userId}>";
 
         private readonly RestClient _restClient;
         private readonly IOptions<DiscordSettings> _settings;

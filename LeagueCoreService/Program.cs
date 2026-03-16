@@ -6,8 +6,10 @@ using LeagueCoreService;
 using LeagueCoreService.Services;
 using Mail;
 using Microsoft.EntityFrameworkCore;
+using NetCord;
 using NetCord.Hosting.Gateway;
 using NetCord.Hosting.Services.ApplicationCommands;
+using NetCord.Services.ApplicationCommands;
 using Newtonsoft.Json;
 using OGS;
 using Shared.Converter;
@@ -81,11 +83,20 @@ builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<OGSService>();
 builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<Discord.DiscordService>();
+builder.Services.AddScoped<CommandOrchestrator>();
 
 // Start the Discord service
-builder.Services.AddDiscordGateway()
-    .AddApplicationCommands();
-builder.Services.AddHostedService<BotService>();
+
+var discordSettings = builder.Configuration
+    .GetSection("Discord")
+    .Get<DiscordSettings>()!;
+
+builder.Services.AddDiscordGateway(o =>
+    {
+        o.Token = discordSettings.Token;
+    })
+    .AddApplicationCommands<ApplicationCommandInteraction, ApplicationCommandContext>()
+    .AddGatewayHandlers(typeof(InteractionHandler).Assembly);
 
 builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
 builder.Services.AddHostedService<QueueWorker>();
@@ -93,6 +104,9 @@ builder.Services.AddHostedService<SchedulerWorker>();
 
 var host = builder.Build();
 
+// Discord command modules
+
+host.AddApplicationCommandModule<BotCommandModule>();
 
 using (var scope = host.Services.CreateScope())
 {
