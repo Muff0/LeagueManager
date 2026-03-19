@@ -2,6 +2,7 @@ using Data;
 using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
+using LeagueCoreService.Queue;
 using LeagueCoreService.Services;
 using Shared.Enum;
 
@@ -12,6 +13,7 @@ namespace LeagueCoreService
         private readonly ILogger<QueueWorker> _logger;
         private readonly MainService _mainService;
         private readonly QueueDataService _queueDataService;
+        private readonly Dictionary<string, ICommandHandler> _handlers;
         
         public QueueWorker(ILogger<QueueWorker> logger, IServiceScopeFactory scopeFactory)
         {
@@ -19,7 +21,9 @@ namespace LeagueCoreService
             _mainService = scope.ServiceProvider.GetRequiredService<MainService>();
             _queueDataService = scope.ServiceProvider.GetRequiredService<QueueDataService>();
             _logger = logger;
-
+            _handlers = scope.ServiceProvider
+                .GetServices<ICommandHandler>()
+                .ToDictionary(h => h.CommandType);
         }
 
         private async Task<CommandMessage?> GetNextCommand()
@@ -67,20 +71,15 @@ namespace LeagueCoreService
             {
                 await SetCommandStatus(cmd, QueueStatus.Processing, false);
 
-                if (cmd.Type == "SendUpcomingMatchesNotification")
+                if (!_handlers.TryGetValue(cmd.Type, out var handler))
                 {
-                    await _mainService.SendUpcomingMatchesNotification();
-                    await SetCommandStatus(cmd, QueueStatus.Completed);
-                }
-                else if (cmd.Type == "SyncMatches")
-                {
-                    await _mainService.SyncMatches();
-                    await SetCommandStatus(cmd, QueueStatus.Completed);
-                }
-                else
-                {
+                    _logger.LogWarning("No handler found for command type: {type}", cmd.Type);
                     await SetCommandStatus(cmd, QueueStatus.Failed);
+                    return;
                 }
+
+                await handler.HandleAsync(cmd);
+                await SetCommandStatus(cmd, QueueStatus.Completed);
             }
             catch (Exception ex)
             {

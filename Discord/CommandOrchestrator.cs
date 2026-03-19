@@ -1,8 +1,11 @@
 using Data;
+using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
 using Discord.Dto;
 using NetCord.Rest;
+using Shared.Extensions;
+using Shared.Queue;
 
 namespace Discord;
 
@@ -49,7 +52,43 @@ public class CommandOrchestrator
 
         response += "Discord: " + ((resGetO.DiscordId != null) ? _discordService.MentionUser((ulong)resGetO.DiscordId) : "Unavailable") + Environment.NewLine;
         response += "OGS: " + resGetO.OGSHandle + Environment.NewLine;
+        response += "Email: " + resGetO.EmailAddress;
 
         return response;
+    }
+
+    public void QueueRankChangeCommand(RankChangePayload rankChangePayloadPayload)
+    {
+        _queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
+        {
+            NewCommand = new CommandMessage()
+            {
+                Type = "RankChangeCommand",
+                Payload = rankChangePayloadPayload.SerializePayload()
+            }
+        });
+    }
+    public void QueueApplyForAwardCommand(AwardApplicationPayload awardApplicationPayload)
+    {
+        _queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
+        {
+            NewCommand = new CommandMessage()
+            {
+                Type = "AwardApplicationCommand",
+                Payload = awardApplicationPayload.SerializePayload()
+            }
+        });
+    }
+
+    public void QueueReportForfeitCommand(ReportForfeitPayload reportForfeitPayload)
+    {
+        _queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
+        {
+            NewCommand = new CommandMessage()
+            {
+                Type = "ReportForfeitCommand",
+                Payload = reportForfeitPayload.SerializePayload()
+            }
+        });
     }
 }

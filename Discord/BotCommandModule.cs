@@ -4,6 +4,7 @@ using NetCord.Services.ApplicationCommands;
 using NetCord;
 using NetCord.Rest;
 using Shared.Enum;
+using Shared.Queue;
 
 namespace Discord;
 
@@ -20,10 +21,12 @@ public class BotCommandModule : ApplicationCommandModule<ApplicationCommandConte
     {
         _commandOrchestrator = commandOrchestrator;
     }
+    
     [SlashCommand("my-opponent", "Get your opponent for a specific round")]
     public async Task MyOpponent(int round)
     {
-        await DeferAsync();
+        await this.Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage(MessageFlags.Ephemeral));
+
         var response = await _commandOrchestrator.GetOpponentAsync(
             new GetOpponentAsyncInDto()
             {
@@ -31,32 +34,68 @@ public class BotCommandModule : ApplicationCommandModule<ApplicationCommandConte
                 PlayerDiscordHandle = Context.Interaction.User.Username,
                 Round = round
             });
-        await FollowupAsync(response);
+        await this.FollowupAsync(new InteractionMessageProperties()
+            .WithContent(response)
+            .WithFlags(MessageFlags.Ephemeral));
     }
     
-    [SlashCommand("ping", "Ping command")]
-    public async Task Ping()
+    [SlashCommand("apply-for-award", "Apply for an award")]
+    public async Task ApplyForAward(string gameLink, AwardType awardType)
     {
-        await this.Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
-        await this.FollowupAsync("ping");
+        await this.Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage(MessageFlags.Ephemeral));
+
+        _commandOrchestrator.QueueApplyForAwardCommand(
+            new AwardApplicationPayload()
+            {
+                AwardType = awardType,
+                GameLink = gameLink
+            });
+        
+        await this.FollowupAsync(new InteractionMessageProperties()
+            .WithContent("Your application has been submitted!")
+            .WithFlags(MessageFlags.Ephemeral));
     }
     
     [SlashCommand("change-rank", "Request a rank Change")]
-    public static string ChangeRank(string rank)
+    public async Task ChangeRank(string rank)
     {
-        return "Your rank change request has been submitted!";
+        await this.Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage(MessageFlags.Ephemeral));
+
+        _commandOrchestrator.QueueRankChangeCommand(
+            new RankChangePayload()
+            {
+                DiscordId = Context.Interaction.User.Id,
+                NewRank = rank
+            });
+        
+        await this.FollowupAsync(new InteractionMessageProperties()
+            .WithContent("Your request has been submitted!")
+            .WithFlags(MessageFlags.Ephemeral));
     }
     
     [SlashCommand("report-forfeit", "Report a forfeit")]
-    public async Task ReportForfeit()
+    public async Task ReportForfeit(int round, string comments)
     {
-        await this.Context.Interaction.SendResponseAsync(InteractionCallback.Message( "Your forfeit report has been submitted! It will be reviewed by the organizers."));
+        
+        await this.Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage(MessageFlags.Ephemeral));
+
+        _commandOrchestrator.QueueReportForfeitCommand(
+            new ReportForfeitPayload()
+            {
+                DiscordId = Context.Interaction.User.Id,
+                Round = round,
+                Comments = comments
+            });
+        await this.FollowupAsync(new InteractionMessageProperties()
+            .WithContent("Your report has been submitted!")
+            .WithFlags(MessageFlags.Ephemeral));
+        
     }
     
     [SlashCommand("set-vc-availability", "Set Availability for VC")]
     public async Task SetVcAvailability()
     {
-        await this.Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
+        await this.Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage(MessageFlags.Ephemeral));
         await Context.Interaction.SendFollowupMessageAsync("Your request has been submitted!");
     }
     
