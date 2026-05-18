@@ -1,4 +1,5 @@
 ﻿using Data;
+using Data.Commands.Queue;
 using Data.Model;
 using Discord;
 using LeagoService;
@@ -18,6 +19,7 @@ namespace LeagueCoreService.Services
         private readonly IDbContextFactory<LeagueContext> _leagueContextFactory;
         private readonly IOptions<LeagoSettings> _leagoOptions;
         private readonly LeagueDataService _leagueDataService;
+        private readonly QueueDataService _queueDataService;
         private readonly DiscordService _discordService;
 
         public MainService(LeagoMainService leagoService,
@@ -25,12 +27,14 @@ namespace LeagueCoreService.Services
             IDbContextFactory<LeagueContext> leagueContextFactory,
             LeagueDataService dataService,
             DiscordService discordService,
+            QueueDataService queueService,
             ILogger<MainService> logger) : base(logger)
         {
             _leagueContextFactory = leagueContextFactory;
             _leagoService = leagoService;
             _leagoOptions = leagoOptions;
             _leagueDataService = dataService;
+            _queueDataService = queueService;
             _discordService = discordService;
         }
 
@@ -233,5 +237,9 @@ namespace LeagueCoreService.Services
             }
         }
 
+        public async Task CleanupQueue()
+        {
+            await _queueDataService.ExecuteAsync(new DeleteOldCommandMessagesCommand());
+        }
     }
 }

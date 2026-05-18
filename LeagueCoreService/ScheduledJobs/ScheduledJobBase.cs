@@ -13,7 +13,7 @@ public abstract class ScheduledJobBase : IScheduledJob
     }
 
     public DateTime LastRun { get; protected set; } = DateTime.Now;
-    public virtual TimeSpan Interval { get; } = TimeSpan.FromHours(1);
+    public virtual TimeSpan Interval { get; set; } = TimeSpan.FromHours(1);
 
     public virtual async Task<bool> ShouldRun(DateTime now)
     {
