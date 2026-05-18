@@ -18,8 +18,8 @@
 
 </div>
 
-<HxGrid @ref="playersGrid" TItem="PlayerViewModel" DataProvider="GetPlayersGridData"
-        SelectedDataItem="selectedPlayer"
+<HxGrid @ref="_playersGrid" TItem="PlayerViewModel" DataProvider="GetPlayersGridData"
+        SelectedDataItem="_selectedPlayer"
         SelectedDataItemChanged="HandleSelectePlayerChanged"
         MultiSelectionEnabled="true" PageSize="500" Responsive="true" >
     <Columns>
@@ -30,22 +30,22 @@
 
 @code {
 
-    private HxGrid<PlayerViewModel> playersGrid;
-    private List<PlayerViewModel>? PlayersList;
-    private HashSet<PlayerViewModel>? selectedPlayers;
-    private PlayerViewModel? selectedPlayer;
-    private string message = "Loading...";
+    private HxGrid<PlayerViewModel> _playersGrid;
+    private List<PlayerViewModel>? _playersList;
+    private HashSet<PlayerViewModel>? _selectedPlayers;
+    private PlayerViewModel? _selectedPlayer;
+    private string _message = "Loading...";
 
 
     private async Task HandleSelectePlayerChanged(PlayerViewModel newSelectedDataItem)
     {
-        if (selectedPlayer != null)
+        if (_selectedPlayer != null)
         {
             // save the changes to original selectedDataItem first
-            await MainService.SavePlayerChanges(new List<PlayerViewModel>() { selectedPlayer });
+            await MainService.SavePlayerChanges(new List<PlayerViewModel>() { _selectedPlayer });
         }
         // update selectedDataItem to new selection
-        selectedPlayer = newSelectedDataItem;
+        _selectedPlayer = newSelectedDataItem;
     }
 
     protected override async Task OnInitializedAsync()
@@ -57,9 +57,9 @@
     private async Task AddReviewToSelectedPlayer()
     {
 
-        if (selectedPlayer != null)
+        if (_selectedPlayer != null)
         {
-            await MainService.AddReviewToPlayer(selectedPlayer);
+            await MainService.AddReviewToPlayer(_selectedPlayer);
         }
     }
 
@@ -76,13 +76,13 @@
     {
         try
         {
-            if (playersGrid == null)
+            if (_playersGrid == null)
                 return;
-            await playersGrid.RefreshDataAsync();
+            await _playersGrid.RefreshDataAsync();
         }
         catch (Exception e)
         {
-            message = "Error";
+            _message = "Error";
         }
     }
 }

@@ -6,14 +6,14 @@
 
 <h1>Sync</h1>
 
-<p role="status">@message</p>
+<p role="status">@_message</p>
 
 <button class="btn btn-primary" @onclick="SyncPlayers">Sync Players</button>
 <button class="btn btn-primary" @onclick="SyncMatches">Sync Matches</button>
-<button class="btn btn-primary" @onclick="CheckOGSRanks">Check Ranks</button>
+<button class="btn btn-primary" @onclick="CheckOgsRanks">Check Ranks</button>
 
 @code {
-    private string message = "Loading...";
+    private string _message = "Loading...";
     
     private async void SyncMatches()
     {
@@ -24,7 +24,7 @@
         }
         catch (Exception e)
         {
-            message = "Error";
+            _message = "Error";
         }
     }
     private async void SyncPlayers()
@@ -36,10 +36,10 @@
         }
         catch (Exception e)
         {
-            message = "Error";
+            _message = "Error";
         }
     }
-    private async void CheckOGSRanks()
+    private async void CheckOgsRanks()
     {
         try
         {
@@ -47,7 +47,7 @@
         }
         catch (Exception e)
         {
-            message = "Error";
+            _message = "Error";
         }
     }
 }

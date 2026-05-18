@@ -6,7 +6,7 @@
 
 <h1>Orders</h1>
 
-<p role="status">@message</p>
+<p role="status">@_message</p>
 
 <InputFile OnChange="OnFileUploaded" />
 
@@ -14,17 +14,17 @@
 <button class="btn btn-primary" @onclick="GetMissingPayments">Get Missing Payments</button>
 
 
-<p role="status">@missingpayments</p>
+<p role="status">@_missingpayments</p>
 
 @code {
-    private string message = "Loading...";
-    private string missingpayments = "...";
+    private string _message = "Loading...";
+    private string _missingpayments = "...";
 
     private async  void GetMissingPayments()
     {
-        var resMP = await MainService.GetMissingPayments();
+        var resMp = await MainService.GetMissingPayments();
 
-        missingpayments = string.Join("; ", resMP.Select(pl => pl.EmailAddress));
+        _missingpayments = string.Join("; ", resMp.Select(pl => pl.EmailAddress));
     }
 
     private async void OnFileUploaded(InputFileChangeEventArgs e)
@@ -38,12 +38,12 @@
                 using var stream = file.OpenReadStream(maxAllowedSize: 10_000_000); // 10 MB limit
                 var result = await MainService.UploadOrdersFile(stream);
 
-                message = result ? "Upload successful!" : "Upload failed.";
+                _message = result ? "Upload successful!" : "Upload failed.";
             }
         }
         catch (Exception ex)
         {
-            message = "Error";
+            _message = "Error";
         }
     }
 }

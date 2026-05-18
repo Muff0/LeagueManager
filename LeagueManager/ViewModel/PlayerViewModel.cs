@@ -9,7 +9,7 @@ namespace LeagueManager.ViewModel
         public string? LastName { get; set; }
         public string? EmailAddress { get; set; }
         public string? DiscordHandle { get; set; }
-        public string? OGSHandle { get; set; }
+        public string? OgsHandle { get; set; }
         public string? LeagoMemberId { get; set; }
         public PlayerRank Rank { get; set; } = PlayerRank.MinValue;
         public string? LeagoKey { get; set; }

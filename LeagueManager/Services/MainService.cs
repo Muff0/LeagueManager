@@ -33,6 +33,17 @@ namespace LeagueManager.Services
         private readonly ReviewService _reviewService;
         private readonly OGSService _ogsService;
         private readonly MailService _mailService;
+        private readonly Dictionary<string, PlayerParticipationTier> _participationTiers = new()
+        {
+            {"Go Magic League - Starter",PlayerParticipationTier.DojoTier1},
+            {"Go Magic League - Learner", PlayerParticipationTier.DojoTier2},
+            {"Go Magic League - Adept", PlayerParticipationTier.DojoTier3},
+            {"Go Magic League - Master", PlayerParticipationTier.DojoTier4},
+            //Old product designations, leaving these here just in case
+            {"Go Magic League - Participation + Lectures", PlayerParticipationTier.DojoTier1},
+            {"Go Magic League - Lectures + 2 reviews", PlayerParticipationTier.DojoTier2},
+            {"Go Magic League - Lectures + 5 reviews", PlayerParticipationTier.DojoTier3},
+        };
 
         public MainService(QueueDataService queueDataService,
             LeagueDataService leagueDataService,
@@ -87,13 +98,10 @@ namespace LeagueManager.Services
 
         protected PlayerParticipationTier GetParticipationTier(string product)
         {
-            if (product == "Go Magic League - Participation + Lectures")
-                return PlayerParticipationTier.DojoTier1;
-            if (product == "Go Magic League - Lectures + 2 reviews")
-                return PlayerParticipationTier.DojoTier2;
-            if (product == "Go Magic League - Lectures + 5 reviews")
-                return PlayerParticipationTier.DojoTier3;
-            return PlayerParticipationTier.None;
+            if (!_participationTiers.TryGetValue(product, out var tier))
+                return PlayerParticipationTier.None;
+
+            return tier;
         }
 
         public async Task LinkReviewMatches()
@@ -200,7 +208,7 @@ namespace LeagueManager.Services
 
         protected async Task ProcessPaymentData(PaymentDataDto[] payments)
         {
-            var cutoffDate = new DateTime(2025, 12, 1);
+            var cutoffDate = new DateTime(2026, 4, 1);
 
             var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery() { IncludePlayerSeasons = true });
             var players = await _leagueDataService.RunQueryAsync(new GetPlayersQuery());
@@ -266,9 +274,9 @@ namespace LeagueManager.Services
         {
 
             var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-            var resGetMP = await _leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery() { SeasonId = season.Id });
+            var resGetMp = await _leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery() { SeasonId = season.Id });
 
-            return resGetMP.Select(pl => new PlayerDto()
+            return resGetMp.Select(pl => new PlayerDto()
             {
                 FirstName = pl.FirstName,
                 LastName = pl.LastName,
@@ -487,7 +495,24 @@ namespace LeagueManager.Services
                 return new List<PlayerViewModel>();
             }
         }
+    
+        public async Task<List<RankChangeRequestViewModel>> GetRankChangeRequests(int? startIndex, int? count, CancellationToken cancellationToken)
+        {
 
+            try
+            {
+                var res = await _queueDataService.RunQueryAsync(new GetCommandMessagesQuery()
+                {
+                    Types = ["RankChangeCommand"]
+                });
+                return res.Select(rev => rev.ToRankChangeRequestViewModel()).ToList();
+            }
+            catch (Exception ex)
+            {
+                HandleException(ex);
+                return new List<RankChangeRequestViewModel>();
+            }
+        }
 
         public async Task<List<ReviewViewModel>> GetOverviewReviews(int? startIndex, int? count, CancellationToken cancellationToken)
         {
@@ -544,6 +569,23 @@ namespace LeagueManager.Services
                 return new List<ReviewViewModel>();
             }
         }
+
+        public async Task MarkRankChangeRequestComplete(RankChangeRequestViewModel request)
+        {
+            try
+            {
+                _queueDataService.Execute(new SetCommandMessageStatusCommand()
+                {
+                    CommandMessageId = request.Id,
+                    NewStatus = QueueStatus.Completed
+                });
+            }
+            catch (Exception e)
+            {
+                HandleException(e);;
+            }
+        }
+        
         public async Task<List<ReviewViewModel>> GetMissedReviews(int? startIndex, int? count, CancellationToken cancellationToken)
         {
 

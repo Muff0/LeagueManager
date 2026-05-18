@@ -31,6 +31,7 @@ namespace LeagueCoreService
             return await _queueDataService.RunQueryAsync(
                 new GetNextCommandMessageQuery()
                 {
+                    Types = _handlers.Keys.ToArray()
                 });
         }
 

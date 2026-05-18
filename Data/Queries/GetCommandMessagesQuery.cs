@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace Data.Queries
 {
     
-    public class GetNextCommandMessageQuery : Scalar<QueueContext, CommandMessage>
+    public class GetCommandMessagesQuery : Query<QueueContext, CommandMessage>
     {
         public string[] Types { get; set; } = [];
         protected override IQueryable<CommandMessage> BuildQuery(QueueContext context)
@@ -15,9 +15,7 @@ namespace Data.Queries
             
             if (Types.Length > 0)
                 query = query.Where(cm => Types.Contains(cm.Type));
-
-            query = query.OrderBy(cm => cm.CreatedAtUtc);
-
+            
             return query;
         }
     }

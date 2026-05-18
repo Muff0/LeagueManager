@@ -13,13 +13,54 @@ namespace LeagueManager.Services
 {
     public class ReviewService : ServiceBase
     {
-
+        private readonly Dictionary<PlayerParticipationTier, int> _participationTiers =
+            new()
+            {
+                { PlayerParticipationTier.DojoTier2, 1 },
+                { PlayerParticipationTier.DojoTier3, 3 },
+                { PlayerParticipationTier.DojoTier4, 5 }
+            };
+        
         public ReviewService(LeagueDataService leagueDataService,
             ILogger<ReviewService> logger) : base(logger)
         {
             _leagueDataService = leagueDataService;
         }
 
+        private async Task<int[]> GetReviewsPerRound(int seasonId)
+        {
+            var resGetReviews = await _leagueDataService.RunQueryAsync(new GetReviewsQuery());
+
+            int[] revPerRound = new int[6];
+
+            for (int ii = 1; ii <= 6; ii++)
+                revPerRound[ii] = resGetReviews.Count(rr => rr.Round == ii);
+            return revPerRound;
+        }
+
+        /// <summary>
+        /// Returns round with least reviews for which the player doesn't already have one scheduled
+        /// </summary>
+        private int GetRoundWithLeastReviews(int[] revPerRound, int[] playerScheduledRounds)
+        {
+            int bestRound = -1;
+            int bestCount = int.MaxValue;
+
+            for (int round = 1; round < revPerRound.Length; round++)
+            {
+                if (playerScheduledRounds.Contains(round))
+                    continue;
+
+                if (revPerRound[round] < bestCount)
+                {
+                    bestCount = revPerRound[round];
+                    bestRound = round;
+                }
+            }
+
+            return bestRound;
+        }
+        
         public async Task AssignRoundsToReviews()
         {
 
@@ -28,68 +69,39 @@ namespace LeagueManager.Services
             {
                 SeasonId = activeSeason.Id,
                 IncludeReviews = true,
-                ParticipationTiers = [PlayerParticipationTier.DojoTier2, PlayerParticipationTier.DojoTier3]
+                ParticipationTiers = _participationTiers.Keys.ToArray()
             });
 
+            // Keeps track of reviews per round, to spread them out, round 0 included to keep it simple
+            int[] roundReviewCount = await GetReviewsPerRound(activeSeason.Id);
+            
             var updateList = new List<ReviewDto>();
-            int currentPattern = 0;
 
             foreach (var player in resGetPlayers)
             {
-                if (player.Reviews.Count == 5)
+                foreach (Review current in player.Reviews)
                 {
-                    for (var i = 0; i < player.Reviews.Count; i++)
-                    {
-                        var current = player.Reviews.FirstOrDefault(rr => rr.Round == i + 1);
-                        if (current == null)
-                        {
-                            var toUpdate = player.Reviews.FirstOrDefault(rr => rr.Round == 0);
-                            if (toUpdate != null)
-                            {
-                                toUpdate.Round = i + 1;
-                                updateList.Add(new ReviewDto()
-                                {
-                                    Id = player.Reviews.ElementAt(i).Id,
-                                    Round = i + 1
-                                });
-                            }
-                        }
-                    }
-                }
+                    if (current.Round > 0)
+                        //already assigned
+                        continue;
 
-                else if (player.Reviews.Count == 2)
-                {
-                    for (var i = 0; i < player.Reviews.Count; i++)
+                    int round = GetRoundWithLeastReviews(roundReviewCount,
+                        player.Reviews.Select(rr => rr.Round).ToArray());
+                    
+                    current.Round = round;
+                    updateList.Add(new ReviewDto()
                     {
-                        int[] pattern = _reviewPattern[currentPattern];
-                        var current = player.Reviews.FirstOrDefault(rr => rr.Round == pattern[i]);
-                        if (current == null)
-                        {
-                            var toUpdate = player.Reviews.FirstOrDefault(rr => rr.Round == 0);
-                            if (toUpdate != null)
-                            {
-                                toUpdate.Round = pattern[i];
-                                updateList.Add(new ReviewDto()
-                                {
-                                    Id = player.Reviews.ElementAt(i).Id,
-                                    Round = pattern[i]
-                                });
-                            }
-                        }
-                    }
-                    currentPattern++;
-                    if (currentPattern == _reviewPattern.Length)
-                        currentPattern = 0;
+                        Id = current.Id,
+                        Round = round
+                    });
                 }
-                else
-                    continue;
             }
             await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand()
             {
                 Reviews = updateList.ToArray()
             });
         }
-
+        
         public async Task BuildReviews()
         {
             var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
@@ -106,7 +118,7 @@ namespace LeagueManager.Services
 
             foreach (var player in resGetPlayers)
             {
-                var reviewCount = GetReviewCount(player.ParticipationTier);
+                var reviewCount = _participationTiers.GetValueOrDefault(player.ParticipationTier);
                 int revDiff = reviewCount - player.Reviews.Count;
 
                 if (revDiff <= 0)
@@ -205,15 +217,6 @@ namespace LeagueManager.Services
 
         private readonly LeagueDataService _leagueDataService;
 
-        private readonly int[][] _reviewPattern = [[1, 3], [2, 4], [3, 5], [1, 4], [2, 5]];
-        private int GetReviewCount(PlayerParticipationTier tier)
-        {
-            if (tier == PlayerParticipationTier.DojoTier2)
-                return 2;
-            if (tier == PlayerParticipationTier.DojoTier3)
-                return 5;
-            return 0;
-        }
 
         public async Task AddReviewToPlayer(PlayerDto playerDto)
         {

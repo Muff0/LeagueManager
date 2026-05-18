@@ -1,0 +1,66 @@
+﻿@page "/rankChange"
+@using LeagueManager.Extensions
+@using LeagueManager.ViewModel
+@using Havit.Blazor.Components.Web;
+@using Shared.Dto
+@inject Services.MainService MainService
+@rendermode InteractiveServer
+
+<PageTitle>Rank Change Requests</PageTitle>
+
+<h1>Rank Change Requests</h1>
+
+
+<div class="grid-container">
+    <div class="grid-item">
+        <button class="btn btn-primary" @onclick="MarkCompleted">Mark Completed</button>
+    </div>
+
+</div>
+
+<HxGrid @ref="_requestsGrid" TItem="RankChangeRequestViewModel" DataProvider="GetRankChangeRequestsData"
+        SelectedDataItem="_selectedRequest"
+        MultiSelectionEnabled="true" PageSize="500" Responsive="true" >
+    <Columns>
+        <HxGridColumn HeaderText="Content" ItemTextSelector="rev => rev.Payload" />
+    </Columns>
+</HxGrid>
+
+@code {
+
+    private HxGrid<RankChangeRequestViewModel> _requestsGrid;
+    private List<RankChangeRequestViewModel>? _requestsList;
+    private HashSet<RankChangeRequestViewModel>? _selectedRequests;
+    private RankChangeRequestViewModel? _selectedRequest;
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+    }
+
+
+    private async Task MarkCompleted()
+    {
+
+        if (_selectedRequest != null)
+        {
+            await MainService.MarkRankChangeRequestComplete(_selectedRequest);
+        }
+    }
+
+    private async Task<GridDataProviderResult<RankChangeRequestViewModel>> GetRankChangeRequestsData(GridDataProviderRequest<RankChangeRequestViewModel> request)
+    {
+        var response = await MainService.GetRankChangeRequests(request.StartIndex, request.Count, request.CancellationToken);
+        return new GridDataProviderResult<RankChangeRequestViewModel>()
+        {
+            Data = response,
+            TotalCount = response.Count
+        };
+    }
+    private async void RefreshRequestsGrid()
+    {
+            await _requestsGrid.RefreshDataAsync();
+    }
+}

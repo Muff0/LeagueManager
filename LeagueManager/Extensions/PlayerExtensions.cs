@@ -10,7 +10,7 @@ namespace LeagueManager.Extensions
         {
             Id = player.Id,
             LeagoMemberId = player.LeagoMemberId,
-            OGSHandle = player.OGSHandle,
+            OgsHandle = player.OGSHandle,
             DiscordHandle = player.DiscordHandle,
             DiscordId = player.DiscordId,
             EmailAddress = player.EmailAddress,
@@ -25,7 +25,7 @@ namespace LeagueManager.Extensions
             {
                 Id = player.Id,
                 LeagoMemberId = player.LeagoMemberId,
-                OGSHandle = player.OGSHandle,
+                OGSHandle = player.OgsHandle,
                 DiscordHandle = player.DiscordHandle,
                 DiscordId = player.DiscordId,
                 EmailAddress = player.EmailAddress,

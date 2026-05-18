@@ -7,24 +7,24 @@
 
 <h1>Sync</h1>
 
-<p role="status">@message</p>
+<p role="status">@_message</p>
 
 
 <button class="btn btn-primary" @onclick="SendNotification">Test Notification</button>
 
 
 <div class="grid-container">
-    <EditForm Model="@notificationModel">
-        <DateTimeInput TValue="DateTime?" @bind-Value="notificationModel.Deadline"></DateTimeInput>
-        <InputNumber @bind-Value="notificationModel.Round" />
+    <EditForm Model="@_notificationModel">
+        <DateTimeInput TValue="DateTime?" @bind-Value="_notificationModel.Deadline"></DateTimeInput>
+        <InputNumber @bind-Value="_notificationModel.Round" />
         <button type="button" @onclick="SendRoundStartNotification">Send</button>
     </EditForm>
 </div>
 
 @code {
 
-    private NotificationViewModel notificationModel = new();
-    private string message = "Loading...";
+    private NotificationViewModel _notificationModel = new();
+    private string _message = "Loading...";
     private async Task SendNotification()
     {
         try
@@ -34,7 +34,7 @@
         }
         catch (Exception e)
         {
-            message = "Error";
+            _message = "Error";
         }
     }
     private async Task SendRoundStartNotification()
@@ -42,11 +42,11 @@
         try
         {
 
-            await MainService.SendRoundStartNotification(notificationModel.Round, notificationModel.Deadline.GetValueOrDefault());
+            await MainService.SendRoundStartNotification(_notificationModel.Round, _notificationModel.Deadline.GetValueOrDefault());
         }
         catch (Exception e)
         {
-            message = "Error";
+            _message = "Error";
         }
     }
     
