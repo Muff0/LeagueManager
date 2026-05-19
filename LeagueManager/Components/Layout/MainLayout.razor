@@ -1,4 +1,8 @@
 ﻿@inherits LayoutComponentBase
+@inject NotificationService Notifications
+@using LeagueManager.Services
+@using Shared.Notifications
+@implements IAsyncDisposable
 
 <div class="page">
     <div class="sidebar">
@@ -22,3 +26,23 @@
     <span class="dismiss">🗙</span>
 </div>
 
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+        Notifications.OnNotification += HandleNotification;
+        await Notifications.StartAsync();
+    }
+
+    private void HandleNotification(NotificationMessage msg)
+    {
+        // push to a toast queue, a list, whatever your UI does
+        InvokeAsync(StateHasChanged);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        Notifications.OnNotification -= HandleNotification;
+        await Notifications.DisposeAsync();
+    }
+}

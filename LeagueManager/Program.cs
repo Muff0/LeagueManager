@@ -11,6 +11,7 @@ using NetCord.Hosting.Gateway;
 using Newtonsoft.Json;
 using OGS;
 using Shared.Converter;
+using Shared.Notifications;
 using Shared.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -34,6 +35,8 @@ JsonConvert.DefaultSettings = () => new JsonSerializerSettings
 
 builder.Services.AddSingleton<ITokenProvider, LeagoTokenProvider>();
 builder.Services.AddTransient<LeagoAuthenticatedHttpHandler>();
+
+
 
 // Clients registration
 
@@ -84,12 +87,22 @@ builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<OGSService>();
 builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<Discord.DiscordService>();
+// Notification Services
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<NotificationDispatcher>();
+builder.Services.AddSingleton<INotificationDispatcher>(sp =>
+    sp.GetRequiredService<NotificationDispatcher>()); // same instance
+builder.Services.AddHostedService<NotificationRelayService>();
+builder.Services.AddSingleton<NotificationService>();
 
 // Start the Discord service
 builder.Services.AddDiscordGateway();
 
 var app = builder.Build();
 
+// Map Notification hub
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

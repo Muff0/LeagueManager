@@ -19,6 +19,7 @@ using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
 using Shared.Enum;
+using Shared.Notifications;
 using Shared.Settings;
 
 namespace LeagueManager.Services
@@ -30,6 +31,7 @@ namespace LeagueManager.Services
         private readonly LeagoMainService _leagoService;
         private readonly IOptions<LeagoSettings> _leagoOptions;
         private readonly DiscordService _discordService;
+        private readonly INotificationDispatcher _notificationService;
         private readonly ReviewService _reviewService;
         private readonly OGSService _ogsService;
         private readonly MailService _mailService;
@@ -53,6 +55,7 @@ namespace LeagueManager.Services
             ReviewService reviewService,
             MailService mailService, 
             OGSService ogsService,
+            INotificationDispatcher notificationService,
             ILogger<MainService> logger) : base(logger)
         {
             _queueDataService = queueDataService;
@@ -62,7 +65,15 @@ namespace LeagueManager.Services
             _discordService = discordService;
             _reviewService = reviewService;
             _mailService = mailService;
+            _notificationService = notificationService;
             _ogsService = ogsService;
+        }
+
+
+        protected override void HandleException(Exception e)
+        {
+            base.HandleException(e);
+            _notificationService.Dispatch((NotificationMessage.Error(e.GetType().ToString(),e.Message, e.Source)));
         }
 
         public async Task<DataTable> BuildOrderDataTable(Stream csvStream)
