@@ -3,6 +3,8 @@ using Discord;
 using LeagoClient;
 using LeagoService;
 using LeagueCoreService;
+using LeagueCoreService.Queue;
+using LeagueCoreService.ScheduledJobs;
 using LeagueCoreService.Services;
 using Mail;
 using Microsoft.EntityFrameworkCore;
@@ -99,8 +101,15 @@ builder.Services.AddDiscordGateway(o =>
     .AddGatewayHandlers(typeof(InteractionHandler).Assembly);
 
 builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
+
+typeof(QueueWorker).Assembly.GetTypes()
+    .Where(t => !t.IsAbstract && typeof(ICommandHandler).IsAssignableFrom(t))
+    .ToList()
+    .ForEach(t => builder.Services.AddScoped(typeof(ICommandHandler), t));
+
 builder.Services.AddHostedService<QueueWorker>();
 builder.Services.AddHostedService<SchedulerWorker>();
+
 
 var host = builder.Build();
 
@@ -137,4 +146,4 @@ using (var scope = host.Services.CreateScope())
         }
     }
 }
-host.Run();
+await host.RunAsync();

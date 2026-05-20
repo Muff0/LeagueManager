@@ -1,11 +1,14 @@
-
 param(
     [string]$MigrationName = "AutoMigration",
-    [string]$LeagueProject = "Data/Data.csproj",
-    [string]$LeagueStartupProject = "LeagueCoreService/LeagueCoreService.csproj" 
+    [string]$Project = "Data/Data.csproj",
+    [string]$StartupProject = "LeagueCoreService/LeagueCoreService.csproj",
+    [ValidateSet("LeagueContext", "QueueContext")]
+    [string]$Context = "LeagueContext"
 )
 
-# Create migration
-dotnet ef migrations add $MigrationName --project $LeagueProject --startup-project $LeagueStartupProject --context LeagueContext --output-dir Migrations/League
+$Path = switch ($Context) {
+    "LeagueContext" { "Migrations/League" }
+    "QueueContext"  { "Migrations/Queue" }
+}
 
-
+dotnet ef migrations add $MigrationName --project $Project --startup-project $StartupProject --context $Context --output-dir $Path

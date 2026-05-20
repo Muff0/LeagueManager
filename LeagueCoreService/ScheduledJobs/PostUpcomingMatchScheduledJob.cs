@@ -3,7 +3,7 @@ using Data.Queries;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class PostUpcomingMatchScheduledJob : ScheduledJobBase
+public class PostUpcomingMatchScheduledJob : TimedScheduledJob
 {
     private LeagueDataService _leagueDataService;
     public PostUpcomingMatchScheduledJob(QueueDataService queueDataService,

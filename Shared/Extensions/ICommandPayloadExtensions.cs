@@ -8,4 +8,5 @@ public static class ICommandPayloadExtensions
     
     public static string SerializePayload(this ICommandPayload payload) 
         => JsonConvert.SerializeObject(payload);
+    
 }

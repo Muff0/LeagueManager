@@ -6,19 +6,14 @@ namespace LeagueCoreService.ScheduledJobs;
 
 public abstract class ScheduledJobBase : IScheduledJob
 {
-    private QueueDataService _queueDataService;
+    protected QueueDataService _queueDataService;
     public ScheduledJobBase(QueueDataService queueDataService)
     {
         _queueDataService = queueDataService;
     }
 
-    public DateTime LastRun { get; protected set; } = DateTime.Now;
-    public virtual TimeSpan Interval { get; set; } = TimeSpan.FromHours(1);
-
-    public virtual async Task<bool> ShouldRun(DateTime now)
-    {
-        return now > LastRun.Add(Interval);
-    }
+    public DateTime LastRun { get; protected set; } = DateTime.MinValue;
+    public abstract Task<bool> ShouldRun(DateTime now);
 
     public abstract string Command { get; }
 

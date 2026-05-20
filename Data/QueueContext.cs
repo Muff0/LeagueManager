@@ -12,6 +12,7 @@ namespace Data
         public DbSet<CommandMessage> CommandQueue { get; set; }
         public DbSet<DomainEvent> EventQueue { get; set; }
         public DbSet<OutgoingMessage> MessageQueue { get; set; }
+        public DbSet<Poll>PollQueue { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,6 +26,9 @@ namespace Data
 
             modelBuilder.Entity<OutgoingMessage>()
                 .HasIndex(om => om.Status);
+            
+            modelBuilder.Entity<Poll>()
+                .HasIndex(po => po.Status);
         }
     }
 }

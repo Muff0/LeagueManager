@@ -1,5 +1,6 @@
 using Data.Model;
 using LeagueManager.ViewModel;
+using Newtonsoft.Json;
 
 namespace LeagueManager.Extensions;
 
@@ -14,4 +15,5 @@ public static class CommandMessageExtensions
             Payload = commandMessage.Payload
         };
     }
+
 }

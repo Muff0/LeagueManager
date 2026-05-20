@@ -25,7 +25,8 @@ namespace LeagueCoreService
                 new CleanupQueueScheduledJob(queueDataService)
                     {Interval = TimeSpan.FromHours(24)},
                 new SyncMatchesScheduledJob(queueDataService),
-                new PostUpcomingMatchScheduledJob(queueDataService, leagueDataService)
+                new PostUpcomingMatchScheduledJob(queueDataService, leagueDataService),
+                new PostDiscordPollScheduledJob(queueDataService)
             ];
         }
 

@@ -1,6 +1,7 @@
 ﻿using Data;
 using Data.Commands.Queue;
 using Data.Model;
+using Data.Queries;
 using Discord;
 using LeagoService;
 using Microsoft.EntityFrameworkCore;
@@ -8,6 +9,7 @@ using Microsoft.Extensions.Options;
 using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
+using Shared.Enum;
 using Shared.Settings;
 
 namespace LeagueCoreService.Services
@@ -223,7 +225,6 @@ namespace LeagueCoreService.Services
             }
         }
 
-
         public async Task SyncMatches()
         {
             try
@@ -240,6 +241,27 @@ namespace LeagueCoreService.Services
         public async Task CleanupQueue()
         {
             await _queueDataService.ExecuteAsync(new DeleteOldCommandMessagesCommand());
+        }
+
+        public async Task PostNextDiscordPoll()
+        {
+            var nextPoll = await _queueDataService.RunQueryAsync(
+                new GetNextPollQuery());
+
+            if (nextPoll == null)
+                return;
+
+            var payload = nextPoll.GetPayload<DiscordPoll>();
+
+            if (payload == null)
+                return;
+
+            await _discordService.PostPoll(payload);
+            await _queueDataService.ExecuteAsync(new SetPollStatusCommand()
+            {
+                PollId = nextPoll.Id,
+                NewStatus = QueueStatus.Completed
+            });
         }
     }
 }

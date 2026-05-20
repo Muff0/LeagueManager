@@ -9,7 +9,9 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.10" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.10" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="10.0.8" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.5-beta1" />
   </ItemGroup>
 

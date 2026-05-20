@@ -40,6 +40,22 @@ namespace Discord
             return null;
         }
 
+        public async Task PostPoll(DiscordPoll poll)
+        {
+            var message = new MessageProperties()
+                .WithPoll(
+                    new MessagePollProperties(
+                        new MessagePollMediaProperties()
+                            .WithText(poll.Question),
+                        poll.Answers.Select(po => 
+                            new MessagePollAnswerProperties(
+                                new MessagePollMediaProperties()
+                                    .WithText(po.Text)
+                                    .WithEmoji(EmojiProperties.Standard(po.Emoji))))));
+
+            await _restClient.SendMessageAsync(_settings.Value.PollChannelId, message);
+        }
+
         public async Task PostReviewThread(PostReviewThreadInDto inDto)
         {
             var match = inDto.Match;

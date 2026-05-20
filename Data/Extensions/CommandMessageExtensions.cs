@@ -6,6 +6,6 @@ namespace Data;
 public static class CommandMessageExtensions
 {
     public static T? GetPayload<T>(this CommandMessage cm) 
-        => cm.Payload is null ? default : JsonConvert.DeserializeObject<T>(cm.Payload);
+        => JsonConvert.DeserializeObject<T>(cm.Payload);
     
 }

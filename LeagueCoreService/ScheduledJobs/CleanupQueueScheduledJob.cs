@@ -2,7 +2,7 @@ using Data;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class CleanupQueueScheduledJob : ScheduledJobBase
+public class CleanupQueueScheduledJob : TimedScheduledJob
 {
     public CleanupQueueScheduledJob(QueueDataService queueDataService) : base(queueDataService)
     {

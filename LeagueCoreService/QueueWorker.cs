@@ -13,7 +13,7 @@ namespace LeagueCoreService
         private readonly ILogger<QueueWorker> _logger;
         private readonly MainService _mainService;
         private readonly QueueDataService _queueDataService;
-        private readonly Dictionary<string, ICommandHandler> _handlers;
+        private readonly IServiceScopeFactory _scopeFactory;
         
         public QueueWorker(ILogger<QueueWorker> logger, IServiceScopeFactory scopeFactory)
         {
@@ -21,17 +21,15 @@ namespace LeagueCoreService
             _mainService = scope.ServiceProvider.GetRequiredService<MainService>();
             _queueDataService = scope.ServiceProvider.GetRequiredService<QueueDataService>();
             _logger = logger;
-            _handlers = scope.ServiceProvider
-                .GetServices<ICommandHandler>()
-                .ToDictionary(h => h.CommandType);
+            _scopeFactory = scopeFactory;
         }
 
-        private async Task<CommandMessage?> GetNextCommand()
+        private async Task<CommandMessage?> GetNextCommand(string[] types)
         {
             return await _queueDataService.RunQueryAsync(
                 new GetNextCommandMessageQuery()
                 {
-                    Types = _handlers.Keys.ToArray()
+                    Types = types
                 });
         }
 
@@ -54,6 +52,7 @@ namespace LeagueCoreService
             {
                 _logger.LogInformation("QueueWorker starting at: {time}", DateTimeOffset.Now);
             }
+
             while (!stoppingToken.IsCancellationRequested)
             {
                 await DoWork();
@@ -64,7 +63,13 @@ namespace LeagueCoreService
 
         private async Task DoWork()
         {
-            var cmd = await GetNextCommand();
+            
+            using var scope = _scopeFactory.CreateScope();
+            var handlers = scope.ServiceProvider
+                .GetServices<ICommandHandler>()
+                .ToDictionary(h => h.CommandType);
+            
+            var cmd = await GetNextCommand(handlers.Keys.ToArray());
 
             if (cmd == null)
                 return;
@@ -72,7 +77,7 @@ namespace LeagueCoreService
             {
                 await SetCommandStatus(cmd, QueueStatus.Processing, false);
 
-                if (!_handlers.TryGetValue(cmd.Type, out var handler))
+                if (!handlers.TryGetValue(cmd.Type, out var handler))
                 {
                     _logger.LogWarning("No handler found for command type: {type}", cmd.Type);
                     await SetCommandStatus(cmd, QueueStatus.Failed);

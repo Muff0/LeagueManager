@@ -2,7 +2,7 @@ using Data;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class SyncMatchesScheduledJob : ScheduledJobBase
+public class SyncMatchesScheduledJob : TimedScheduledJob
 {
     public SyncMatchesScheduledJob(QueueDataService queueDataService) : base(queueDataService)
     {
