@@ -1,5 +1,4 @@
 ﻿using Data.Model;
-using Microsoft.EntityFrameworkCore;
 
 namespace Data.Queries
 {
@@ -7,7 +6,7 @@ namespace Data.Queries
     public class GetCommandMessagesQuery : Query<QueueContext, CommandMessage>
     {
         public string[] Types { get; set; } = [];
-        protected override IQueryable<CommandMessage> BuildQuery(QueueContext context)
+        public override IQueryable<CommandMessage> BuildQuery(QueueContext context)
         {
             var query = base.BuildQuery(context);
 

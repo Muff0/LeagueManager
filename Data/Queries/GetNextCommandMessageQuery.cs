@@ -1,5 +1,4 @@
 ﻿using Data.Model;
-using Microsoft.EntityFrameworkCore;
 
 namespace Data.Queries
 {

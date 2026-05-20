@@ -44,6 +44,17 @@ namespace Data
             }
         }
 
+        public int Count<T2>(Query<T,T2> queryObject) where T2 : class
+        {
+            return queryObject.BuildQuery(GetDbContext()).Count();
+        }
+        
+        
+        public async Task<int> CountAsync<T2>(Query<T,T2> queryObject) where T2 : class
+        {
+            return await queryObject.BuildQuery(GetDbContext()).CountAsync();
+        }
+
         public async Task ExecuteAsync(BatchCommand<T> commandObject)
         {
             foreach (Command<T> batch in commandObject.GetCommands())

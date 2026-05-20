@@ -1,6 +1,5 @@
 using Data.Model;
 using LeagueManager.ViewModel;
-using Newtonsoft.Json;
 
 namespace LeagueManager.Extensions;
 

@@ -93,7 +93,7 @@ builder.Services.AddSingleton<NotificationDispatcher>();
 builder.Services.AddSingleton<INotificationDispatcher>(sp =>
     sp.GetRequiredService<NotificationDispatcher>()); // same instance
 builder.Services.AddHostedService<NotificationRelayService>();
-builder.Services.AddSingleton<NotificationService>();
+builder.Services.AddScoped<NotificationService>();
 
 // Start the Discord service
 builder.Services.AddDiscordGateway();

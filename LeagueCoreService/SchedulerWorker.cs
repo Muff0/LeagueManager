@@ -1,10 +1,5 @@
 using Data;
-using Data.Commands.Queue;
-using Data.Model;
-using Data.Queries;
 using LeagueCoreService.ScheduledJobs;
-using LeagueCoreService.Services;
-using Shared.Enum;
 
 namespace LeagueCoreService
 {
@@ -33,7 +28,12 @@ namespace LeagueCoreService
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
                 _logger.LogInformation("SchedulerWorker starting at: {time}", DateTimeOffset.Now);
-            
+
+                foreach (var job in _scheduledJobs )
+                {
+                    await job.Init();
+                }
+                
             while (!stoppingToken.IsCancellationRequested)
             {
                 await DoWork();

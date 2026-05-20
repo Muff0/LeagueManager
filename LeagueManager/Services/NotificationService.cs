@@ -1,26 +1,28 @@
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.SignalR.Client;
 using Shared.Notifications;
 
-namespace LeagueManager.Services;
 
-public class NotificationService : IAsyncDisposable
+namespace LeagueManager.Services
 {
-    private readonly HubConnection _hub;
-
-    public event Action<NotificationMessage>? OnNotification;
-
-    public NotificationService(IConfiguration config)
+    public class NotificationService : IAsyncDisposable
     {
-        var apiBase = config["ApiBaseUrl"]!; // however you already configure this
-        _hub = new HubConnectionBuilder()
-            .WithUrl($"{apiBase}/hubs/notifications")
-            .WithAutomaticReconnect()
-            .Build();
+        private readonly HubConnection _hub;
 
-        _hub.On<NotificationMessage>("Notification", msg => OnNotification?.Invoke(msg));
+        public event Action<NotificationMessage>? OnNotification;
+
+        public NotificationService(NavigationManager nav)
+        {
+            _hub = new HubConnectionBuilder()
+                .WithUrl(nav.ToAbsoluteUri("/hubs/notifications"))
+                .WithAutomaticReconnect()
+                .Build();
+
+            _hub.On<NotificationMessage>("Notification", msg => OnNotification?.Invoke(msg));
+        }
+
+        public async Task StartAsync() => await _hub.StartAsync();
+
+        public async ValueTask DisposeAsync() => await _hub.DisposeAsync();
     }
-
-    public async Task StartAsync() => await _hub.StartAsync();
-
-    public async ValueTask DisposeAsync() => await _hub.DisposeAsync();
 }

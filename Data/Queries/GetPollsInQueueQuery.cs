@@ -1,11 +1,11 @@
-﻿using Data.Model;
+using Data.Model;
 
 namespace Data.Queries
 {
     
-    public class GetNextPollQuery : Scalar<QueueContext, Poll>
+    public class GetPollsInQueueQuery : Query<QueueContext, Poll>
     {
-        protected override IQueryable<Poll> BuildQuery(QueueContext context)
+        public override IQueryable<Poll> BuildQuery(QueueContext context)
         {
             var query = base.BuildQuery(context);
 

@@ -1,4 +1,3 @@
-using Data;
 using Discord.Dto;
 using NetCord.Services.ApplicationCommands;
 using NetCord;

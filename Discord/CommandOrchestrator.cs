@@ -3,7 +3,6 @@ using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
 using Discord.Dto;
-using NetCord.Rest;
 using Shared.Extensions;
 using Shared.Queue;
 

@@ -27,7 +27,8 @@ namespace Data.Queries
         public int[]? Round { get; set; }
 
         public ReviewMatchQueryMode MatchQueryMode { get; set; } = ReviewMatchQueryMode.AllReviews;
-        protected override IQueryable<Review> BuildQuery(LeagueContext context)
+
+        public override IQueryable<Review> BuildQuery(LeagueContext context)
         {
             var query = base.BuildQuery(context);
 

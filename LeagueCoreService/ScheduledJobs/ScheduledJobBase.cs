@@ -21,6 +21,10 @@ public abstract class ScheduledJobBase : IScheduledJob
     {
         return "";
     }
+
+    public virtual async Task Init()
+    {
+    }
     
     public async Task Enqueue()
     {

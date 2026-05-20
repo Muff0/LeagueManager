@@ -1,11 +1,4 @@
-﻿using Shared.Dto;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Data.Commands.Review
+﻿namespace Data.Commands.Review
 {
     public class AddReviewToPlayerCommand : Command<LeagueContext>
     {

@@ -37,14 +37,14 @@ namespace Data
         #endregion Properties
 
         #region Methods
-
+        
         /// <summary>
         /// Creates an IQueryable for the specified entity type and applies the given
         /// AsNoTracking and LazyLoadingEnabled settings
         /// </summary>
         /// <param name="context">The DbContext to query</param>
         /// <returns>An IQueryable<T></returns>
-        protected virtual IQueryable<T2> BuildQuery(T context)
+        public virtual IQueryable<T2> BuildQuery(T context)
         {
             IQueryable<T2> query = context.Set<T2>();
 

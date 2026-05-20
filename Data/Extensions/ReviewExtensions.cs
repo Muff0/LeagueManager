@@ -1,6 +1,5 @@
 ﻿using Data.Model;
 using Shared.Dto;
-using Shared.Enum;
 
 namespace Data
 {

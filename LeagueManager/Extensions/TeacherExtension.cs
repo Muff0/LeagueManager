@@ -1,6 +1,5 @@
 ﻿using Data.Model;
 using LeagueManager.ViewModel;
-using Shared.Dto;
 
 namespace LeagueManager.Extensions
 {

@@ -1,14 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetCord;
-using NetCord.Gateway;
-using NetCord.Hosting.Gateway;
-using NetCord.Hosting.Services;
-using NetCord.Hosting.Services.ApplicationCommands;
-using NetCord.Logging;
 using NetCord.Rest;
-using NetCord.Services.ApplicationCommands;
-using NetCord.Services.ComponentInteractions;
 using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
@@ -51,9 +44,19 @@ namespace Discord
                             new MessagePollAnswerProperties(
                                 new MessagePollMediaProperties()
                                     .WithText(po.Text)
-                                    .WithEmoji(EmojiProperties.Standard(po.Emoji))))));
+                                    .WithEmoji(EmojiProperties.Standard(po.Emoji)))))
+                        .WithDurationInHours(120));
 
             await _restClient.SendMessageAsync(_settings.Value.PollChannelId, message);
+        }
+
+        public async Task SendPollCuratorMessage(int pollsInQueue)
+        {
+            string content = MentionUser(_settings.Value.PollCuratorId) 
+                             + $" a new poll was posted, there are now {pollsInQueue} polls left in the queue.";
+            var message = BuildMessageProperties(content);
+
+            await _restClient.SendMessageAsync(_settings.Value.AdminNotificationChannelId, message);
         }
 
         public async Task PostReviewThread(PostReviewThreadInDto inDto)

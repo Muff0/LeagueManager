@@ -11,7 +11,7 @@ public abstract class WeeklyScheduledJob : ScheduledJobBase
         : base(queueDataService) { }
 
     public override Task<bool> ShouldRun(DateTime now)
-    {
+    {   
         var lastOccurrence = GetLastOccurrence(now);
         return Task.FromResult(LastRun < lastOccurrence);
     }

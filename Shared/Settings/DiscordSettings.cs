@@ -14,5 +14,7 @@
         public ulong PlayerRoleId { get; init; } = 0;
         public ulong LiveReviewChannelId { get; init; }
         public ulong PollChannelId { get; init; }
+        public ulong AdminNotificationChannelId { get; init; }
+        public ulong PollCuratorId { get; init; }
     }
 }

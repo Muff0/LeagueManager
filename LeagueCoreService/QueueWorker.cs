@@ -47,7 +47,7 @@ namespace LeagueCoreService
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
-            
+
             if (_logger.IsEnabled(LogLevel.Information))
             {
                 _logger.LogInformation("QueueWorker starting at: {time}", DateTimeOffset.Now);

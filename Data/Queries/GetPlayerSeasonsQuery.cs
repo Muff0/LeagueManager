@@ -13,7 +13,7 @@ namespace Data.Queries
         public PlayerParticipationTier[] ParticipationTiers { get; set; } = [];
         public bool IncludeReviews { get; set; }
 
-        protected override IQueryable<PlayerSeason> BuildQuery(LeagueContext context)
+        public override IQueryable<PlayerSeason> BuildQuery(LeagueContext context)
         {
             var query = base.BuildQuery(context);
 

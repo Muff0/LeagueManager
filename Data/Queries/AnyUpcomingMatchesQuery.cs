@@ -1,5 +1,4 @@
 using Data.Model;
-using Shared.Infrastructure;
 
 namespace Data.Queries;
 

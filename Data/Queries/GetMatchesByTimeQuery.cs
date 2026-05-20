@@ -11,7 +11,7 @@ namespace Data.Queries
         public bool InlcudePlayers { get; set; } = false;
         public bool IncludeNotConfirmed { get; set; } = false;
 
-        protected override IQueryable<Match> BuildQuery(LeagueContext context)
+        public override IQueryable<Match> BuildQuery(LeagueContext context)
         {
             var query = base.BuildQuery(context);
 

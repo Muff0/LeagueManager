@@ -262,6 +262,10 @@ namespace LeagueCoreService.Services
                 PollId = nextPoll.Id,
                 NewStatus = QueueStatus.Completed
             });
+
+            var pollQueue = await _queueDataService.CountAsync(new GetPollsInQueueQuery());
+            
+            await _discordService.SendPollCuratorMessage(pollQueue);
         }
     }
 }

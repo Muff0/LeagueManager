@@ -1,10 +1,8 @@
 using Data;
 using Discord;
 using LeagoClient;
-using LeagoService;
 using LeagueCoreService;
 using LeagueCoreService.Queue;
-using LeagueCoreService.ScheduledJobs;
 using LeagueCoreService.Services;
 using Mail;
 using Microsoft.EntityFrameworkCore;

@@ -10,7 +10,7 @@ namespace Data.Queries
 
         public int SeasonId { get; set; } = 0;
 
-        protected override IQueryable<Player> BuildQuery(LeagueContext context)
+        public override IQueryable<Player> BuildQuery(LeagueContext context)
         {
             var query = base.BuildQuery(context);
 
