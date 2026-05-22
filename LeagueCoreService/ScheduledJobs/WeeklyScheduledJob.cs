@@ -16,7 +16,7 @@ public abstract class WeeklyScheduledJob : ScheduledJobBase
         return Task.FromResult(LastRun < lastOccurrence);
     }
 
-    private DateTime GetLastOccurrence(DateTime now)
+    protected DateTime GetLastOccurrence(DateTime now)
     {
         int daysBack = ((int)now.DayOfWeek - (int)Day + 7) % 7;
         var candidate = now.Date.AddDays(-daysBack) + Time.ToTimeSpan();

@@ -10,6 +10,7 @@ using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
 using Shared.Enum;
+using Shared.Queue;
 using Shared.Settings;
 
 namespace LeagueCoreService.Services
@@ -266,6 +267,11 @@ namespace LeagueCoreService.Services
             var pollQueue = await _queueDataService.CountAsync(new GetPollsInQueueQuery());
             
             await _discordService.SendPollCuratorMessage(pollQueue);
+        }
+
+        public async Task SendNextPollNotification(DateTime time)
+        {
+            await _discordService.SendNextPollNotification(time);
         }
     }
 }

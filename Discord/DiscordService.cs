@@ -6,6 +6,7 @@ using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
 using Shared.Enum;
+using Shared.Queue;
 using Shared.Settings;
 
 namespace Discord
@@ -254,5 +255,16 @@ namespace Discord
             new ForumGuildThreadMessageProperties()
                 .WithAllowedMentions(null)
                 .WithContent(content));
+
+        public async Task SendNextPollNotification(DateTime time)
+        {
+            var content = MentionUser(_settings.Value.AdminId)
+                          + " Scheduler Initialized. The next Poll will be posted at "
+                          + BuildTimeTag(time);
+            var message = BuildMessageProperties(content);
+
+            await _restClient.SendMessageAsync(_settings.Value.AdminNotificationChannelId, message);
+        }
+        
     }
 }
