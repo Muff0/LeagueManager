@@ -11,7 +11,10 @@ namespace Data.Commands.Queue
             base.RunAction(context);
 
             if (NewCommand != null)
+            {
+                NewCommand.CreatedAtUtc = DateTime.UtcNow;
                 context.Add(NewCommand);
+            }
         }
     }
 }
