@@ -41,5 +41,11 @@ public abstract class ScheduledJobBase : IScheduledJob
         });
 
         LastRun = DateTime.Now;
+        await OnEnqueued();
+    }
+
+    public async virtual Task OnEnqueued()
+    {
+        return;
     }
 }

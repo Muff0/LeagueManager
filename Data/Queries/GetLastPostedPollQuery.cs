@@ -9,7 +9,8 @@ namespace Data.Queries
         {
             var query = base.BuildQuery(context);
 
-            query = query.Where(cm => cm.Status == Shared.Enum.QueueStatus.Completed);
+            query = query.Where(cm => cm.Status == Shared.Enum.QueueStatus.Completed
+                && cm.ProcessedAtUtc != null);
             
             query = query.OrderByDescending(cm => cm.ProcessedAtUtc);
 

@@ -3,6 +3,7 @@ using Discord;
 using LeagoClient;
 using LeagueCoreService;
 using LeagueCoreService.Queue;
+using LeagueCoreService.ScheduledJobs;
 using LeagueCoreService.Services;
 using Mail;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ using NetCord.Services.ApplicationCommands;
 using Newtonsoft.Json;
 using OGS;
 using Shared.Converter;
+using Shared.Services;
 using Shared.Settings;
 
 var builder = Host.CreateApplicationBuilder(args);
@@ -21,6 +23,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.Configure<LeagoSettings>(builder.Configuration.GetSection("Leago"));
 builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
+builder.Services.Configure<PollSchedulerSettings>(builder.Configuration.GetSection("PollScheduler"));
 
 // Needed to handle bad datetime values without altering the generated code
 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -85,6 +88,8 @@ builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<Discord.DiscordService>();
 builder.Services.AddScoped<CommandOrchestrator>();
 
+builder.Services.AddSingleton<PollSchedulerService>();
+
 // Start the Discord service
 
 var discordSettings = builder.Configuration
@@ -104,6 +109,12 @@ typeof(QueueWorker).Assembly.GetTypes()
     .Where(t => !t.IsAbstract && typeof(ICommandHandler).IsAssignableFrom(t))
     .ToList()
     .ForEach(t => builder.Services.AddScoped(typeof(ICommandHandler), t));
+
+
+typeof(QueueWorker).Assembly.GetTypes()
+    .Where(t => !t.IsAbstract && typeof(IScheduledJob).IsAssignableFrom(t))
+    .ToList()
+    .ForEach(t => builder.Services.AddSingleton( t));
 
 builder.Services.AddHostedService<QueueWorker>();
 builder.Services.AddHostedService<SchedulerWorker>();

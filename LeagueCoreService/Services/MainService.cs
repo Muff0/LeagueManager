@@ -11,6 +11,7 @@ using Shared.Dto;
 using Shared.Dto.Discord;
 using Shared.Enum;
 using Shared.Queue;
+using Shared.Services;
 using Shared.Settings;
 
 namespace LeagueCoreService.Services
@@ -19,11 +20,12 @@ namespace LeagueCoreService.Services
     {
         private readonly LeagoMainService _leagoService;
 
-        private readonly IDbContextFactory<LeagueContext> _leagueContextFactory;
         private readonly IOptions<LeagoSettings> _leagoOptions;
         private readonly LeagueDataService _leagueDataService;
         private readonly QueueDataService _queueDataService;
         private readonly DiscordService _discordService;
+        private IDbContextFactory<LeagueContext> _leagueContextFactory;
+        private readonly PollSchedulerService _pollSchedulerService;
 
         public MainService(LeagoMainService leagoService,
             IOptions<LeagoSettings> leagoOptions,
@@ -41,12 +43,6 @@ namespace LeagueCoreService.Services
             _discordService = discordService;
         }
 
-        public async Task<string[]> GetTournamentsAsync()
-        {
-            var res = await _leagoService.GetEvents(new Shared.Dto.GetEventsInDto());
-
-            return res.Events.Select(i => i.Name).ToArray();
-        }
 
         public async Task<Data.Model.Match[]> GetUpcomingMatches()
         {
@@ -117,29 +113,9 @@ namespace LeagueCoreService.Services
             }
         }
 
-        public SeasonDto? GetActiveSeason()
-        {
-            using (var context = _leagueContextFactory.CreateDbContext())
-            {
-                var existingSeason = context.Seasons.FirstOrDefault(ss => ss.IsActive);
-
-                if (existingSeason == null)
-                    return null;
-
-                return new SeasonDto()
-                {
-                    Id = existingSeason.Id,
-                    Title = existingSeason.Title,
-                    LeagoL1Key = existingSeason.LeagoL1Key,
-                    LeagoL2Key = existingSeason.LeagoL2Key,
-                    IsActive = existingSeason.IsActive
-                };
-            }
-        }
-
         public async Task SyncMatchesForRound(int round)
         {
-            var activeSeason = GetActiveSeason();
+            var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
             if (activeSeason == null)
                 return;
 
@@ -261,17 +237,11 @@ namespace LeagueCoreService.Services
             await _queueDataService.ExecuteAsync(new SetPollStatusCommand()
             {
                 PollId = nextPoll.Id,
-                NewStatus = QueueStatus.Completed
+                NewStatus = QueueStatus.Completed,
+                UpdateProcessedTime = true
             });
 
-            var pollQueue = await _queueDataService.CountAsync(new GetPollsInQueueQuery());
-            
-            await _discordService.SendPollCuratorMessage(pollQueue);
         }
-
-        public async Task SendNextPollNotification(DateTime time)
-        {
-            await _discordService.SendNextPollNotification(time);
-        }
+        
     }
 }

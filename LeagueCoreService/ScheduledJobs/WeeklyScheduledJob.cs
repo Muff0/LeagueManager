@@ -1,29 +1,21 @@
 using Data;
+using Shared.Services;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public abstract class WeeklyScheduledJob : ScheduledJobBase
+public abstract class WeeklyScheduledJob<T> : ScheduledJobBase where T : IJobSchedulerService
 {
-    protected abstract DayOfWeek Day { get; init; }
-    protected abstract TimeOnly Time { get; init; } // UTC
+    protected T _schedulerService;
 
-    protected WeeklyScheduledJob(QueueDataService queueDataService)
-        : base(queueDataService) { }
+    protected WeeklyScheduledJob(QueueDataService queueDataService, T schedulerService)
+        : base(queueDataService)
+    {
+        _schedulerService = schedulerService;
+    }
 
     public override Task<bool> ShouldRun(DateTime now)
     {   
-        var lastOccurrence = GetLastOccurrence(now);
-        return Task.FromResult(LastRun < lastOccurrence);
-    }
-
-    protected DateTime GetLastOccurrence(DateTime now)
-    {
-        int daysBack = ((int)now.DayOfWeek - (int)Day + 7) % 7;
-        var candidate = now.Date.AddDays(-daysBack) + Time.ToTimeSpan();
-
-        if (candidate > now)
-            candidate = candidate.AddDays(-7);
-
-        return candidate;
+        var nextOccurrence = _schedulerService.GetNextOccurrence(LastRun, now);
+        return Task.FromResult(now >= nextOccurrence);
     }
 }

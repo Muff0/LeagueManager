@@ -11,17 +11,20 @@ namespace LeagueCoreService
         
         public SchedulerWorker(ILogger<SchedulerWorker> logger, 
             QueueDataService queueDataService,
-            LeagueDataService leagueDataService)
+            IServiceScopeFactory scopeFactory)
         {
             _logger = logger;
 
+            var scope = scopeFactory.CreateScope();
+            
+            
             _scheduledJobs =
             [
                 new CleanupQueueScheduledJob(queueDataService)
-                    {Interval = TimeSpan.FromHours(24)},
-                new SyncMatchesScheduledJob(queueDataService),
-                new PostUpcomingMatchScheduledJob(queueDataService, leagueDataService),
-                new PostDiscordPollScheduledJob(queueDataService)
+                    {Interval = TimeSpan.FromHours(24)}, // will have to create settings for this
+                scope.ServiceProvider.GetRequiredService<SyncMatchesScheduledJob>(),
+                scope.ServiceProvider.GetRequiredService<PostUpcomingMatchScheduledJob>(),
+                scope.ServiceProvider.GetRequiredService<PostDiscordPollScheduledJob>()
             ];
         }
 

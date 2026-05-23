@@ -51,14 +51,6 @@ namespace Discord
             await _restClient.SendMessageAsync(_settings.Value.PollChannelId, message);
         }
 
-        public async Task SendPollCuratorMessage(int pollsInQueue)
-        {
-            string content = MentionUser(_settings.Value.PollCuratorId) 
-                             + $" a new poll was posted, there are now {pollsInQueue} polls left in the queue.";
-            var message = BuildMessageProperties(content);
-
-            await _restClient.SendMessageAsync(_settings.Value.AdminNotificationChannelId, message);
-        }
 
         public async Task PostReviewThread(PostReviewThreadInDto inDto)
         {
@@ -256,15 +248,21 @@ namespace Discord
                 .WithAllowedMentions(null)
                 .WithContent(content));
 
-        public async Task SendNextPollNotification(DateTime time)
-        {
-            var content = MentionUser(_settings.Value.AdminId)
-                          + " Scheduler Initialized. The next Poll will be posted at "
-                          + BuildTimeTag(time);
-            var message = BuildMessageProperties(content);
-
-            await _restClient.SendMessageAsync(_settings.Value.AdminNotificationChannelId, message);
-        }
         
+        public async Task SendPollNotification(int pollsInQueue, DateTime pollTime, string message, DiscordNotificationType notificationType)
+        {
+            string content = message + Environment.NewLine
+                + $"There are now {pollsInQueue} polls left in the queue." + Environment.NewLine
+                             + "Next poll will be posted on " + BuildTimeTag(pollTime) + Environment.NewLine;
+
+            if (notificationType == DiscordNotificationType.Admin)
+                content += MentionUser(_settings.Value.AdminId);
+            else if (notificationType == DiscordNotificationType.Poll)
+                content += MentionUser(_settings.Value.PollCuratorId);
+            
+            var messageProperties = BuildMessageProperties(content);
+
+            await _restClient.SendMessageAsync(_settings.Value.AdminNotificationChannelId, messageProperties);
+        }
     }
 }

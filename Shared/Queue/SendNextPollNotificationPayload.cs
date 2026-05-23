@@ -4,5 +4,6 @@ namespace Shared.Queue;
 
 public class SendNextPollNotificationPayload : ICommandPayload
 {
-    public DateTime Time { get; set; } 
+    public string Message { get; set; } = string.Empty;
+    public DiscordNotificationType DiscordNotificationType { get; set; } = DiscordNotificationType.Admin;
 }

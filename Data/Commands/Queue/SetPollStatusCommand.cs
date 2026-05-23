@@ -7,7 +7,7 @@ namespace Data.Commands.Queue
         public int PollId { get; set; }
         public QueueStatus NewStatus { get; set; }
 
-        public bool UpdateProcessedTime { get; set; } = false;
+        public bool UpdateProcessedTime { get; set; } = true;
 
         protected override void RunAction(QueueContext context)
         {

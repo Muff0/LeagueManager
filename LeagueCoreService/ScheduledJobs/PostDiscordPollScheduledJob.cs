@@ -2,27 +2,40 @@ using Data;
 using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
+using Shared.Enum;
 using Shared.Extensions;
 using Shared.Queue;
+using Shared.Services;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class PostDiscordPollScheduledJob : WeeklyScheduledJob
+public class PostDiscordPollScheduledJob : WeeklyScheduledJob<PollSchedulerService>
 {
-    public PostDiscordPollScheduledJob(QueueDataService queueDataService) : base(queueDataService)
+    public PostDiscordPollScheduledJob(QueueDataService queueDataService,
+        PollSchedulerService pollSchedulerService)
+         : base(queueDataService, pollSchedulerService)
     {
     }
 
     public override string Command => "PostDiscordPoll";
-    protected override DayOfWeek Day { get; init; } = DayOfWeek.Monday;
-    protected override TimeOnly Time { get; init; } = new TimeOnly(16,0);
 
     public override async Task Init()
     {
         var lastRun = await _queueDataService.RunQueryAsync(new GetLastPostedPollQuery());
         if (lastRun != null)
             LastRun = lastRun.ProcessedAtUtc.GetValueOrDefault();
-        
+
+        await SendNextPollNotification("Poll scheduler initialized. ", DiscordNotificationType.Admin);
+    }
+
+    public async override Task OnEnqueued()
+    {
+        await SendNextPollNotification("A new Poll has been posted. ", DiscordNotificationType.Poll);
+        await base.OnEnqueued();
+    }
+
+    private async Task SendNextPollNotification(string message, DiscordNotificationType notificationType)
+    {
         await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
         {
             NewCommand = new CommandMessage()
@@ -30,7 +43,8 @@ public class PostDiscordPollScheduledJob : WeeklyScheduledJob
                 Type = "SendNextPollNotification",
                 Payload = new SendNextPollNotificationPayload()
                 {
-                    Time = GetLastOccurrence(DateTime.Now)
+                    Message = message,
+                    DiscordNotificationType = notificationType
                 }.SerializePayload()
             }
         });
