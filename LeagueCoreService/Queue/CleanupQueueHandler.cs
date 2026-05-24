@@ -1,13 +1,15 @@
+using Data;
+using Data.Commands.Queue;
 using Data.Model;
 using LeagueCoreService.Services;
 
 namespace LeagueCoreService.Queue;
 
-public class CleanupQueueHandler(MainService mainService) 
+public class CleanupQueueHandler(QueueDataService queueDataService) 
     : ICommandHandler
 {
     public string CommandType => "CleanupQueue";
     
     public async Task HandleAsync(CommandMessage cmd)
-        => await mainService.CleanupQueue();
+        => await queueDataService.ExecuteAsync(new DeleteOldCommandMessagesCommand());
 }

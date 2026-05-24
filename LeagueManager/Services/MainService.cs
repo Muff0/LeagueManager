@@ -134,7 +134,7 @@ namespace LeagueManager.Services
                 using var contentStream = new StreamReader(content);
                 var table = await BuildOrderDataTable(content);
                 var payments = ParsePaymentData(table);
-                await ProcessPaymentData(payments);
+                var resProcessPayment = await ProcessPaymentData(payments);
 
                 return true;
             }
@@ -217,8 +217,9 @@ namespace LeagueManager.Services
             }
         }
 
-        protected async Task ProcessPaymentData(PaymentDataDto[] payments)
+        protected async Task<ProcessPaymentDataOutDto> ProcessPaymentData(PaymentDataDto[] payments)
         {
+            
             var cutoffDate = new DateTime(2026, 4, 1);
 
             var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery() { IncludePlayerSeasons = true });
@@ -278,7 +279,11 @@ namespace LeagueManager.Services
             _leagueDataService.Execute(new UpdatePlayerSeasons() { PlayerRegistrations = toUpdate.ToArray() });
             _leagueDataService.Execute(new UpdatePlayersDataCommand() { Players = updateGoMagicIdList.ToArray() });
 
-            string noRegstr = string.Join(";", noReg.Select(pd => pd.UserEmail));
+            return new ProcessPaymentDataOutDto()
+            {
+                NoMatches = noMatch.ToArray(),
+                MissingRegistrations = noReg.ToArray()
+            };
         }
 
         public async Task<PlayerDto[]> GetMissingPayments()

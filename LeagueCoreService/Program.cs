@@ -1,5 +1,6 @@
 using Data;
 using Discord;
+using Discord.Logging;
 using LeagoClient;
 using LeagueCoreService;
 using LeagueCoreService.Queue;
@@ -13,6 +14,8 @@ using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Services.ApplicationCommands;
 using Newtonsoft.Json;
 using OGS;
+using Serilog;
+using Serilog.Events;
 using Shared.Converter;
 using Shared.Services;
 using Shared.Settings;
@@ -53,7 +56,25 @@ builder.Services.AddHttpClient<OGSClient>();
 // Logging
 
 builder.Logging.ClearProviders();
-builder.Logging.AddConsole();
+
+var discordSettings = builder.Configuration.GetSection("Discord").Get<DiscordSettings>()!;
+
+var logConfig = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft", LogEventLevel.Warning)
+    .MinimumLevel.Override("System", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(outputTemplate:
+        "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}");
+
+if (!string.IsNullOrEmpty(discordSettings.AlertWebhookUrl))
+    logConfig.WriteTo.WriteToDiscordWebhook(
+        discordSettings.AlertWebhookUrl,
+        minimumLevel: LogEventLevel.Error);  // Warning in dev, Error in prod
+
+Log.Logger = logConfig.CreateLogger();
+
+builder.Logging.AddSerilog(Log.Logger);
 
 // Read connection string from appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
@@ -92,9 +113,6 @@ builder.Services.AddSingleton<PollSchedulerService>();
 
 // Start the Discord service
 
-var discordSettings = builder.Configuration
-    .GetSection("Discord")
-    .Get<DiscordSettings>()!;
 
 builder.Services.AddDiscordGateway(o =>
     {

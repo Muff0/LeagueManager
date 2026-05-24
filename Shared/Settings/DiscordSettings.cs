@@ -16,5 +16,6 @@
         public ulong PollChannelId { get; init; }
         public ulong AdminNotificationChannelId { get; init; }
         public ulong PollCuratorId { get; init; }
+        public string? AlertWebhookUrl { get; set; } 
     }
 }

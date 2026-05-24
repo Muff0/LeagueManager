@@ -1,0 +1,44 @@
+using System.ComponentModel;
+using Data.Model;
+using Microsoft.EntityFrameworkCore;
+using Shared.Dto;
+
+namespace Data.Commands.Match;
+
+public class UpdateMatchesCommand : Command<LeagueContext>
+{
+    public MatchDto[] ToUpdate { get; set; } = [];
+    
+    protected override void RunAction(LeagueContext context)
+    {
+        foreach (var currentMatch in ToUpdate)
+        {
+            if (currentMatch.Players == null)
+                throw new InvalidOperationException("Players is null");
+
+            var existingMatch = context.Matches.Include(mm => mm.PlayerMatches)
+                .ThenInclude(pm => pm.Player)
+                .FirstOrDefault(mm => mm.LeagoKey == currentMatch.LeagoKey);
+
+            if (existingMatch == null)
+                continue;
+            
+                existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
+                existingMatch.MatchUrl = currentMatch.GameLink ?? "";
+                existingMatch.IsComplete = currentMatch.Players.Any(pl => pl.Outcome != Shared.Enum.PlayerMatchOutcome.NotReported);
+
+                foreach (PlayerMatchDto playerMatch in currentMatch.Players)
+                {
+                    var existingPlayerMatch = existingMatch.PlayerMatches?.FirstOrDefault(pm => pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
+
+                    if (existingPlayerMatch == null)
+                        continue;
+
+                    existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
+                    existingPlayerMatch.Outcome = playerMatch.Outcome;
+                    existingPlayerMatch.Color = playerMatch.Color;
+                }
+            } 
+        
+    }
+}
