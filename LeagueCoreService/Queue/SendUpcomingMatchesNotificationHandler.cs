@@ -21,8 +21,9 @@ public class SendUpcomingMatchesNotificationHandler(LeagueDataService leagueData
             InlcudePlayers = true,
             IncludeCompleted = false,
             IncludeNotConfirmed = false,
+            IsNotificationSent = false,
             TimeFrom = DateTime.Now.ToUniversalTime(),
-            TimeTo = DateTime.Now.AddMinutes(360).ToUniversalTime(),
+            TimeTo = DateTime.Now.AddMinutes(30).ToUniversalTime(),
             Count = 5
         };
 

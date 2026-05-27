@@ -1,5 +1,6 @@
 ﻿@page "/sync"
 @inject Services.MainService MainService
+@using Shared.Dto.OGS
 @rendermode InteractiveServer
 
 <PageTitle>Sync</PageTitle>
@@ -12,8 +13,26 @@
 <button class="btn btn-primary" @onclick="SyncMatches">Sync Matches</button>
 <button class="btn btn-primary" @onclick="CheckOgsRanks">Check Ranks</button>
 
+<HxGrid @ref="_checkRankGrid" TItem="CheckRankDto" 
+        DataProvider="GetGridData"
+        MultiSelectionEnabled="true" PageSize="300" Responsive="true">
+    <Columns>
+        <HxGridColumn HeaderText="Player" ItemTextSelector="rev => rev.Player.FirstName + ' ' + rev.Player.LastName" />
+        <HxGridColumn HeaderText="Rank" ItemTextSelector="rev => rev.Player.Rank.ToString()" />
+        <HxGridColumn HeaderText="OGSRank" ItemTextSelector="rev => (30 - rev.OGSRank).ToString()"/>
+        <HxGridColumn HeaderText="OGSProfile" ItemTextSelector="pl => pl.Player.OGSHandle"></HxGridColumn>
+        </Columns>
+</HxGrid>
+
 @code {
     private string _message = "Loading...";
+    private HxGrid<CheckRankDto> _checkRankGrid;
+    private IEnumerable<CheckRankDto> _checkRankResults;
+    
+    private Task<GridDataProviderResult<CheckRankDto>> GetGridData(GridDataProviderRequest<CheckRankDto> request)
+    {
+        return Task.FromResult(request.ApplyTo(_checkRankResults));
+    }
     
     private async void SyncMatches()
     {
@@ -43,7 +62,8 @@
     {
         try
         {
-            await MainService.CheckRanks();
+            _checkRankResults = await MainService.CheckRanks();
+            await _checkRankGrid.RefreshDataAsync();
         }
         catch (Exception e)
         {

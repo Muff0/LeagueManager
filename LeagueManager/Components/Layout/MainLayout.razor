@@ -1,8 +1,6 @@
 ﻿@inherits LayoutComponentBase
-@inject NotificationService Notifications
 @using LeagueManager.Services
 @using Shared.Notifications
-@implements IAsyncDisposable
 
 <div class="page">
     <div class="sidebar">
@@ -20,29 +18,10 @@
     </main>
 </div>
 
+<NotificationToast />
+
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
-
-
-@code {
-    protected override async Task OnInitializedAsync()
-    {
-        Notifications.OnNotification += HandleNotification;
-        await Notifications.StartAsync();
-    }
-
-    private void HandleNotification(NotificationMessage msg)
-    {
-        // push to a toast queue, a list, whatever your UI does
-        InvokeAsync(StateHasChanged);
-    }
-
-    public async ValueTask DisposeAsync()
-    {
-        Notifications.OnNotification -= HandleNotification;
-        await Notifications.DisposeAsync();
-    }
-}

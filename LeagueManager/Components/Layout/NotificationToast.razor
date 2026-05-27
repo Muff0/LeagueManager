@@ -1,0 +1,185 @@
+@inject NotificationService Notifications
+@using LeagueManager.Services
+@using Shared.Notifications
+@implements IDisposable
+
+@if (_notifications.Count > 0)
+{
+    <div class="toast-container">
+        @foreach (var n in _notifications)
+        {
+            <div class="toast toast--@n.Message.Level.ToString().ToLower() @(n.Exiting ? "toast--exit" : "toast--enter")"
+                 @key="n.Id">
+                <div class="toast__bar"></div>
+                <div class="toast__body">
+                    <div class="toast__header">
+                        <span class="toast__icon">@Icon(n.Message.Level)</span>
+                        <span class="toast__title">@n.Message.Title</span>
+                        <button class="toast__close" @onclick="() => Remove(n)">✕</button>
+                    </div>
+                    @if (!string.IsNullOrEmpty(n.Message.Detail))
+                    {
+                        <div class="toast__detail">@n.Message.Detail</div>
+                    }
+                    <div class="toast__meta">@n.Message.Source · @n.Message.Timestamp.ToLocalTime().ToString("HH:mm:ss")</div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<style>
+    .toast-container {
+        position: fixed;
+        bottom: 1.5rem;
+        right: 1.5rem;
+        display: flex;
+        flex-direction: column-reverse;
+        gap: 0.625rem;
+        z-index: 9999;
+        pointer-events: none;
+    }
+
+    .toast {
+        display: flex;
+        width: 22rem;
+        border-radius: 6px;
+        overflow: hidden;
+        background: #1e1e2e;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+        pointer-events: all;
+        font-family: 'Consolas', 'Fira Mono', monospace;
+        font-size: 0.8rem;
+    }
+
+    .toast__bar {
+        width: 4px;
+        flex-shrink: 0;
+    }
+
+    .toast__body {
+        flex: 1;
+        padding: 0.65rem 0.75rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
+        min-width: 0;
+    }
+
+    .toast__header {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .toast__icon {
+        font-size: 0.85rem;
+    }
+
+    .toast__title {
+        font-weight: 600;
+        flex: 1;
+        color: #e2e8f0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .toast__close {
+        background: none;
+        border: none;
+        color: #64748b;
+        cursor: pointer;
+        padding: 0 0.2rem;
+        font-size: 0.7rem;
+        line-height: 1;
+        flex-shrink: 0;
+    }
+
+    .toast__close:hover { color: #e2e8f0; }
+
+    .toast__detail {
+        color: #94a3b8;
+        line-height: 1.4;
+        word-break: break-word;
+    }
+
+    .toast__meta {
+        color: #475569;
+        font-size: 0.7rem;
+        margin-top: 0.1rem;
+    }
+
+    /* Level colours */
+    .toast--success .toast__bar { background: #22c55e; }
+    .toast--error   .toast__bar { background: #ef4444; }
+    .toast--warning .toast__bar { background: #f59e0b; }
+    .toast--info    .toast__bar { background: #3b82f6; }
+
+    /* Animations */
+    @@keyframes slideIn {
+        from { opacity: 0; transform: translateX(120%); }
+        to   { opacity: 1; transform: translateX(0); }
+    }
+    @@keyframes slideOut {
+        from { opacity: 1; transform: translateX(0); }
+        to   { opacity: 0; transform: translateX(120%); }
+    }
+
+    .toast--enter { animation: slideIn 0.22s ease forwards; }
+    .toast--exit  { animation: slideOut 0.22s ease forwards; }
+</style>
+
+@code {
+    private readonly List<ToastEntry> _notifications = [];
+    private const int AutoDismissMs = 5000;
+
+    protected async override Task OnInitializedAsync()
+    {
+        Notifications.OnNotification += HandleNotification;
+        await Notifications.StartAsync();
+    }
+
+    private void HandleNotification(NotificationMessage msg)
+    {
+        var entry = new ToastEntry(msg);
+        InvokeAsync(async () =>
+        {
+            _notifications.Add(entry);
+            StateHasChanged();
+            await Task.Delay(AutoDismissMs);
+            await DismissAsync(entry);
+        });
+    }
+
+    private async Task DismissAsync(ToastEntry entry)
+    {
+        if (!_notifications.Contains(entry)) return;
+        entry.Exiting = true;
+        StateHasChanged();
+        await Task.Delay(220); // match slideOut duration
+        _notifications.Remove(entry);
+        StateHasChanged();
+    }
+
+    private void Remove(ToastEntry entry)
+        => InvokeAsync(() => DismissAsync(entry));
+
+    private static string Icon(NotificationLevel level) => level switch
+    {
+        NotificationLevel.Success => "✓",
+        NotificationLevel.Error   => "✕",
+        NotificationLevel.Warning => "⚠",
+        _                         => "ℹ",
+    };
+
+    public void Dispose()
+        => Notifications.OnNotification -= HandleNotification;
+
+    private class ToastEntry(NotificationMessage message)
+    {
+        public Guid Id { get; } = Guid.NewGuid();
+        public NotificationMessage Message { get; } = message;
+        public bool Exiting { get; set; }
+    }
+}

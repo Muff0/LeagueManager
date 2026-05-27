@@ -18,6 +18,7 @@ using OGS;
 using Shared;
 using Shared.Dto;
 using Shared.Dto.Discord;
+using Shared.Dto.OGS;
 using Shared.Enum;
 using Shared.Notifications;
 using Shared.Settings;
@@ -182,6 +183,7 @@ namespace LeagueManager.Services
                 }
 
                 await _leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand() { Players = updateList.ToArray() });
+                SendTaskCompletedNotification();
             }
             catch (Exception ex)
             {
@@ -189,6 +191,16 @@ namespace LeagueManager.Services
             }
         }
 
+        public void SendTaskCompletedNotification()
+        {
+            _notificationService.Dispatch(
+                new NotificationMessage(
+                    "Task Completed",
+                    null,
+                    NotificationLevel.Success,
+                    nameof(MainService),
+                    DateTime.Now));
+        }
 
 
         public async Task UpdateDiscordPlayerRole()
@@ -210,6 +222,7 @@ namespace LeagueManager.Services
                         .Cast<ulong>()
                         .ToArray()
                 });
+                SendTaskCompletedNotification();
             }
             catch (Exception ex)
             {
@@ -321,10 +334,11 @@ namespace LeagueManager.Services
             return res;
         }
 
-        public async Task CheckRanks()
+        public async Task<CheckRankDto[]> CheckRanks()
         {
             try
             {
+                var results = new List<CheckRankDto>();
                 var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
                 var players = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery()
                 {
@@ -341,14 +355,21 @@ namespace LeagueManager.Services
 
                     if (ogsPl == null)
                         continue;
-
-                    string ranks = player.Player.FirstName + " " + player.Player.LastName + " " + player.Player.Rank.GetDisplayName() + " - " + (30-_ogsService.RatingToRank(ogsPl.Rating)).ToString();
-                    ranks = "";
+                    
+                    results.Add(new CheckRankDto()
+                    {
+                        Player = player.Player.ToPlayerDto(),
+                        OGSRank = _ogsService.RatingToRank(ogsPl.Rating),
+                        OGSRating =  ogsPl.Rating
+                    });
+                    
                 }
+                return results.ToArray();
             }
             catch (Exception ex)
             {
                 HandleException(ex);
+                return [];
             }
         }
 
@@ -410,30 +431,6 @@ namespace LeagueManager.Services
             return paymentData.ToArray();
         }
 
-        public async Task<List<ReviewViewModel>> GetReviews()
-        {
-            try
-            {
-                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
-                {
-                    IncludeMatch = true,
-                    IncludeOwner = true,
-                    IncludeTeacher = true,
-                    Round = [1, 2, 3, 4, 5],
-                    SeasonId = season.Id,
-                    Status = [ReviewStatus.Planned],
-                    MatchQueryMode = GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly
-                });
-
-                return res.Select(re => re.ToViewModel()).ToList();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return new List<ReviewViewModel> { };
-            }
-        }
 
         public async Task SaveReviewChanges(List<ReviewViewModel> reviews)
         {
@@ -845,6 +842,7 @@ namespace LeagueManager.Services
             {
                 HandleException(e);
             }
+            SendTaskCompletedNotification();
         }
 
         public async Task UpdatePlayersList()
