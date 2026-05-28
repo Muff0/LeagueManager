@@ -22,7 +22,7 @@ namespace LeagueCoreService
             [
                 scope.ServiceProvider.GetRequiredService<SyncMatchesScheduledJob>(),
                 scope.ServiceProvider.GetRequiredService<CleanupQueueScheduledJob>(),
-                scope.ServiceProvider.GetRequiredService<PostUpcomingMatchScheduledJob>(),
+                scope.ServiceProvider.GetRequiredService<PostUpcomingMatchesScheduledJob>(),
                 scope.ServiceProvider.GetRequiredService<PostDiscordPollScheduledJob>()
             ];
         }

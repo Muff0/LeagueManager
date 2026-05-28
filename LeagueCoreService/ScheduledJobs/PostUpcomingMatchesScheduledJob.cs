@@ -7,13 +7,13 @@ using Shared.Settings;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class PostUpcomingMatchScheduledJob(QueueDataService queueDataService, 
+public class PostUpcomingMatchesScheduledJob(QueueDataService queueDataService, 
     PostUpcomingMatchesSchedulerService schedulerService,
     LeagueDataService leagueDataService,
     IOptions<SchedulerSettings> settings) 
     : ScheduledJobBase<PostUpcomingMatchesSchedulerService>(queueDataService, schedulerService)
 {
-    public override string Command { get; } = "PostUpcomingMatch";
+    public override string Command { get; } = "PostUpcomingMatches";
     
     public override async Task<bool> ShouldRun(DateTime now)
     {

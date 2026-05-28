@@ -9,13 +9,13 @@ using Shared.Settings;
 
 namespace LeagueCoreService.Queue;
 
-public class SendUpcomingMatchesNotificationHandler(LeagueDataService leagueDataService,
-    ILogger<SendUpcomingMatchesNotificationHandler> logger,
+public class PostUpcomingMatchesHandler(LeagueDataService leagueDataService,
+    ILogger<PostUpcomingMatchesHandler> logger,
     DiscordService discordService,
     IOptions<SchedulerSettings> settings) 
     : ICommandHandler
 {
-    public string CommandType => "SendUpcomingMatchesNotification";
+    public string CommandType => "PostUpcomingMatches";
     
     public async Task<Data.Model.Match[]> GetUpcomingMatches()
     {
