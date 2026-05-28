@@ -3,13 +3,16 @@ using Data.Commands.Match;
 using Data.Model;
 using Discord;
 using LeagueCoreService.Services;
+using Microsoft.Extensions.Options;
 using Shared.Dto.Discord;
+using Shared.Settings;
 
 namespace LeagueCoreService.Queue;
 
 public class SendUpcomingMatchesNotificationHandler(LeagueDataService leagueDataService,
-    ILogger logger,
-    DiscordService discordService) 
+    ILogger<SendUpcomingMatchesNotificationHandler> logger,
+    DiscordService discordService,
+    IOptions<SchedulerSettings> settings) 
     : ICommandHandler
 {
     public string CommandType => "SendUpcomingMatchesNotification";
@@ -22,8 +25,8 @@ public class SendUpcomingMatchesNotificationHandler(LeagueDataService leagueData
             IncludeCompleted = false,
             IncludeNotConfirmed = false,
             IsNotificationSent = false,
-            TimeFrom = DateTime.Now.ToUniversalTime(),
-            TimeTo = DateTime.Now.AddMinutes(30).ToUniversalTime(),
+            TimeFromUTC = DateTime.Now.ToUniversalTime(),
+            TimeToUTC = DateTime.Now.AddMinutes(settings.Value.UpcomingMatchesTimeSpanMinutes).ToUniversalTime(),
             Count = 5
         };
 

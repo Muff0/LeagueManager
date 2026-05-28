@@ -1,13 +1,12 @@
 using Data;
+using Shared.Services;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class CleanupQueueScheduledJob : TimedScheduledJob
+public class CleanupQueueScheduledJob(QueueDataService queueDataService, 
+    CleanupQueueSchedulerService schedulerService,
+    LeagueDataService leagueDataService) 
+    : ScheduledJobBase<CleanupQueueSchedulerService>(queueDataService, schedulerService)
 {
-    public CleanupQueueScheduledJob(QueueDataService queueDataService) : base(queueDataService)
-    {
-    }
-
-    
     public override string Command => "CleanupQueue";
 }

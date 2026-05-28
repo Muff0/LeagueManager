@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using OGS;
 using Serilog;
 using Serilog.Events;
+using Serilog.Extensions.Logging;
 using Shared.Converter;
 using Shared.Services;
 using Shared.Settings;
@@ -26,7 +27,7 @@ var builder = Host.CreateApplicationBuilder(args);
 builder.Services.Configure<LeagoSettings>(builder.Configuration.GetSection("Leago"));
 builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
-builder.Services.Configure<PollSchedulerSettings>(builder.Configuration.GetSection("PollScheduler"));
+builder.Services.Configure<SchedulerSettings>(builder.Configuration.GetSection("Scheduler"));
 
 // Needed to handle bad datetime values without altering the generated code
 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -54,9 +55,6 @@ builder.Services.AddHttpClient<UsersClient>();
 builder.Services.AddHttpClient<OGSClient>();
 
 // Logging
-
-builder.Logging.ClearProviders();
-
 var discordSettings = builder.Configuration.GetSection("Discord").Get<DiscordSettings>()!;
 
 var logConfig = new LoggerConfiguration()
@@ -70,11 +68,12 @@ var logConfig = new LoggerConfiguration()
 if (!string.IsNullOrEmpty(discordSettings.AlertWebhookUrl))
     logConfig.WriteTo.WriteToDiscordWebhook(
         discordSettings.AlertWebhookUrl,
-        minimumLevel: LogEventLevel.Error);  // Warning in dev, Error in prod
+        minimumLevel: LogEventLevel.Error);
 
 Log.Logger = logConfig.CreateLogger();
 
-builder.Logging.AddSerilog(Log.Logger);
+builder.Services.AddSingleton<ILoggerFactory>(new SerilogLoggerFactory(Log.Logger, dispose: true));
+builder.Services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
 
 // Read connection string from appsettings.json
 var connectionString = builder.Configuration.GetConnectionString("PostgreSQL");
@@ -110,6 +109,9 @@ builder.Services.AddScoped<Discord.DiscordService>();
 builder.Services.AddScoped<CommandOrchestrator>();
 
 builder.Services.AddSingleton<PollSchedulerService>();
+builder.Services.AddSingleton<SyncMatchesSchedulerService>();
+builder.Services.AddSingleton<PostUpcomingMatchesSchedulerService>();
+builder.Services.AddSingleton<CleanupQueueSchedulerService>();
 
 // Start the Discord service
 

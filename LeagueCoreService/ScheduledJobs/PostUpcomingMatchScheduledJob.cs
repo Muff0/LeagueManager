@@ -1,29 +1,37 @@
 using Data;
+using Data.Model;
 using Data.Queries;
+using Microsoft.Extensions.Options;
+using Shared.Services;
+using Shared.Settings;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class PostUpcomingMatchScheduledJob : TimedScheduledJob
+public class PostUpcomingMatchScheduledJob(QueueDataService queueDataService, 
+    PostUpcomingMatchesSchedulerService schedulerService,
+    LeagueDataService leagueDataService,
+    IOptions<SchedulerSettings> settings) 
+    : ScheduledJobBase<PostUpcomingMatchesSchedulerService>(queueDataService, schedulerService)
 {
-    private LeagueDataService _leagueDataService;
-    public PostUpcomingMatchScheduledJob(QueueDataService queueDataService,
-        LeagueDataService leagueDataService) : base(queueDataService)
-    {
-        _leagueDataService = leagueDataService;
-    }
     public override string Command { get; } = "PostUpcomingMatch";
-
-    public override TimeSpan Interval => TimeSpan.FromMinutes(1);
-
+    
     public override async Task<bool> ShouldRun(DateTime now)
     {
         var shouldRun = await base.ShouldRun(now);
         if (!shouldRun)
             return false;
 
-        var isUpcoming = await _leagueDataService.RunQueryAsync(
-            new UpcomingMatchesQuery());
+        var isUpcoming = await leagueDataService.CountAsync(new Data.Queries.GetMatchesByTimeQuery()
+        {
+            InlcudePlayers = true,
+            IncludeCompleted = false,
+            IncludeNotConfirmed = false,
+            IsNotificationSent = false,
+            TimeFromUTC = DateTime.Now.ToUniversalTime(),
+            TimeToUTC = DateTime.Now.ToUniversalTime().AddMinutes(settings.Value.UpcomingMatchesTimeSpanMinutes),
+            Count = 5
+        });
 
-        return true;
+        return isUpcoming > 0;
     }
 }

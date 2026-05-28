@@ -1,13 +1,10 @@
 using Data;
+using Shared.Services;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class SyncMatchesScheduledJob : TimedScheduledJob
+public class SyncMatchesScheduledJob(QueueDataService queueDataService, SyncMatchesSchedulerService schedulerService) : ScheduledJobBase<SyncMatchesSchedulerService>(queueDataService, schedulerService)
 {
-    public SyncMatchesScheduledJob(QueueDataService queueDataService) : base(queueDataService)
-    {
-    }
-
     
     public override string Command => "SyncMatches";
 }

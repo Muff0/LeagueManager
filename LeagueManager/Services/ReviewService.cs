@@ -28,11 +28,14 @@ namespace LeagueManager.Services
 
         private async Task<int[]> GetReviewsPerRound(int seasonId)
         {
-            var resGetReviews = await _leagueDataService.RunQueryAsync(new GetReviewsQuery());
+            var resGetReviews = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
+            {
+                SeasonId = seasonId
+            });
 
             int[] revPerRound = new int[6];
 
-            for (int ii = 1; ii <= 6; ii++)
+            for (int ii = 1; ii < 6; ii++)
                 revPerRound[ii] = resGetReviews.Count(rr => rr.Round == ii);
             return revPerRound;
         }
@@ -93,6 +96,7 @@ namespace LeagueManager.Services
                         Id = current.Id,
                         Round = round
                     });
+                    roundReviewCount[round]++;
                 }
             }
             await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand()
@@ -110,7 +114,7 @@ namespace LeagueManager.Services
                     IncludePlayer = true,
                     IncludeReviews = true,
                     SeasonId = activeSeason.Id,
-                    ParticipationTiers = [PlayerParticipationTier.DojoTier2, PlayerParticipationTier.DojoTier3]
+                    ParticipationTiers = [PlayerParticipationTier.DojoTier2, PlayerParticipationTier.DojoTier3, PlayerParticipationTier.DojoTier4]
                 });
 
             var toAdd = new List<Review>();

@@ -7,7 +7,7 @@ using Shared.Dto;
 
 namespace LeagueCoreService.Queue;
 
-public class SyncMatchesHandler(ILogger logger,
+public class SyncMatchesHandler(ILogger<SyncMatchesHandler> logger,
     LeagueDataService leagueDataService,
     LeagoMainService leagoService) 
     : ICommandHandler

@@ -128,7 +128,7 @@ namespace LeagueManager.Services
             }
         }
 
-        public async Task<bool> UploadOrdersFile(Stream content)
+        public async Task<ProcessPaymentDataOutDto> UploadOrdersFile(Stream content)
         {
             try
             {
@@ -137,12 +137,12 @@ namespace LeagueManager.Services
                 var payments = ParsePaymentData(table);
                 var resProcessPayment = await ProcessPaymentData(payments);
 
-                return true;
+                return resProcessPayment;
             }
             catch (Exception ex)
             {
                 HandleException(ex);
-                return false;
+                return new();
             }
         }
 

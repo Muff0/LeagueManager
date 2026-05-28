@@ -9,23 +9,15 @@ using Shared.Services;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public class PostDiscordPollScheduledJob : WeeklyScheduledJob<PollSchedulerService>
+public class PostDiscordPollScheduledJob(QueueDataService queueDataService, PollSchedulerService schedulerService) : ScheduledJobBase<PollSchedulerService>(queueDataService, schedulerService)
 {
-    public PostDiscordPollScheduledJob(QueueDataService queueDataService,
-        PollSchedulerService pollSchedulerService)
-         : base(queueDataService, pollSchedulerService)
-    {
-    }
-
     public override string Command => "PostDiscordPoll";
 
     public override async Task Init()
     {
-        var lastRun = await _queueDataService.RunQueryAsync(new GetLastPostedPollQuery());
+        var lastRun = await queueDataService.RunQueryAsync(new GetLastPostedPollQuery());
         if (lastRun != null)
             LastRun = lastRun.ProcessedAtUtc.GetValueOrDefault();
-
-        await SendNextPollNotification("Poll scheduler initialized. ", DiscordNotificationType.Admin);
     }
 
     public async override Task OnEnqueued()
@@ -36,7 +28,7 @@ public class PostDiscordPollScheduledJob : WeeklyScheduledJob<PollSchedulerServi
 
     private async Task SendNextPollNotification(string message, DiscordNotificationType notificationType)
     {
-        await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
+        await queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
         {
             NewCommand = new CommandMessage()
             {

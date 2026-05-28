@@ -10,7 +10,7 @@ namespace Tests.Shared;
 public class PollScheduleServiceTests
 {
     private static PollSchedulerService CreateService(DayOfWeek day, int hour) =>
-        new(Options.Create(new PollSchedulerSettings
+        new(Options.Create(new SchedulerSettings
         {
             PollPostDay = day,
             PollPostHour = hour

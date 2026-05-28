@@ -20,9 +20,8 @@ namespace LeagueCoreService
             
             _scheduledJobs =
             [
-                new CleanupQueueScheduledJob(queueDataService)
-                    {Interval = TimeSpan.FromHours(24)}, // will have to create settings for this
                 scope.ServiceProvider.GetRequiredService<SyncMatchesScheduledJob>(),
+                scope.ServiceProvider.GetRequiredService<CleanupQueueScheduledJob>(),
                 scope.ServiceProvider.GetRequiredService<PostUpcomingMatchScheduledJob>(),
                 scope.ServiceProvider.GetRequiredService<PostDiscordPollScheduledJob>()
             ];

@@ -1,19 +1,20 @@
 using Data;
 using Data.Commands.Queue;
 using Data.Model;
+using Shared.Services;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public abstract class ScheduledJobBase : IScheduledJob
+public abstract class ScheduledJobBase<T>(QueueDataService queueDataService, T schedulerService) : IScheduledJob where T : IJobSchedulerService
 {
-    protected QueueDataService _queueDataService;
-    public ScheduledJobBase(QueueDataService queueDataService)
-    {
-        _queueDataService = queueDataService;
-    }
 
     public DateTime LastRun { get; protected set; } = DateTime.MinValue;
-    public abstract Task<bool> ShouldRun(DateTime now);
+    
+    public virtual Task<bool> ShouldRun(DateTime now)
+    {   
+        var nextOccurrence = schedulerService.GetNextOccurrence(LastRun, now);
+        return Task.FromResult(now >= nextOccurrence);
+    }
 
     public abstract string Command { get; }
 
@@ -35,7 +36,7 @@ public abstract class ScheduledJobBase : IScheduledJob
             Payload = BuildPayload()
         };
 
-        await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
+        await queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
         {
             NewCommand = command,
         });

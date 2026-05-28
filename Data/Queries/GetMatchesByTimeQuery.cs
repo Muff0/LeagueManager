@@ -5,8 +5,8 @@ namespace Data.Queries
 {
     public class GetMatchesByTimeQuery : Query<LeagueContext, Match>
     {
-        public DateTime? TimeFrom { get; set; }
-        public DateTime? TimeTo { get; set; }
+        public DateTime? TimeFromUTC { get; set; }
+        public DateTime? TimeToUTC { get; set; }
         public bool IncludeCompleted { get; set; } = false;
         public bool InlcudePlayers { get; set; } = false;
         public bool IncludeNotConfirmed { get; set; } = false;
@@ -24,11 +24,11 @@ namespace Data.Queries
                 query = query.Include(mm => mm.PlayerMatches)
                     .ThenInclude(pm => pm.Player);
 
-            if (TimeFrom != null)
-                query = query.Where(mm => mm.GameTimeUTC >= TimeFrom.GetValueOrDefault().ToUniversalTime());
+            if (TimeFromUTC != null)
+                query = query.Where(mm => mm.GameTimeUTC >= TimeFromUTC.GetValueOrDefault());
 
-            if (TimeTo != null)
-                query = query.Where(mm => mm.GameTimeUTC <= TimeTo.GetValueOrDefault().ToUniversalTime());
+            if (TimeToUTC != null)
+                query = query.Where(mm => mm.GameTimeUTC <= TimeToUTC.GetValueOrDefault());
 
             if (!IncludeNotConfirmed)
                 query = query.Where(mm => mm.PlayerMatches.All(pm => pm.HasConfirmed));
