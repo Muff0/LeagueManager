@@ -11,6 +11,8 @@
     <PackageReference Include="NetCord" Version="1.0.0-alpha.476" />
     <PackageReference Include="NetCord.Hosting" Version="1.0.0-alpha.476" />
     <PackageReference Include="NetCord.Hosting.Services" Version="1.0.0-alpha.476" />
+    <PackageReference Include="Serilog" Version="4.3.1" />
+    <PackageReference Include="Serilog.Extensions.Logging" Version="10.0.0" />
   </ItemGroup>
 
   <ItemGroup>
