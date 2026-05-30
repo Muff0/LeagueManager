@@ -93,16 +93,18 @@ builder.Services.AddSingleton<NotificationDispatcher>();
 builder.Services.AddSingleton<INotificationDispatcher>(sp =>
     sp.GetRequiredService<NotificationDispatcher>()); // same instance
 builder.Services.AddHostedService<NotificationRelayService>();
-builder.Services.AddScoped<NotificationService>();
+builder.Services.AddSingleton<NotificationService>();
+
+// Mail Service
+
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
+builder.Services.AddScoped<MailService>();
 
 // Start the Discord service
 builder.Services.AddDiscordGateway();
 
 var app = builder.Build();
 
-// Map Notification hub
-
-app.MapHub<NotificationHub>("/hubs/notifications");
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -111,6 +113,11 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseAntiforgery();
+
+
+// Map Notification hub
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 app.MapStaticAssets();
 app.MapRazorComponents<App>()

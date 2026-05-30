@@ -6,6 +6,7 @@ namespace Shared.Notifications;
 
 public class NotificationRelayService(
     NotificationDispatcher dispatcher,
+    NotificationService notificationService,
     IHubContext<NotificationHub> hubContext,
     ILogger<NotificationRelayService> logger) : BackgroundService
 {
@@ -13,6 +14,7 @@ public class NotificationRelayService(
     {
         await foreach (var message in dispatcher.Reader.ReadAllAsync(stoppingToken))
         {
+            notificationService.Notify(message); // direct in-process delivery
             try
             {
                 await hubContext.Clients.All.SendAsync("Notification", message, stoppingToken);

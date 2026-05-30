@@ -113,6 +113,11 @@ builder.Services.AddSingleton<SyncMatchesSchedulerService>();
 builder.Services.AddSingleton<PostUpcomingMatchesSchedulerService>();
 builder.Services.AddSingleton<CleanupQueueSchedulerService>();
 
+// Mail Service
+
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
+builder.Services.AddScoped<MailService>();
+
 // Start the Discord service
 
 

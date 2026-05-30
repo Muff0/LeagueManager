@@ -96,7 +96,7 @@ namespace Discord
 
             var msg = BuildMessageProperties(content);
 
-            await _restClient.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
+            await _restClient.SendMessageAsync(_settings.Value.LeagueAnnouncementsChannelId, msg);
         }
         protected string BuildEventUrl(GuildScheduledEvent guildEvent) => $"https://discord.com/events/{guildEvent.GuildId}/{guildEvent.Id}";
 
@@ -111,7 +111,7 @@ namespace Discord
 
             var msg = BuildMessageProperties(content);
 
-            await _restClient.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
+            await _restClient.SendMessageAsync(_settings.Value.LeagueAnnouncementsChannelId, msg);
         }
 
         public async Task SendRoundStartNotification(SendRoundStartNotificationInDto inDto)
@@ -120,7 +120,7 @@ namespace Discord
             {
                 var msg = BuildRoundStartNotification(inDto.RoundNumber, inDto.RoundEnd);
 
-                await _restClient.SendMessageAsync(_settings.Value.MatchAnnouncementChannelId, msg);
+                await _restClient.SendMessageAsync(_settings.Value.LeagueAnnouncementsChannelId, msg);
             }
             catch (Exception ex)
             {

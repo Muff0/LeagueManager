@@ -137,7 +137,6 @@
     protected async override Task OnInitializedAsync()
     {
         Notifications.OnNotification += HandleNotification;
-        await Notifications.StartAsync();
     }
 
     private void HandleNotification(NotificationMessage msg)

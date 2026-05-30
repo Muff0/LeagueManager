@@ -8,4 +8,6 @@ public class SchedulerSettings
     public int SendUpcomingMatchesIntervalMinutes { get; set; } = 15;
     public int UpcomingMatchesTimeSpanMinutes { get; set; } = 15;
     public int CleanupQueueIntervalDays { get; set; } = 1;
+    public DayOfWeek UnconfirmedMatchReminderDay { get; set; }
+    public int UnconfirmedMatchReminderHour { get; set; }
 }

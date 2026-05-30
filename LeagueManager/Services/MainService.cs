@@ -10,6 +10,7 @@ using Data.Model;
 using Data.Queries;
 using Discord;
 using LeagoService;
+using LeagueCoreService.Queue;
 using LeagueManager.Extensions;
 using LeagueManager.ViewModel;
 using Mail;
@@ -21,6 +22,7 @@ using Shared.Dto.Discord;
 using Shared.Dto.OGS;
 using Shared.Enum;
 using Shared.Notifications;
+using Shared.Services;
 using Shared.Settings;
 
 namespace LeagueManager.Services
@@ -76,6 +78,8 @@ namespace LeagueManager.Services
             base.HandleException(e);
             _notificationService.Dispatch((NotificationMessage.Error(e.GetType().ToString(),e.Message, e.Source)));
         }
+        
+        
 
         public async Task<DataTable> BuildOrderDataTable(Stream csvStream)
         {
@@ -888,6 +892,22 @@ namespace LeagueManager.Services
             }
 
             _leagueDataService.Execute(new UpdatePlayersDataCommand() { Players = toAdd.ToArray() });
+        }
+
+        public async Task SendMissingPaymentsEmail()
+        {
+            try
+            {
+                var handler = new SendUnconfirmedMatchRemindersHandler(_mailService, _leagueDataService);
+
+                await handler.HandleAsync(new CommandMessage());
+                
+                SendTaskCompletedNotification();
+            }
+            catch (Exception e)
+            {
+                HandleException(e);
+            }
         }
     }
 }

@@ -7,6 +7,7 @@
         public string Token { get; init; } = string.Empty;
         public ulong ReviewChannelId { get; init; }
         public ulong MatchAnnouncementChannelId { get; init; }
+        public ulong LeagueAnnouncementsChannelId { get; init; }
         public ulong MatchAnnouncementRoleId { get; init; }
         public ulong LeagueAnnouncementRoleId { get; init; }
         public ulong ServerId { get; init; }
