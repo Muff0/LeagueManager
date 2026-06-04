@@ -1,19 +1,22 @@
 using Data;
+using Data.Commands.Queue;
 using Data.Extensions;
 using Data.Model;
 using Data.Queries;
 using Mail;
 using Mail.MessageBuilders;
+using Shared.Extensions;
+using Shared.Queue;
 
 namespace LeagueCoreService.Queue;
 
-public class SendUnconfirmedMatchRemindersHandler(MailService mailService,
+public class SendUnconfirmedMatchRemindersHandler(QueueDataService queueDataService,
     LeagueDataService leagueDataService) : ICommandHandler
 {
     public string CommandType => "SendUnconfirmedMatchReminders";
     public async Task HandleAsync(CommandMessage cmd)
     {
-        var season = (await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery()))
+        var season = (await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery()))!
             .ToSeasonDto();
         var unconfirmedMatches = (await leagueDataService.RunQueryAsync(
             new GetUnconfirmedMatchesQuery()
@@ -25,9 +28,30 @@ public class SendUnconfirmedMatchRemindersHandler(MailService mailService,
         foreach (var currentMatch in unconfirmedMatches)
         {
             var msg = new MatchReminderMessage(currentMatch, NextMondayNoon(), season);
-            foreach (var player in  currentMatch.Players!)
-                await mailService.SendAsync(player.Player.EmailAddress, player.Player.FirstName, msg.Subject, msg.HtmlBody);
-        }
+            foreach (var player in currentMatch.Players!)
+            {
+                if (player?.Player?.EmailAddress == null)
+                    continue;
+                var payload = new SendEmailPayload()
+                {
+                    HtmlBody = msg.HtmlBody,
+                    Subject = msg.Subject,
+                    ToAddress = player.Player.EmailAddress,
+                    ToName = player.Player.FirstName! + " " + player.Player.LastName!,
+                    Ccs = ["league@gomagic.org"]
+                };
+                await queueDataService.ExecuteAsync(
+                    new InsertCommandMessageCommand()
+                    {
+                        NewCommand = new CommandMessage()
+                        {
+                            Type = "SendEmail",
+                            Payload = payload.SerializePayload()
+                        }
+                    });
+            }
+            
+                }
     }
     public DateTime NextMondayNoon()
     {

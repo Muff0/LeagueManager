@@ -112,9 +112,6 @@ public class MailService(IOptions<MailSettings> options, ILogger<MailService> lo
         foreach (var (address, name) in recipients)
             message.To.Add(new MailboxAddress(name, address));
 
-        // Hardcoded for now
-        message.Cc.Add(new MailboxAddress("League", "league@gomagic.org"));
-
         if (ccs != null)
             foreach (var (address, name)  in ccs)
                 message.Cc.Add(new MailboxAddress(name, address));

@@ -2,7 +2,7 @@
 
 namespace Data
 {
-    public abstract class Scalar<T, T2> where T : DbContext where T2 : class
+    public abstract class Scalar<T, T2> where T : DbContext where T2 : class?
     {
         #region Properties
 

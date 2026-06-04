@@ -13,12 +13,6 @@ public class PostDiscordPollScheduledJob(QueueDataService queueDataService, Poll
 {
     public override string Command => "PostDiscordPoll";
 
-    public override async Task Init()
-    {
-        var lastRun = await queueDataService.RunQueryAsync(new GetLastPostedPollQuery());
-        if (lastRun != null)
-            LastRun = lastRun.ProcessedAtUtc.GetValueOrDefault();
-    }
 
     public async override Task OnEnqueued()
     {

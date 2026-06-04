@@ -61,7 +61,7 @@ namespace Data
                 await ExecuteAsync(batch);
         }
 
-        public T2 RunQuery<T2>(Scalar<T, T2> queryObject) where T2 : class
+        public T2? RunQuery<T2>(Scalar<T, T2> queryObject) where T2 : class
         {
             return queryObject.Execute(GetDbContext());
         }
@@ -71,7 +71,7 @@ namespace Data
             return queryObject.Execute(GetDbContext());
         }
 
-        public async Task<T2> RunQueryAsync<T2>(Scalar<T, T2> queryObject) where T2 : class
+        public async Task<T2?> RunQueryAsync<T2>(Scalar<T, T2> queryObject) where T2 : class
         {
             return await queryObject.ExecuteAsync(GetDbContext());
         }

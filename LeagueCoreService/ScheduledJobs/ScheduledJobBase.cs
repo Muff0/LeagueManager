@@ -1,6 +1,7 @@
 using Data;
 using Data.Commands.Queue;
 using Data.Model;
+using Data.Queries;
 using Shared.Services;
 
 namespace LeagueCoreService.ScheduledJobs;
@@ -15,6 +16,17 @@ public abstract class ScheduledJobBase<T>(QueueDataService queueDataService, T s
         var nextOccurrence = schedulerService.GetNextOccurrence(LastRun, now);
         return Task.FromResult(now >= nextOccurrence);
     }
+    
+    
+    public virtual async Task Init()
+    {
+        var lastRun = await queueDataService.RunQueryAsync(new GetCommandMessageLastRunQuery()
+        {
+            CommandMessageType = Command
+        });
+        if (lastRun != null)
+            LastRun = lastRun.ProcessedAtUtc;
+    }
 
     public abstract string Command { get; }
 
@@ -23,9 +35,6 @@ public abstract class ScheduledJobBase<T>(QueueDataService queueDataService, T s
         return "";
     }
 
-    public virtual async Task Init()
-    {
-    }
     
     public async Task Enqueue()
     {
