@@ -24,32 +24,33 @@ public class SendUnconfirmedMatchRemindersHandler(QueueDataService queueDataServ
                 IncludePlayers = true,
                 SeasonId = season.Id
             })).Select(m => m.ToMatchDto()).ToArray();
+        // Hacky but should be ok for now
+        var currentRound = unconfirmedMatches.Max(um => um.Round);
         
         foreach (var currentMatch in unconfirmedMatches)
         {
+            if (currentMatch.Round != currentRound)
+                continue;
             var msg = new MatchReminderMessage(currentMatch, NextMondayNoon(), season);
-            foreach (var player in currentMatch.Players!)
+            var p1 = currentMatch.Players![0].Player!;
+            var p2 = currentMatch.Players![1].Player!;
+            
+            var payload = new SendEmailPayload()
             {
-                if (player?.Player?.EmailAddress == null)
-                    continue;
-                var payload = new SendEmailPayload()
+                HtmlBody = msg.HtmlBody,
+                Subject = msg.Subject,
+                Tos = [p1.EmailAddress],
+                Ccs = [p2.EmailAddress]
+            };
+            await queueDataService.ExecuteAsync(
+                new InsertCommandMessageCommand()
                 {
-                    HtmlBody = msg.HtmlBody,
-                    Subject = msg.Subject,
-                    ToAddress = player.Player.EmailAddress,
-                    ToName = player.Player.FirstName! + " " + player.Player.LastName!,
-                    Ccs = ["league@gomagic.org"]
-                };
-                await queueDataService.ExecuteAsync(
-                    new InsertCommandMessageCommand()
+                    NewCommand = new CommandMessage()
                     {
-                        NewCommand = new CommandMessage()
-                        {
-                            Type = "SendEmail",
-                            Payload = payload.SerializePayload()
-                        }
-                    });
-            }
+                        Type = "SendEmail",
+                        Payload = payload.SerializePayload()
+                    }
+                });
             
                 }
     }

@@ -38,7 +38,7 @@ public class MailService(IOptions<MailSettings> options, ILogger<MailService> lo
         SendEmailPayload payload,
         CancellationToken ct = default)
         {
-            var message = BuildMessage([(payload.ToAddress, payload.ToName)], 
+            var message = BuildMessage(payload.Tos.Select(to => (to, to)).ToArray(), 
                 payload.Subject, 
                 payload.HtmlBody,
                 payload.Ccs.Select(cc =>  (cc, cc)).ToArray(),
