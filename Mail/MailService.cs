@@ -3,6 +3,7 @@ using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
+using Shared.Queue;
 using Shared.Settings;
 
 namespace Mail;
@@ -28,6 +29,24 @@ public class MailService(IOptions<MailSettings> options, ILogger<MailService> lo
         var message = BuildMessage([(toAddress, toName)], subject, htmlBody);
         await SendMessageAsync(message, ct);
     }
+    /// <summary>
+    /// Sends a single email. HTML body is required; a plain-text fallback is
+    /// derived automatically by stripping tags.
+    /// Overload for Queue Payload
+    /// </summary>
+    public async Task SendAsync(
+        SendEmailPayload payload,
+        CancellationToken ct = default)
+        {
+            var message = BuildMessage([(payload.ToAddress, payload.ToName)], 
+                payload.Subject, 
+                payload.HtmlBody,
+                payload.Ccs.Select(cc =>  ("", cc)).ToArray(),
+                payload.Bccs.Select(bcc =>  ("", bcc)).ToArray());
+        await SendMessageAsync(message, ct);
+    }
+
+    
 
     /// <summary>
     /// Sends the same email to multiple recipients as individual messages.
@@ -83,7 +102,9 @@ public class MailService(IOptions<MailSettings> options, ILogger<MailService> lo
     private MimeMessage BuildMessage(
         IEnumerable<(string Address, string Name)> recipients,
         string subject,
-        string htmlBody)
+        string htmlBody,
+        IEnumerable<(string Address, string Name)>? ccs = null,
+        IEnumerable<(string Address, string Name)>? bccs = null)
     {
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(_settings.FromName, _settings.FromAddress));
@@ -93,6 +114,14 @@ public class MailService(IOptions<MailSettings> options, ILogger<MailService> lo
 
         // Hardcoded for now
         message.Cc.Add(new MailboxAddress("League", "league@gomagic.org"));
+
+        if (ccs != null)
+            foreach (var (address, name)  in ccs)
+                message.Cc.Add(new MailboxAddress(name, address));
+            
+        if (bccs != null)
+            foreach (var (address, name)  in bccs)
+                message.Bcc.Add(new MailboxAddress(name, address));
         
         message.Subject = subject;
 
