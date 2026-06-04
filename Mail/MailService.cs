@@ -41,8 +41,8 @@ public class MailService(IOptions<MailSettings> options, ILogger<MailService> lo
             var message = BuildMessage([(payload.ToAddress, payload.ToName)], 
                 payload.Subject, 
                 payload.HtmlBody,
-                payload.Ccs.Select(cc =>  ("", cc)).ToArray(),
-                payload.Bccs.Select(bcc =>  ("", bcc)).ToArray());
+                payload.Ccs.Select(cc =>  (cc, cc)).ToArray(),
+                payload.Bccs.Select(bcc =>  (bcc, bcc)).ToArray());
         await SendMessageAsync(message, ct);
     }
 
