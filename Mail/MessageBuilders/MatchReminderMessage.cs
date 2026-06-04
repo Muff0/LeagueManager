@@ -18,7 +18,7 @@ public class MatchReminderMessage
                     <br/>
                     <p> Hello, your match for the current round doesn't have a confirmed date yet.</p>
                     <p> As a reminder, all matches in the current round will have to be played by 
-                    {deadlineUTC.DayOfWeek} {deadlineUTC.ToShortDateString()} at {deadlineUTC.ToShortTimeString()}.
+                    {deadlineUTC.ToLongDateString()} at {deadlineUTC.ToShortTimeString()}.
                     
                     If you're having trouble scheduling please reply to this email or contact me on Discord (username muff0).</p>
                     

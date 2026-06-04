@@ -21,14 +21,12 @@ public class SendUnconfirmedMatchRemindersHandler(MailService mailService,
                 IncludePlayers = true,
                 SeasonId = season.Id
             })).Select(m => m.ToMatchDto()).ToArray();
-
+        
         foreach (var currentMatch in unconfirmedMatches)
         {
-            var pl = currentMatch.Players.FirstOrDefault(pl => pl.Player.FirstName == "Pietro")?.Player;
-            if (pl == null)
-                continue;
             var msg = new MatchReminderMessage(currentMatch, NextMondayNoon(), season);
-            await mailService.SendAsync(pl.EmailAddress, pl.FirstName, msg.Subject, msg.HtmlBody);
+            foreach (var player in  currentMatch.Players!)
+                await mailService.SendAsync(player.Player.EmailAddress, player.Player.FirstName, msg.Subject, msg.HtmlBody);
         }
     }
     public DateTime NextMondayNoon()
