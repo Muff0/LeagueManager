@@ -89,6 +89,7 @@ namespace LeagueCoreService
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, ex.Message);
                 await SetCommandStatus(cmd, QueueStatus.Failed);
             }
         }

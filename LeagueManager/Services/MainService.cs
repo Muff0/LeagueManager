@@ -815,17 +815,6 @@ namespace LeagueManager.Services
                     HandleException(ex);
                 }
             }
-            if (sendMail)
-            {
-                try
-                {
-
-                }
-                catch (Exception ex)
-                {
-                    HandleException(ex);
-                }
-            }
         }
 
         public async Task UpdatePlayers()
@@ -898,7 +887,7 @@ namespace LeagueManager.Services
         {
             try
             {
-                var handler = new SendUnconfirmedMatchRemindersHandler(_mailService, _leagueDataService);
+                var handler = new SendUnconfirmedMatchRemindersHandler(_queueDataService, _leagueDataService);
 
                 await handler.HandleAsync(new CommandMessage());
                 
