@@ -112,6 +112,8 @@ builder.Services.AddSingleton<PollSchedulerService>();
 builder.Services.AddSingleton<SyncMatchesSchedulerService>();
 builder.Services.AddSingleton<PostUpcomingMatchesSchedulerService>();
 builder.Services.AddSingleton<CleanupQueueSchedulerService>();
+builder.Services.AddSingleton<SendUnconfirmedMatchRemindersSchedulerService>();
+
 
 // Mail Service
 
