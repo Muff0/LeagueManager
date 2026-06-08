@@ -7,8 +7,7 @@ using Shared.Dto;
 
 namespace LeagueCoreService.Queue;
 
-public class SyncMatchesHandler(ILogger<SyncMatchesHandler> logger,
-    LeagueDataService leagueDataService,
+public class SyncMatchesHandler(LeagueDataService leagueDataService,
     LeagoMainService leagoService) 
     : ICommandHandler
 {
@@ -46,14 +45,7 @@ public class SyncMatchesHandler(ILogger<SyncMatchesHandler> logger,
 
     private async Task SyncMatches()
     {
-        try
-        {
             for (int ii = 0; ii < 5; ii++)
                 await SyncMatchesForRound(ii + 1);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, ex.Message);
-        }
     }
 }

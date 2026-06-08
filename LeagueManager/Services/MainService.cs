@@ -887,9 +887,9 @@ namespace LeagueManager.Services
         {
             try
             {
-                var handler = new SendUnconfirmedMatchRemindersHandler(_queueDataService, _leagueDataService);
+                var handler = new SyncMatchesHandler(_leagueDataService, _leagoService);
 
-                await handler.HandleAsync(new CommandMessage());
+                await handler.SyncMatchesForRound(2);
                 
                 SendTaskCompletedNotification();
             }

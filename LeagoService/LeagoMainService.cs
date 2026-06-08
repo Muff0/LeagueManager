@@ -77,10 +77,6 @@ namespace LeagoService
         {
             var res = new GetMatchesOutDto();
 
-            try
-            {
-                var rres = await _roundsClient.ListRoundsAsync(inDto.TournamentKey);
-
                 var mres = await _roundsClient.ListRoundMatchesAsync(inDto.TournamentKey, inDto.RoundKey, inDto.MatchesOffset, inDto.MatchesCount);
 
                 res.Matches = mres.Select(mm => new MatchDto()
@@ -106,11 +102,6 @@ namespace LeagoService
                         Outcome = (Shared.Enum.PlayerMatchOutcome)pp.Outcome
                     }).ToArray()
                 }).ToArray();
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
 
             return res;
         }

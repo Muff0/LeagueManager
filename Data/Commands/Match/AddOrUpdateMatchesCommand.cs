@@ -70,7 +70,23 @@ public class AddOrUpdateMatchesCommand : Command<LeagueContext>
                     var existingPlayerMatch = existingMatch.PlayerMatches?.FirstOrDefault(pm => pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
 
                     if (existingPlayerMatch == null)
-                        continue;
+                    {
+                        if (playerMatch?.Player == null)
+                            continue;
+
+                        var existingPlayer = context.Players.FirstOrDefault(pp => pp.LeagoKey == playerMatch.Player.LeagoKey);
+
+                        if (existingPlayer == null)
+                            continue;
+                        existingPlayerMatch = new PlayerMatch()
+                        {
+                            Color = playerMatch.Color,
+                            PlayerId = existingPlayer.Id,
+                            HasConfirmed = playerMatch.HasConfirmed,
+                            Outcome = playerMatch.Outcome,
+                        };
+                        existingMatch.PlayerMatches.Add(existingPlayerMatch);   
+                    }
 
                     existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
                     existingPlayerMatch.Outcome = playerMatch.Outcome;
