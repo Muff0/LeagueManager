@@ -1,0 +1,121 @@
+@using LeagueManager.ViewModel
+@using Shared.Enum
+
+<div class="lm-panel @(IsOpen ? "" : "hidden")">
+    @if (IsOpen && Player != null)
+    {
+        <div class="lm-panel-inner">
+            <div class="lm-panel-header">
+                <div style="display:flex;align-items:center;gap:10px">
+                    <div class="lm-avatar">@Initials</div>
+                    <div>
+                        <div class="lm-panel-name">@Player.FirstName @Player.LastName</div>
+                        <div class="lm-panel-id">
+                            Player #@Player.Id
+                            <span class="lm-badge">@Player.Rank.GetDisplayName()</span>
+                        </div>
+                    </div>
+                </div>
+                <button class="lm-close-btn" @onclick="OnClose" aria-label="Close">
+                    <i class="ti ti-x" aria-hidden="true"></i>
+                </button>
+            </div>
+
+            <div class="lm-section-label">Contact</div>
+            <div class="lm-field">
+                <label>Email</label>
+                <span>@(Player.EmailAddress ?? "—")</span>
+            </div>
+            <div class="lm-field-row">
+                <div class="lm-field">
+                    <label>Timezone</label>
+                    <span>@(Player.TimeZone ?? "—")</span>
+                </div>
+                <div class="lm-field">
+                    <label>Leago ID</label>
+                    <span class="mono">@(Player.LeagoMemberId ?? "—")</span>
+                </div>
+            </div>
+
+            <div class="lm-section-label">Discord</div>
+            <div class="lm-field-row">
+                <div class="lm-field">
+                    <label>Handle</label>
+                    <input type="text" @bind="_editHandle"
+                           class="@(_editHandle != Player.DiscordHandle ? "edited" : "")"
+                           placeholder="username" />
+                </div>
+                <div class="lm-field">
+                    <label>Discord ID</label>
+                    <input type="text" @bind="_editDiscordId"
+                           class="@(_editDiscordId != Player.DiscordId?.ToString() ? "edited" : "")"
+                           placeholder="snowflake ID" />
+                </div>
+            </div>
+
+            <div class="lm-section-label">Platforms</div>
+            <div class="lm-field-row">
+                <div class="lm-field">
+                    <label>OGS handle</label>
+                    <span>@(Player.OgsHandle ?? "—")</span>
+                </div>
+                <div class="lm-field">
+                    <label>GoMagic user ID</label>
+                    <span class="mono">@(Player.GoMagicUserId?.ToString() ?? "—")</span>
+                </div>
+            </div>
+
+            <div class="lm-panel-actions">
+                <button class="lm-btn primary" disabled="@(!IsDirty)" @onclick="Save">
+                    Save changes
+                </button>
+                <button class="lm-btn" @onclick="OnClose">Cancel</button>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public PlayerViewModel? Player { get; set; }
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback<PlayerViewModel> OnSave { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    private string _editHandle = "";
+    private string _editDiscordId = "";
+
+    private string Initials => Player is null ? ""
+        : $"{Player.FirstName?[0]}{Player.LastName?[0]}".ToUpperInvariant();
+
+    private bool IsDirty =>
+        _editHandle != (Player?.DiscordHandle ?? "") ||
+        _editDiscordId != (Player?.DiscordId?.ToString() ?? "");
+
+    protected override void OnParametersSet()
+    {
+        if (Player is null) return;
+        _editHandle = Player.DiscordHandle ?? "";
+        _editDiscordId = Player.DiscordId?.ToString() ?? "";
+    }
+
+    private async Task Save()
+    {
+        if (Player is null) return;
+        var updated = new PlayerViewModel
+        {
+            Id = Player.Id,
+            FirstName = Player.FirstName,
+            LastName = Player.LastName,
+            EmailAddress = Player.EmailAddress,
+            OgsHandle = Player.OgsHandle,
+            LeagoMemberId = Player.LeagoMemberId,
+            Rank = Player.Rank,
+            LeagoKey = Player.LeagoKey,
+            GoMagicUserId = Player.GoMagicUserId,
+            TimeZone = Player.TimeZone,
+            DiscordHandle = string.IsNullOrWhiteSpace(_editHandle) ? null : _editHandle,
+            DiscordId = ulong.TryParse(_editDiscordId, out var id) ? id : null,
+        };
+        await OnSave.InvokeAsync(updated);
+    }
+}

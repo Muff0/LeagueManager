@@ -1,85 +1,109 @@
 ﻿@page "/players"
+@using LeagueManager.Components.Panels
 @using LeagueManager.ViewModel
+@using Shared.Enum
 @inject Services.MainService MainService
 @rendermode InteractiveServer
 
 <PageTitle>Players</PageTitle>
 
-<h1>Players</h1>
-
-
-<div class="grid-container">
-    <div class="grid-item">
-        <button class="btn btn-primary" @onclick="AddReviewToSelectedPlayer">Add Review</button>
+<div class="lm-players-page">
+    <div class="lm-topbar">
+        <div>
+            <h1 class="lm-page-title">Players</h1>
+            <span class="lm-page-sub">@(_filteredCount.HasValue ? $"{_filteredCount} player{(_filteredCount == 1 ? "" : "s")}" : "Loading…")</span>
+        </div>
+        <div class="lm-search-wrap">
+            <i class="ti ti-search" aria-hidden="true"></i>
+            <input type="text" placeholder="Search by name, handle, ID…"
+                   value="@_searchQuery"
+                   @oninput="HandleSearch" />
+        </div>
     </div>
 
+    <div class="lm-main">
+        <div class="lm-table-area">
+            <table>
+                <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Rank</th>
+                    <th>Discord</th>
+                    <th>OGS</th>
+                    <th>Timezone</th>
+                    <th>ID</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var player in _displayedPlayers)
+                {
+                    <tr class="@(player.Id == _selectedPlayer?.Id ? "selected" : "")"
+                        @onclick="() => SelectPlayer(player)">
+                        <td><strong>@player.FirstName @player.LastName</strong></td>
+                        <td><span class="lm-badge">@player.Rank.GetDisplayName()</span></td>
+                        <td class="muted">@(string.IsNullOrEmpty(player.DiscordHandle) ? "—" : player.DiscordHandle)</td>
+                        <td class="muted">@(player.OgsHandle ?? "—")</td>
+                        <td class="muted">@(player.TimeZone ?? "—")</td>
+                        <td class="mono">#@player.Id</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+
+        <PlayerPanel Player="_selectedPlayer"
+                     IsOpen="_selectedPlayer != null"
+                     OnSave="HandlePanelSave"
+                     OnClose="ClosePanel" />
+    </div>
 </div>
 
-<HxGrid @ref="_playersGrid" TItem="PlayerViewModel" DataProvider="GetPlayersGridData"
-        SelectedDataItem="_selectedPlayer"
-        SelectedDataItemChanged="HandleSelectePlayerChanged"
-        MultiSelectionEnabled="true" PageSize="500" Responsive="true" >
-    <Columns>
-        <HxGridColumn HeaderText="First Name" ItemTextSelector="rev => rev.FirstName" />
-        <HxGridColumn HeaderText="Last Name" ItemTextSelector="rev => rev.LastName" />
-    </Columns>
-</HxGrid>
-
 @code {
-
-    private HxGrid<PlayerViewModel> _playersGrid;
-    private List<PlayerViewModel>? _playersList;
-    private HashSet<PlayerViewModel>? _selectedPlayers;
+    private List<PlayerViewModel> _allPlayers = new();
+    private List<PlayerViewModel> _displayedPlayers = new();
     private PlayerViewModel? _selectedPlayer;
-    private string _message = "Loading...";
-
-
-    private async Task HandleSelectePlayerChanged(PlayerViewModel newSelectedDataItem)
-    {
-        if (_selectedPlayer != null)
-        {
-            // save the changes to original selectedDataItem first
-            await MainService.SavePlayerChanges(new List<PlayerViewModel>() { _selectedPlayer });
-        }
-        // update selectedDataItem to new selection
-        _selectedPlayer = newSelectedDataItem;
-    }
+    private string _searchQuery = "";
+    private int? _filteredCount;
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
+        _allPlayers = await MainService.GetPlayers(0, 500, CancellationToken.None);
+        ApplyFilter();
     }
 
-
-    private async Task AddReviewToSelectedPlayer()
+    private void HandleSearch(ChangeEventArgs e)
     {
-
-        if (_selectedPlayer != null)
-        {
-            await MainService.AddReviewToPlayer(_selectedPlayer);
-        }
+        _searchQuery = e.Value?.ToString() ?? "";
+        ApplyFilter();
     }
 
-    private async Task<GridDataProviderResult<PlayerViewModel>> GetPlayersGridData(GridDataProviderRequest<PlayerViewModel> request)
+    private void ApplyFilter()
     {
-        var response = await MainService.GetPlayers(request.StartIndex, request.Count, request.CancellationToken);
-        return new GridDataProviderResult<PlayerViewModel>()
-        {
-            Data = response,
-            TotalCount = response.Count
-        };
+        var q = _searchQuery.Trim().ToLowerInvariant();
+        _displayedPlayers = string.IsNullOrEmpty(q)
+            ? _allPlayers
+            : _allPlayers.Where(p =>
+                Contains(p.FirstName, q) || Contains(p.LastName, q) ||
+                Contains(p.DiscordHandle, q) || Contains(p.DiscordId?.ToString(), q) ||
+                Contains(p.OgsHandle, q) || Contains(p.Id?.ToString(), q) ||
+                Contains(p.EmailAddress, q) || Contains(p.LeagoMemberId, q)
+            ).ToList();
+        _filteredCount = _displayedPlayers.Count;
     }
-    private async void RefreshPlayersGrid()
+
+    private static bool Contains(string? value, string query) =>
+        value?.Contains(query, StringComparison.OrdinalIgnoreCase) == true;
+
+    private void SelectPlayer(PlayerViewModel player) =>
+        _selectedPlayer = player.Id == _selectedPlayer?.Id ? null : player;
+
+    private async Task HandlePanelSave(PlayerViewModel updated)
     {
-        try
-        {
-            if (_playersGrid == null)
-                return;
-            await _playersGrid.RefreshDataAsync();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        await MainService.SavePlayerChanges(new List<PlayerViewModel> { updated });
+        var idx = _allPlayers.FindIndex(p => p.Id == updated.Id);
+        if (idx >= 0) _allPlayers[idx] = updated;
+        ApplyFilter();
     }
+
+    private void ClosePanel() => _selectedPlayer = null;
 }

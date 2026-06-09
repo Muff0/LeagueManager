@@ -887,10 +887,6 @@ namespace LeagueManager.Services
         {
             try
             {
-                var handler = new SyncMatchesHandler(_leagueDataService, _leagoService);
-
-                await handler.SyncMatchesForRound(2);
-                
                 SendTaskCompletedNotification();
             }
             catch (Exception e)
