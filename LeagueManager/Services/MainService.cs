@@ -303,7 +303,7 @@ public class MainService : ServiceBase
         }).ToArray();
     }
 
-    private Player? TryFindPlayer(ICollection<Player> players, PaymentDataDto payment)
+    private Data.Model.Player? TryFindPlayer(ICollection<Data.Model.Player> players, PaymentDataDto payment)
     {
         // First let's try the mail
         var res = players.FirstOrDefault(pl => pl.GoMagicUserId == payment.UserId);
@@ -755,7 +755,7 @@ public class MainService : ServiceBase
             TournamentKey = activeSeason.LeagoL1Key
         });
 
-        var toAdd = new List<Player>();
+        var toAdd = new List<Data.Model.Player>();
 
         _leagueDataService.Execute(new UpdatePlayersDataCommand { Players = getPlayersRes.Players });
 
@@ -793,6 +793,7 @@ public class MainService : ServiceBase
     {
         try
         {
+            await _ogsService.Test();
             SendTaskCompletedNotification();
         }
         catch (Exception e)

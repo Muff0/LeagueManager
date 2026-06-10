@@ -15,6 +15,7 @@ using NetCord.Hosting.Services.ApplicationCommands;
 using NetCord.Services.ApplicationCommands;
 using Newtonsoft.Json;
 using OGS;
+using OGS.Client;
 using Serilog;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
@@ -29,6 +30,7 @@ builder.Services.Configure<LeagoSettings>(builder.Configuration.GetSection("Leag
 builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
 builder.Services.Configure<SchedulerSettings>(builder.Configuration.GetSection("Scheduler"));
+builder.Services.Configure<OgsSettings>(builder.Configuration.GetSection("Ogs"));
 
 // Needed to handle bad datetime values without altering the generated code
 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -53,7 +55,17 @@ builder.Services.AddHttpClient<RoundsClient>();
 builder.Services.AddHttpClient<TournamentsClient>();
 builder.Services.AddHttpClient<UsersClient>();
 
-builder.Services.AddHttpClient<OGSClient>();
+builder.Services.AddHttpClient<IOnlineLeagueClient, OnlineLeagueClient>();
+
+// OGS online_league API: OAuth2 client-credentials auth + bearer token handler.
+builder.Services.AddSingleton<IOgsTokenProvider, OgsTokenProvider>();
+builder.Services.AddTransient<OgsAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<IOnlineLeagueClient, OnlineLeagueClient>(c =>
+        c.BaseAddress = new Uri("https://online-go.com/api/v1/"))
+    .AddHttpMessageHandler<OgsAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<IOgsPlayerClient, OgsPlayerClient>(c =>
+        c.BaseAddress = new Uri("https://online-go.com/api/v1/"))
+    .AddHttpMessageHandler<OgsAuthenticatedHttpHandler>();
 
 // Logging
 var discordSettings = builder.Configuration.GetSection("Discord").Get<DiscordSettings>()!;

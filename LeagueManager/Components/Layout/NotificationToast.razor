@@ -4,31 +4,31 @@
 @using Shared.Notifications
 @implements IDisposable
 
-<div class="toast-container">
+<div class="ntoast-container">
     @foreach (var n in _notifications)
     {
-        <div class="toast toast--@n.Message.Level.ToString().ToLower() @(n.Exiting ? "toast--exit" : "toast--enter")"
+        <div class="ntoast ntoast--@n.Message.Level.ToString().ToLower() @(n.Exiting ? "ntoast--exit" : "ntoast--enter")"
              @key="n.Id">
-            <div class="toast__bar"></div>
-            <div class="toast__body">
-                <div class="toast__header">
-                    <span class="toast__icon">@Icon(n.Message.Level)</span>
-                    <span class="toast__title">@n.Message.Title</span>
-                    <button class="toast__close" @onclick="() => Remove(n)">✕</button>
+            <div class="ntoast__bar"></div>
+            <div class="ntoast__body">
+                <div class="ntoast__header">
+                    <span class="ntoast__icon">@Icon(n.Message.Level)</span>
+                    <span class="ntoast__title">@n.Message.Title</span>
+                    <button class="ntoast__close" @onclick="() => Remove(n)">✕</button>
                 </div>
                 @if (!string.IsNullOrEmpty(n.Message.Detail))
                 {
-                    <div class="toast__detail">@n.Message.Detail</div>
+                    <div class="ntoast__detail">@n.Message.Detail</div>
                 }
                 <div
-                    class="toast__meta">@n.Message.Source · @n.Message.Timestamp.ToLocalTime().ToString("HH:mm:ss")</div>
+                    class="ntoast__meta">@n.Message.Source · @n.Message.Timestamp.ToLocalTime().ToString("HH:mm:ss")</div>
             </div>
         </div>
     }
 </div>
 
 <style>
-    .toast-container {
+    .ntoast-container {
         position: fixed;
         bottom: 1.5rem;
         right: 1.5rem;
@@ -39,7 +39,7 @@
         pointer-events: none;
     }
 
-    .toast {
+    .ntoast {
         display: flex;
         width: 22rem;
         border-radius: 6px;
@@ -51,12 +51,12 @@
         font-size: 0.8rem;
     }
 
-    .toast__bar {
+    .ntoast__bar {
         width: 4px;
         flex-shrink: 0;
     }
 
-    .toast__body {
+    .ntoast__body {
         flex: 1;
         padding: 0.65rem 0.75rem;
         display: flex;
@@ -65,17 +65,17 @@
         min-width: 0;
     }
 
-    .toast__header {
+    .ntoast__header {
         display: flex;
         align-items: center;
         gap: 0.4rem;
     }
 
-    .toast__icon {
+    .ntoast__icon {
         font-size: 0.85rem;
     }
 
-    .toast__title {
+    .ntoast__title {
         font-weight: 600;
         flex: 1;
         color: #e2e8f0;
@@ -84,7 +84,7 @@
         text-overflow: ellipsis;
     }
 
-    .toast__close {
+    .ntoast__close {
         background: none;
         border: none;
         color: #64748b;
@@ -95,35 +95,35 @@
         flex-shrink: 0;
     }
 
-    .toast__close:hover {
+    .ntoast__close:hover {
         color: #e2e8f0;
     }
 
-    .toast__detail {
+    .ntoast__detail {
         color: #94a3b8;
         line-height: 1.4;
         word-break: break-word;
     }
 
-    .toast__meta {
+    .ntoast__meta {
         color: #475569;
         font-size: 0.7rem;
         margin-top: 0.1rem;
     }
 
-    .toast--success .toast__bar {
+    .ntoast--success .ntoast__bar {
         background: #22c55e;
     }
 
-    .toast--error .toast__bar {
+    .ntoast--error .ntoast__bar {
         background: #ef4444;
     }
 
-    .toast--warning .toast__bar {
+    .ntoast--warning .ntoast__bar {
         background: #f59e0b;
     }
 
-    .toast--info .toast__bar {
+    .ntoast--info .ntoast__bar {
         background: #3b82f6;
     }
 
@@ -149,11 +149,11 @@
         }
     }
 
-    .toast--enter {
+    .ntoast--enter {
         animation: slideIn 0.22s ease forwards;
     }
 
-    .toast--exit {
+    .ntoast--exit {
         animation: slideOut 0.22s ease forwards;
     }
 </style>
