@@ -1,11 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Data
+namespace Data;
+
+public class LeagueDataService : DataServiceBase<LeagueContext>
 {
-    public class LeagueDataService : DataServiceBase<LeagueContext>
+    public LeagueDataService(IDbContextFactory<LeagueContext> contextFactory) : base(contextFactory)
     {
-        public LeagueDataService(IDbContextFactory<LeagueContext> contextFactory) : base(contextFactory)
-        {
-        }
     }
 }

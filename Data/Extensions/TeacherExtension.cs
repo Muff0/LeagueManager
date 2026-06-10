@@ -1,11 +1,13 @@
 ﻿using Data.Model;
 using Shared.Dto;
 
-namespace Data
+namespace Data;
+
+public static class TeacherExtension
 {
-    public static class TeacherExtension
+    public static TeacherDto ToTeacherDto(this Teacher teacher)
     {
-        public static TeacherDto ToTeacherDto(this Teacher teacher) => new TeacherDto()
+        return new TeacherDto
         {
             DiscordId = teacher.DiscordId ?? 0,
             Id = teacher.Id,

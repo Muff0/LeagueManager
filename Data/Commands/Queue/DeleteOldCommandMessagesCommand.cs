@@ -5,7 +5,7 @@ namespace Data.Commands.Queue;
 public class DeleteOldCommandMessagesCommand : Command<QueueContext>
 {
     public TimeSpan MaxAge = TimeSpan.FromDays(30);
-    
+
     protected override void RunAction(QueueContext context)
     {
         var cutoffDate = DateTime.Now - MaxAge;

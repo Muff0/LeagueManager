@@ -8,11 +8,11 @@ using Shared.Enum;
 
 namespace LeagueCoreService.Queue;
 
-public class PostDiscordPollHandler(DiscordService discordService,
-        QueueDataService queueDataService) 
+public class PostDiscordPollHandler(
+    DiscordService discordService,
+    QueueDataService queueDataService)
     : ICommandHandler
 {
-    
     public string CommandType => "PostDiscordPoll";
 
     public async Task HandleAsync(CommandMessage cmd)
@@ -29,7 +29,7 @@ public class PostDiscordPollHandler(DiscordService discordService,
             return;
 
         await discordService.PostPoll(payload);
-        await queueDataService.ExecuteAsync(new SetPollStatusCommand()
+        await queueDataService.ExecuteAsync(new SetPollStatusCommand
         {
             PollId = nextPoll.Id,
             NewStatus = QueueStatus.Completed,

@@ -1,5 +1,5 @@
-
 using Data;
+using Discord;
 using Havit.Blazor.Components.Web;
 using LeagoClient;
 using LeagoService;
@@ -35,7 +35,6 @@ JsonConvert.DefaultSettings = () => new JsonSerializerSettings
 
 builder.Services.AddSingleton<ITokenProvider, LeagoTokenProvider>();
 builder.Services.AddTransient<LeagoAuthenticatedHttpHandler>();
-
 
 
 // Clients registration
@@ -81,12 +80,12 @@ builder.Services.AddDbContextFactory<QueueContext>(options =>
 
 builder.Services.AddScoped<LeagueDataService>();
 builder.Services.AddScoped<QueueDataService>();
-builder.Services.AddScoped<LeagoService.LeagoMainService>();
+builder.Services.AddScoped<LeagoMainService>();
 builder.Services.AddScoped<MailService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<OGSService>();
 builder.Services.AddScoped<MainService>();
-builder.Services.AddScoped<Discord.DiscordService>();
+builder.Services.AddScoped<DiscordService>();
 // Notification Services
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<NotificationDispatcher>();
@@ -107,10 +106,7 @@ var app = builder.Build();
 
 
 // Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
-{
-    app.UseExceptionHandler("/Error", createScopeForErrors: true);
-}
+if (!app.Environment.IsDevelopment()) app.UseExceptionHandler("/Error", true);
 
 app.UseAntiforgery();
 

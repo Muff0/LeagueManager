@@ -6,14 +6,15 @@ using Data;
 using Data.Commands.Player;
 using Data.Commands.Queue;
 using Data.Commands.Review;
+using Data.Extensions;
 using Data.Model;
 using Data.Queries;
 using Discord;
 using LeagoService;
-using LeagueCoreService.Queue;
 using LeagueManager.Extensions;
 using LeagueManager.ViewModel;
 using Mail;
+using Mail.MessageBuilders;
 using Microsoft.Extensions.Options;
 using OGS;
 using Shared;
@@ -21,878 +22,782 @@ using Shared.Dto;
 using Shared.Dto.Discord;
 using Shared.Dto.OGS;
 using Shared.Enum;
+using Shared.Extensions;
 using Shared.Notifications;
-using Shared.Services;
+using Shared.Queue;
 using Shared.Settings;
 
-namespace LeagueManager.Services
+namespace LeagueManager.Services;
+
+public class MainService : ServiceBase
 {
-    public class MainService : ServiceBase
+    private readonly DiscordService _discordService;
+    private readonly IOptions<LeagoSettings> _leagoOptions;
+    private readonly LeagoMainService _leagoService;
+    private readonly LeagueDataService _leagueDataService;
+    private readonly MailService _mailService;
+    private readonly INotificationDispatcher _notificationService;
+    private readonly OGSService _ogsService;
+
+    private readonly Dictionary<string, PlayerParticipationTier> _participationTiers = new()
     {
-        private readonly QueueDataService _queueDataService;
-        private readonly LeagueDataService _leagueDataService;
-        private readonly LeagoMainService _leagoService;
-        private readonly IOptions<LeagoSettings> _leagoOptions;
-        private readonly DiscordService _discordService;
-        private readonly INotificationDispatcher _notificationService;
-        private readonly ReviewService _reviewService;
-        private readonly OGSService _ogsService;
-        private readonly MailService _mailService;
-        private readonly Dictionary<string, PlayerParticipationTier> _participationTiers = new()
-        {
-            {"Go Magic League - Starter",PlayerParticipationTier.DojoTier1},
-            {"Go Magic League - Learner", PlayerParticipationTier.DojoTier2},
-            {"Go Magic League - Adept", PlayerParticipationTier.DojoTier3},
-            {"Go Magic League - Master", PlayerParticipationTier.DojoTier4},
-            //Old product designations, leaving these here just in case
-            {"Go Magic League - Participation + Lectures", PlayerParticipationTier.DojoTier1},
-            {"Go Magic League - Lectures + 2 reviews", PlayerParticipationTier.DojoTier2},
-            {"Go Magic League - Lectures + 5 reviews", PlayerParticipationTier.DojoTier3},
-        };
+        { "Go Magic League - Starter", PlayerParticipationTier.DojoTier1 },
+        { "Go Magic League - Learner", PlayerParticipationTier.DojoTier2 },
+        { "Go Magic League - Adept", PlayerParticipationTier.DojoTier3 },
+        { "Go Magic League - Master", PlayerParticipationTier.DojoTier4 },
+        //Old product designations, leaving these here just in case
+        { "Go Magic League - Participation + Lectures", PlayerParticipationTier.DojoTier1 },
+        { "Go Magic League - Lectures + 2 reviews", PlayerParticipationTier.DojoTier2 },
+        { "Go Magic League - Lectures + 5 reviews", PlayerParticipationTier.DojoTier3 }
+    };
 
-        public MainService(QueueDataService queueDataService,
-            LeagueDataService leagueDataService,
-            LeagoMainService leagoService,
-            IOptions<LeagoSettings> leagoOptions,
-            DiscordService discordService,
-            ReviewService reviewService,
-            MailService mailService, 
-            OGSService ogsService,
-            INotificationDispatcher notificationService,
-            ILogger<MainService> logger) : base(logger)
+    private readonly QueueDataService _queueDataService;
+    private readonly ReviewService _reviewService;
+
+    public MainService(QueueDataService queueDataService,
+        LeagueDataService leagueDataService,
+        LeagoMainService leagoService,
+        IOptions<LeagoSettings> leagoOptions,
+        DiscordService discordService,
+        ReviewService reviewService,
+        MailService mailService,
+        OGSService ogsService,
+        INotificationDispatcher notificationService,
+        ILogger<MainService> logger) : base(logger)
+    {
+        _queueDataService = queueDataService;
+        _leagueDataService = leagueDataService;
+        _leagoService = leagoService;
+        _leagoOptions = leagoOptions;
+        _discordService = discordService;
+        _reviewService = reviewService;
+        _mailService = mailService;
+        _notificationService = notificationService;
+        _ogsService = ogsService;
+    }
+
+
+    protected override void HandleException(Exception e)
+    {
+        base.HandleException(e);
+        _notificationService.Dispatch(NotificationMessage.Error(e.GetType().ToString(), e.Message, e.Source));
+    }
+
+
+    public async Task<DataTable> BuildOrderDataTable(Stream csvStream)
+    {
+        var table = new DataTable();
+
+        using var reader = new StreamReader(csvStream);
+        using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
         {
-            _queueDataService = queueDataService;
-            _leagueDataService = leagueDataService;
-            _leagoService = leagoService;
-            _leagoOptions = leagoOptions;
-            _discordService = discordService;
-            _reviewService = reviewService;
-            _mailService = mailService;
-            _notificationService = notificationService;
-            _ogsService = ogsService;
+            DetectDelimiter = true,
+            HasHeaderRecord = true
+        });
+
+        await csv.ReadAsync();
+        csv.ReadHeader();
+        foreach (var header in csv.HeaderRecord) table.Columns.Add(header);
+
+        while (await csv.ReadAsync())
+        {
+            var row = table.NewRow();
+            foreach (DataColumn column in table.Columns)
+                row[column.ColumnName] = csv.GetField(column.DataType, column.ColumnName) ?? DBNull.Value;
+            table.Rows.Add(row);
         }
 
+        return table;
+    }
 
-        protected override void HandleException(Exception e)
+    protected PlayerParticipationTier GetParticipationTier(string product)
+    {
+        if (!_participationTiers.TryGetValue(product, out var tier))
+            return PlayerParticipationTier.None;
+
+        return tier;
+    }
+
+    public async Task LinkReviewMatches()
+    {
+        try
         {
-            base.HandleException(e);
-            _notificationService.Dispatch((NotificationMessage.Error(e.GetType().ToString(),e.Message, e.Source)));
+            await _reviewService.LinkExistingReviewMatches();
         }
-        
-        
-
-        public async Task<DataTable> BuildOrderDataTable(Stream csvStream)
+        catch (Exception ex)
         {
-            var table = new DataTable();
-
-            using var reader = new StreamReader(csvStream);
-            using var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-            {
-                DetectDelimiter = true,
-                HasHeaderRecord = true,
-            });
-
-            await csv.ReadAsync();
-            csv.ReadHeader();
-            foreach (var header in csv.HeaderRecord)
-            {
-                table.Columns.Add(header);
-            }
-
-            while (await csv.ReadAsync())
-            {
-                var row = table.NewRow();
-                foreach (DataColumn column in table.Columns)
-                {
-                    row[column.ColumnName] = csv.GetField(column.DataType, column.ColumnName) ?? DBNull.Value;
-                }
-                table.Rows.Add(row);
-            }
-
-            return table;
+            HandleException(ex);
         }
+    }
 
-        protected PlayerParticipationTier GetParticipationTier(string product)
+    public async Task<ProcessPaymentDataOutDto> UploadOrdersFile(Stream content)
+    {
+        try
         {
-            if (!_participationTiers.TryGetValue(product, out var tier))
-                return PlayerParticipationTier.None;
+            using var contentStream = new StreamReader(content);
+            var table = await BuildOrderDataTable(content);
+            var payments = ParsePaymentData(table);
+            var resProcessPayment = await ProcessPaymentData(payments);
 
-            return tier;
+            return resProcessPayment;
         }
-
-        public async Task LinkReviewMatches()
+        catch (Exception ex)
         {
-            try
-            {
-                await _reviewService.LinkExistingReviewMatches();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
+            HandleException(ex);
+            return new ProcessPaymentDataOutDto();
         }
+    }
 
-        public async Task<ProcessPaymentDataOutDto> UploadOrdersFile(Stream content)
+
+    public async Task FetchMissingDiscordIds()
+    {
+        try
         {
-            try
-            {
-                using var contentStream = new StreamReader(content);
-                var table = await BuildOrderDataTable(content);
-                var payments = ParsePaymentData(table);
-                var resProcessPayment = await ProcessPaymentData(payments);
-
-                return resProcessPayment;
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return new();
-            }
-        }
-
-        public async Task BuildReviews()
-        {
-            try
-            {
-                await _reviewService.BuildReviews();
-                await _reviewService.AssignRoundsToReviews();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-        }
-
-        public async Task FetchMissingDiscordIds()
-        {
-            try
-            {
-                var players = await _leagueDataService.RunQueryAsync(new GetPlayersQuery());
-
-                var missingIds = players.Where(pl => pl.DiscordHandle != null
-                    && pl.DiscordHandle != ""
-                    && pl.DiscordId == null);
-
-                var updateList = new List<PlayerDto>();
-
-                foreach (var player in missingIds)
-                {
-                    var id = await _discordService.GetDiscordUserId(player.DiscordHandle);
-                    if (id != null)
-                        updateList.Add(new PlayerDto()
-                        {
-                            Id = player.Id,
-                            DiscordId = id
-                        });
-                }
-
-                await _leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand() { Players = updateList.ToArray() });
-                SendTaskCompletedNotification();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-        }
-
-        public void SendTaskCompletedNotification()
-        {
-            _notificationService.Dispatch(
-                new NotificationMessage(
-                    "Task Completed",
-                    null,
-                    NotificationLevel.Success,
-                    nameof(MainService),
-                    DateTime.Now));
-        }
-
-
-        public async Task UpdateDiscordPlayerRole()
-        {
-            try
-            {
-                var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-                var currentPlayers = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery()
-                {
-                    IncludePlayer = true,
-                    SeasonId = activeSeason.Id,
-                });
-
-                await _discordService.UpdatePlayerRole(new UpdatePlayerRoleInDto()
-                {
-                    CurrentPlayers = currentPlayers.Select(ps => ps.Player)
-                        .Where(pl => pl!.DiscordId != null)
-                        .Select(pl => pl!.DiscordId)
-                        .Cast<ulong>()
-                        .ToArray()
-                });
-                SendTaskCompletedNotification();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-        }
-
-        protected async Task<ProcessPaymentDataOutDto> ProcessPaymentData(PaymentDataDto[] payments)
-        {
-            
-            var cutoffDate = new DateTime(2026, 4, 1);
-
-            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery() { IncludePlayerSeasons = true });
             var players = await _leagueDataService.RunQueryAsync(new GetPlayersQuery());
 
-            var noMatch = new List<PaymentDataDto>();
-            var noReg = new List<PaymentDataDto>();
-            var toUpdate = new List<PlayerRegistrationDto>();
-            var updateGoMagicIdList = new List<PlayerDto>();
+            var missingIds = players.Where(pl => pl.DiscordHandle != null
+                                                 && pl.DiscordHandle != ""
+                                                 && pl.DiscordId == null);
 
-            foreach (var payment in payments)
+            var updateList = new List<PlayerDto>();
+
+            foreach (var player in missingIds)
             {
-                if (payment.DateTime < cutoffDate)
-                    continue;
-
-                var player = TryFindPlayer(players, payment);
-
-                if (player == null)
-                {
-                    noMatch.Add(payment);
-                    continue;
-                }
-
-                if (player.GoMagicUserId == 0)
-                    updateGoMagicIdList.Add(
-                        new PlayerDto()
-                        {
-                            Id = player.Id,
-                            GoMagicUserId = payment.UserId,
-                        });
-
-                var currentPlayerSeason = season.PlayerSeasons.FirstOrDefault(ps => ps.PlayerId == player.Id);
-
-                if (currentPlayerSeason == null)
-                {
-                    noReg.Add(payment);
-                    continue;
-                }
-
-                var partTier = GetParticipationTier(payment.Product);
-
-                if (currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.Refunded || currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.Cancelled)
-                    continue;
-
-                if (currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.None
-                    || currentPlayerSeason.ParticipationTier != partTier)
-                    toUpdate.Add(new PlayerRegistrationDto()
+                var id = await _discordService.GetDiscordUserId(player.DiscordHandle);
+                if (id != null)
+                    updateList.Add(new PlayerDto
                     {
-                        DateTime = payment.DateTime,
-                        PlayerId = player.Id,
-                        PlayerParticipationTier = partTier,
-                        SeasonId = season.Id,
-                        PlayerPaymentStatus = PlayerPaymentStatus.Paid
+                        Id = player.Id,
+                        DiscordId = id
                     });
             }
 
-            _leagueDataService.Execute(new UpdatePlayerSeasons() { PlayerRegistrations = toUpdate.ToArray() });
-            _leagueDataService.Execute(new UpdatePlayersDataCommand() { Players = updateGoMagicIdList.ToArray() });
-
-            return new ProcessPaymentDataOutDto()
-            {
-                NoMatches = noMatch.ToArray(),
-                MissingRegistrations = noReg.ToArray()
-            };
-        }
-
-        public async Task<PlayerDto[]> GetMissingPayments()
-        {
-
-            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-            var resGetMp = await _leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery() { SeasonId = season.Id });
-
-            return resGetMp.Select(pl => new PlayerDto()
-            {
-                FirstName = pl.FirstName,
-                LastName = pl.LastName,
-                EmailAddress = pl.EmailAddress,
-                DiscordHandle = pl.DiscordHandle,
-            }).ToArray();
-        }
-
-        private Data.Model.Player? TryFindPlayer(ICollection<Data.Model.Player> players, PaymentDataDto payment)
-        {
-            // First let's try the mail
-            Player? res = players.FirstOrDefault(pl => pl.GoMagicUserId == payment.UserId);
-
-            if (res == null)
-                res = players.FirstOrDefault(pl => pl.EmailAddress.Equals(payment.UserEmail, StringComparison.InvariantCultureIgnoreCase)
-                    || pl.EmailAddress == payment.BillingEmail);
-
-            if (res == null)
-            {
-                var countSameNames = players.Where(pl => payment.BillingName.Contains(pl.FirstName, StringComparison.InvariantCultureIgnoreCase) && payment.BillingName.Contains(pl.LastName, StringComparison.InvariantCultureIgnoreCase));
-
-                if (countSameNames.Count() == 1)
-                    res = countSameNames.First();
-            }
-
-            return res;
-        }
-
-        public async Task<CheckRankDto[]> CheckRanks()
-        {
-            try
-            {
-                var results = new List<CheckRankDto>();
-                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-                var players = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery()
-                {
-                    IncludePlayer = true,
-                    SeasonId = season.Id,
-                });
-
-                foreach (var player in players)
-                {
-                    if (player.Player == null || player.Player.OGSHandle == "")
-                        continue;
-
-                    var ogsPl = await _ogsService.GetPlayer(player.Player.OGSHandle);
-
-                    if (ogsPl == null)
-                        continue;
-                    
-                    results.Add(new CheckRankDto()
-                    {
-                        Player = player.Player.ToPlayerDto(),
-                        OGSRank = _ogsService.RatingToRank(ogsPl.Rating),
-                        OGSRating =  ogsPl.Rating
-                    });
-                    
-                }
-                return results.ToArray();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return [];
-            }
-        }
-
-        public async Task PostReviews()
-        {
-            try
-            {
-                var unposted = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
-                {
-                    IncludeMatch = true,
-                    IncludeTeacher = true,
-                    HasReviewUrl = true,
-                    IncludePlayerSeasons = true,
-                    Status = [ReviewStatus.Allocated]
-                });
-
-                List<ReviewDto> posted = new List<ReviewDto>();
-                foreach (var review in unposted)
-                {
-                    var reviewDto = review.ToReviewDto();
-                    await _discordService.PostReviewThread(new PostReviewThreadInDto()
-                    {
-                        Review = reviewDto,
-                        Match = review.Match!.ToMatchDto(),
-                        Teacher = review.Teacher!.ToTeacherDto()
-                    });
-
-                    reviewDto.ReviewStatus = ReviewStatus.Notified;
-                    posted.Add(reviewDto);
-                }
-
-                await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand() { Reviews = posted.ToArray() });
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-            }
-        }
-
-        protected PaymentDataDto[] ParsePaymentData(DataTable table)
-        {
-            var paymentData = new List<PaymentDataDto>();
-
-            foreach (DataRow row in table.Rows)
-            {
-                var newPaymentData = new PaymentDataDto();
-
-                var dateString = row.Field<string>("Date");
-                newPaymentData.DateTime = DateTime.Parse(dateString);
-                newPaymentData.BillingEmail = row.Field<string>("Billing Email") ?? "";
-                newPaymentData.USD = double.Parse(row.Field<string>("USD"));
-                newPaymentData.UserEmail = row.Field<string>("User Email") ?? "";
-                newPaymentData.UserId = int.Parse(row.Field<string>("User ID"));
-                newPaymentData.UserName = row.Field<string>("User Name") ?? "";
-                newPaymentData.BillingName = row.Field<string>("Billing Name") ?? "";
-                newPaymentData.Product = row.Field<string>("Product") ?? "";
-                paymentData.Add(newPaymentData);
-            }
-            return paymentData.ToArray();
-        }
-
-
-        public async Task SaveReviewChanges(List<ReviewViewModel> reviews)
-        {
-            var updateList = reviews.Select(re => re.ToReviewDto());
-
-            await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand()
-            {
-                Reviews = updateList.ToArray(),
-            });
-
-        }
-
-        public async Task AddReviewToPlayer(PlayerViewModel player)
-        {
-            await _reviewService.AddReviewToPlayer(player.ToPlayerDto());
-        }
-
-        public async Task SavePlayerChanges(List<PlayerViewModel> players)
-        {
-            var updateList = players.Select(pl => pl.ToPlayerDto());
-
-            await _leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand()
-            {
-                Players = updateList.ToArray(),
-            });
-
-        }
-
-
-        public async Task<List<ReviewViewModel>> GetReviewsToSchedule(int? startIndex, int? count, CancellationToken cancellationToken, bool includeNoMatch)
-        {
-
-            try
-            {
-                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
-                {
-                    IncludeMatch = true,
-                    IncludeOwner = true,
-                    IncludeTeacher = true,
-                    Round = [1, 2, 3, 4, 5],
-                    SeasonId = season.Id,
-                    Status = [ReviewStatus.Planned],
-                    MatchQueryMode = includeNoMatch ? GetReviewsQuery.ReviewMatchQueryMode.AllReviews : GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly,
-                    Count = count ?? 0,
-                    StartIndex = startIndex ?? 0,
-                });
-                return res.Select(rev => rev.ToViewModel()).ToList();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return new List<ReviewViewModel>();
-            }
-        }
-        public async Task<List<PlayerViewModel>> GetPlayers(int? startIndex, int? count, CancellationToken cancellationToken)
-        {
-
-            try
-            {
-                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-                var res = await _leagueDataService.RunQueryAsync(new GetPlayersQuery()
-                {
-                    IncludePlayerSeasons =true,
-                    SeasonId = season.Id,
-                    Count = count ?? 0,
-                    StartIndex = startIndex ?? 0,
-                    OrderResults = true
-                });
-                return res.Select(rev => rev.ToPlayerViewModel()).ToList();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return new List<PlayerViewModel>();
-            }
-        }
-    
-        public async Task<List<RankChangeRequestViewModel>> GetRankChangeRequests(int? startIndex, int? count, CancellationToken cancellationToken)
-        {
-
-            try
-            {
-                var res = await _queueDataService.RunQueryAsync(new GetCommandMessagesQuery()
-                {
-                    Types = ["RankChangeCommand"]
-                });
-                return res.Select(rev => rev.ToRankChangeRequestViewModel()).ToList();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return new List<RankChangeRequestViewModel>();
-            }
-        }
-
-        public async Task<List<ReviewViewModel>> GetOverviewReviews(int? startIndex, int? count, CancellationToken cancellationToken)
-        {
-
-            try
-            {
-                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
-                {
-                    IncludeMatch = true,
-                    IncludeOwner = true,
-                    IncludeTeacher = true,
-                    IncludePlayerSeasons = true,
-                    Count = count ?? 0,
-                    StartIndex = startIndex ?? 0,
-                });
-                return res.Select(rev => rev.ToViewModel())
-                    .OrderBy(rev => rev.SeasonName)
-                    .ThenBy(rev => rev.Round)
-                    .ThenBy(rev => rev.OwnerName)
-                    .ToList();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return new List<ReviewViewModel>();
-            }
-        }
-
-        public async Task<List<ReviewViewModel>> GetReviewsToPost(int? startIndex, int? count, CancellationToken cancellationToken)
-        {
-
-            try
-            {
-                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
-                {
-                    IncludeMatch = true,
-                    IncludeOwner = true,
-                    IncludeTeacher = true,
-                    IncludePlayerSeasons = true,
-                    Round = [1, 2, 3, 4, 5],
-                    SeasonId = season.Id,
-                    Status = [ReviewStatus.Allocated],
-                    MatchQueryMode = GetReviewsQuery.ReviewMatchQueryMode.WithMatchOnly,
-                    Count = count ?? 0,
-                    StartIndex = startIndex ?? 0,
-                });
-                return res.Select(rev => rev.ToViewModel()).ToList();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return new List<ReviewViewModel>();
-            }
-        }
-
-        public async Task MarkRankChangeRequestComplete(RankChangeRequestViewModel request)
-        {
-            try
-            {
-                _queueDataService.Execute(new SetCommandMessageStatusCommand()
-                {
-                    CommandMessageId = request.Id,
-                    NewStatus = QueueStatus.Completed
-                });
-            }
-            catch (Exception e)
-            {
-                HandleException(e);;
-            }
-        }
-        
-        public async Task<List<ReviewViewModel>> GetMissedReviews(int? startIndex, int? count, CancellationToken cancellationToken)
-        {
-
-            try
-            {
-                var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-                var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery()
-                {
-                    IncludeMatch = true,
-                    IncludeOwner = true,
-                    IncludeTeacher = true,
-                    Round = [1, 2, 3, 4, 5],
-                    ExcludeSeasonIds = [season.Id],
-                    Status = [ReviewStatus.Planned,ReviewStatus.Allocated],
-                    Count = count ?? 0,
-                    StartIndex = startIndex ?? 0,
-                });
-                return res.Select(rev => rev.ToViewModel()).ToList();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return new List<ReviewViewModel>();
-            }
-        }
-
-
-
-        public async Task DeleteReviews(IEnumerable<ReviewViewModel> reviews)
-        {
-            try
-            {
-                await _leagueDataService.ExecuteAsync(new DeleteReviewsCommand() { Reviews = reviews.Select(re => re.ToReviewDto()).ToArray() });
-            }
-            catch (Exception e)
-            {
-                HandleException(e);
-            }
-        }
-        public async Task UnlinkMatchFromReviews(IEnumerable<ReviewViewModel> reviews, bool deleteMatch = false)
-        {
-            try
-            {
-                await _reviewService.UnlinkMatch(reviews.Select(re => re.ToReviewDto()).ToArray(), deleteMatch);
-            }
-            catch (Exception e)
-            {
-                HandleException(e);
-            }
-        }
-        public async Task MoveToAllocated(IEnumerable<ReviewViewModel> reviews)
-        {
-            try
-            {
-                await _reviewService.SetReviewStatus(new SetReviewStatusInDto()
-                {
-                    Reviews = reviews.Select(re => re.ToReviewDto()),
-                    NewStatus = ReviewStatus.Allocated
-                });
-            }
-            catch (Exception e)
-            {
-                HandleException(e);
-            }
-        }
-
-
-        public async Task SetDuplicateReview(IEnumerable<ReviewViewModel> reviews)
-        {
-            try
-            {
-                await _reviewService.SetReviewStatus(new SetReviewStatusInDto()
-                {
-                    Reviews = reviews.Select(re => re.ToReviewDto()),
-                    NewStatus = ReviewStatus.Duplicate
-                });
-            }
-            catch (Exception e)
-            {
-                HandleException(e);
-            }
-        }
-
-
-        public async Task SetCanceledReview(IEnumerable<ReviewViewModel> reviews)
-        {
-            try
-            {
-                await _reviewService.SetReviewStatus(new SetReviewStatusInDto()
-                {
-                    Reviews = reviews.Select(re => re.ToReviewDto()),
-                    NewStatus = ReviewStatus.Canceled
-                });
-            }
-            catch (Exception e)
-            {
-                HandleException(e);
-            }
-        }
-
-        public async Task ScheduleReviews(IEnumerable<ReviewViewModel> reviews, DateTime reviewEventDate, int teacherId)
-        {
-            try
-            {
-                var teacher = await _leagueDataService.RunQueryAsync(new GetTeacherQuery() { Id = teacherId });
-                if (teacher == null)
-                    return;
-
-                var games = new List<MatchDto>();
-
-                foreach (var review in reviews)
-                {
-                    var toAdd = await _leagueDataService.RunQueryAsync(new GetMatchQuery() { Id = (int)review.MatchId!, IncludePlayers = true });
-                    games.Add(toAdd.ToMatchDto());
-                }
-
-                await _discordService.SendReviewEventNotification(new SendReviewEventNotificationInDto()
-                {
-                    DateTimeUTC = reviewEventDate,
-                    Reviews = games.ToArray(),
-                    Teacher = teacher.ToTeacherDto()
-                });
-            }
-            catch (Exception e)
-            {
-                HandleException(e);
-            }
-        }
-
-        public async Task SendUpcomingMatchesNotification()
-        {
-            var command = new CommandMessage()
-            {
-                CreatedAtUtc = DateTime.UtcNow,
-                Type = "SendUpcomingMatchesNotification",
-                Payload = ""
-            };
-
-            await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
-            {
-                NewCommand = command,
-            });
-        }
-
-        public async Task SendRoundStartNotification(int round, DateTime roundDeadline)
-        {
-            try
-            {
-                await _discordService.SendRoundStartNotification(new SendRoundStartNotificationInDto()
-                {
-                    RoundEnd = roundDeadline,
-                    RoundNumber = round
-                });
-            }
-            catch (Exception ex)
-            { HandleException(ex); }
-        }
-
-        public async Task<List<TeacherViewModel>> GetTeachers()
-        {
-            try
-            {
-                var res = await _leagueDataService.RunQueryAsync(new GetTeachersQuery());
-                return res.Select(te => te.ToTeacherViewModel()).OrderBy(te => te.Name).ToList();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return new List<TeacherViewModel>();
-            }
-        }
-
-        public async Task AssignTeacherToReviews(IEnumerable<ReviewViewModel> reviews, int teacherId) => await _reviewService.AssignTeacherToReviews(reviews.Select(re => re.ToReviewDto()), teacherId);
-
-        public async Task SyncMatches()
-        {
-            var command = new CommandMessage()
-            {
-                CreatedAtUtc = DateTime.UtcNow,
-                Type = "SyncMatches",
-                Payload = ""
-            };
-
-            await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
-            {
-                NewCommand = command,
-            });
-        }
-
-        public async Task SendReviewSchedule(bool sendDiscordMessage = true, bool sendMail = true)
-        {
-            ReviewScheduleDto[] reviews;
-            try
-            {
-                reviews = await _reviewService.GetReviewSchedule();
-            }
-            catch (Exception ex)
-            {
-                HandleException(ex);
-                return;
-            }
-            if (sendDiscordMessage)
-            {
-                try
-                {
-                    await _discordService.SendReviewSchedule(reviews);
-                }
-                catch (Exception ex)
-                {
-                    HandleException(ex);
-                }
-            }
-        }
-
-        public async Task UpdatePlayers()
-        {
-            try
-            {
-                await UpdatePlayersList();
-            }
-            catch (Exception e)
-            {
-                HandleException(e);
-            }
-            try
-            {
-                await UpdatePlayersPublicProfiles();
-            }
-            catch (Exception e)
-            {
-                HandleException(e);
-            }
+            await _leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand { Players = updateList.ToArray() });
             SendTaskCompletedNotification();
         }
-
-        public async Task UpdatePlayersList()
+        catch (Exception ex)
         {
-            var activeSeason = _leagueDataService.RunQuery(new GetActiveSeasonQuery());
+            HandleException(ex);
+        }
+    }
 
-            if (activeSeason == null)
-                return;
+    public void SendTaskCompletedNotification()
+    {
+        _notificationService.Dispatch(
+            new NotificationMessage(
+                "Task Completed",
+                null,
+                NotificationLevel.Success,
+                nameof(MainService),
+                DateTime.Now));
+    }
 
-            var getPlayersRes = await _leagoService.GetPlayers(new Shared.Dto.GetPlayersInDto()
+
+    public async Task UpdateDiscordPlayerRole()
+    {
+        try
+        {
+            var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var currentPlayers = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
             {
-                TournamentKey = activeSeason.LeagoL1Key
+                IncludePlayer = true,
+                SeasonId = activeSeason.Id
             });
 
-            List<Data.Model.Player> toAdd = new List<Data.Model.Player>();
+            await _discordService.UpdatePlayerRole(new UpdatePlayerRoleInDto
+            {
+                CurrentPlayers = currentPlayers.Select(ps => ps.Player)
+                    .Where(pl => pl!.DiscordId != null)
+                    .Select(pl => pl!.DiscordId)
+                    .Cast<ulong>()
+                    .ToArray()
+            });
+            SendTaskCompletedNotification();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
 
-            _leagueDataService.Execute(new UpdatePlayersDataCommand() { Players = getPlayersRes.Players });
+    protected async Task<ProcessPaymentDataOutDto> ProcessPaymentData(PaymentDataDto[] payments)
+    {
+        var cutoffDate = new DateTime(2026, 4, 1);
 
-            _leagueDataService.Execute(new AddPlayersToSeason() { Players = getPlayersRes.Players, SeasonId = activeSeason.Id });
+        var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery { IncludePlayerSeasons = true });
+        var players = await _leagueDataService.RunQueryAsync(new GetPlayersQuery());
+
+        var noMatch = new List<PaymentDataDto>();
+        var noReg = new List<PaymentDataDto>();
+        var toUpdate = new List<PlayerRegistrationDto>();
+        var updateGoMagicIdList = new List<PlayerDto>();
+
+        foreach (var payment in payments)
+        {
+            if (payment.DateTime < cutoffDate)
+                continue;
+
+            var player = TryFindPlayer(players, payment);
+
+            if (player == null)
+            {
+                noMatch.Add(payment);
+                continue;
+            }
+
+            if (player.GoMagicUserId == 0)
+                updateGoMagicIdList.Add(
+                    new PlayerDto
+                    {
+                        Id = player.Id,
+                        GoMagicUserId = payment.UserId
+                    });
+
+            var currentPlayerSeason = season.PlayerSeasons.FirstOrDefault(ps => ps.PlayerId == player.Id);
+
+            if (currentPlayerSeason == null)
+            {
+                noReg.Add(payment);
+                continue;
+            }
+
+            var partTier = GetParticipationTier(payment.Product);
+
+            if (currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.Refunded ||
+                currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.Cancelled)
+                continue;
+
+            if (currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.None
+                || currentPlayerSeason.ParticipationTier != partTier)
+                toUpdate.Add(new PlayerRegistrationDto
+                {
+                    DateTime = payment.DateTime,
+                    PlayerId = player.Id,
+                    PlayerParticipationTier = partTier,
+                    SeasonId = season.Id,
+                    PlayerPaymentStatus = PlayerPaymentStatus.Paid
+                });
         }
 
-        public async Task UpdatePlayersPublicProfiles()
-        {
-            var players = _leagueDataService.RunQuery(new GetPlayersQuery());
+        _leagueDataService.Execute(new UpdatePlayerSeasons { PlayerRegistrations = toUpdate.ToArray() });
+        _leagueDataService.Execute(new UpdatePlayersDataCommand { Players = updateGoMagicIdList.ToArray() });
 
-            List<PlayerDto> toAdd = new List<PlayerDto>();
+        return new ProcessPaymentDataOutDto
+        {
+            NoMatches = noMatch.ToArray(),
+            MissingRegistrations = noReg.ToArray()
+        };
+    }
+
+    public async Task<PlayerDto[]> GetMissingPayments()
+    {
+        var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var resGetMp = await _leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery { SeasonId = season.Id });
+
+        return resGetMp.Select(pl => new PlayerDto
+        {
+            FirstName = pl.FirstName,
+            LastName = pl.LastName,
+            EmailAddress = pl.EmailAddress,
+            DiscordHandle = pl.DiscordHandle
+        }).ToArray();
+    }
+
+    private Player? TryFindPlayer(ICollection<Player> players, PaymentDataDto payment)
+    {
+        // First let's try the mail
+        var res = players.FirstOrDefault(pl => pl.GoMagicUserId == payment.UserId);
+
+        if (res == null)
+            res = players.FirstOrDefault(pl =>
+                pl.EmailAddress.Equals(payment.UserEmail, StringComparison.InvariantCultureIgnoreCase)
+                || pl.EmailAddress == payment.BillingEmail);
+
+        if (res == null)
+        {
+            var countSameNames = players.Where(pl =>
+                payment.BillingName.Contains(pl.FirstName, StringComparison.InvariantCultureIgnoreCase) &&
+                payment.BillingName.Contains(pl.LastName, StringComparison.InvariantCultureIgnoreCase));
+
+            if (countSameNames.Count() == 1)
+                res = countSameNames.First();
+        }
+
+        return res;
+    }
+
+    public async Task<CheckRankDto[]> CheckRanks()
+    {
+        try
+        {
+            var results = new List<CheckRankDto>();
+            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var players = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
+            {
+                IncludePlayer = true,
+                SeasonId = season.Id
+            });
 
             foreach (var player in players)
             {
-                var pres = await _leagoService.GetProfile(new GetProfileInDto()
-                {
-                    ProfileKey = player.LeagoKey,
-                    ArenaKey = _leagoOptions.Value.ArenaKey,
-                });
+                if (player.Player == null || player.Player.OGSHandle == "")
+                    continue;
 
-                toAdd.Add(new PlayerDto()
+                var ogsPl = await _ogsService.GetPlayer(player.Player.OGSHandle);
+
+                if (ogsPl == null)
+                    continue;
+
+                results.Add(new CheckRankDto
                 {
-                    Id = player.Id,
-                    DiscordHandle = pres.DiscordHandle,
-                    EmailAddress = pres.Email,
-                    TimeZone = pres.Timezone
+                    Player = player.Player.ToPlayerDto(),
+                    OGSRank = _ogsService.RatingToRank(ogsPl.Rating),
+                    OGSRating = ogsPl.Rating
                 });
             }
 
-            _leagueDataService.Execute(new UpdatePlayersDataCommand() { Players = toAdd.ToArray() });
+            return results.ToArray();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            return [];
+        }
+    }
+
+    public async Task PostReviews()
+    {
+        try
+        {
+            var unposted = await _leagueDataService.RunQueryAsync(new GetReviewsQuery
+            {
+                IncludeMatch = true,
+                IncludeTeacher = true,
+                HasReviewUrl = true,
+                IncludePlayerSeasons = true,
+                Status = [ReviewStatus.Allocated]
+            });
+
+            var posted = new List<ReviewDto>();
+            foreach (var review in unposted)
+            {
+                var reviewDto = review.ToReviewDto();
+                await _discordService.PostReviewThread(new PostReviewThreadInDto
+                {
+                    Review = reviewDto,
+                    Match = review.Match!.ToMatchDto(),
+                    Teacher = review.Teacher!.ToTeacherDto()
+                });
+
+                reviewDto.ReviewStatus = ReviewStatus.Notified;
+                posted.Add(reviewDto);
+            }
+
+            await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand { Reviews = posted.ToArray() });
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
+
+    protected PaymentDataDto[] ParsePaymentData(DataTable table)
+    {
+        var paymentData = new List<PaymentDataDto>();
+
+        foreach (DataRow row in table.Rows)
+        {
+            var newPaymentData = new PaymentDataDto();
+
+            var dateString = row.Field<string>("Date");
+            newPaymentData.DateTime = DateTime.Parse(dateString);
+            newPaymentData.BillingEmail = row.Field<string>("Billing Email") ?? "";
+            newPaymentData.USD = double.Parse(row.Field<string>("USD"));
+            newPaymentData.UserEmail = row.Field<string>("User Email") ?? "";
+            newPaymentData.UserId = int.Parse(row.Field<string>("User ID"));
+            newPaymentData.UserName = row.Field<string>("User Name") ?? "";
+            newPaymentData.BillingName = row.Field<string>("Billing Name") ?? "";
+            newPaymentData.Product = row.Field<string>("Product") ?? "";
+            paymentData.Add(newPaymentData);
         }
 
-        public async Task SendMissingPaymentsEmail()
+        return paymentData.ToArray();
+    }
+
+
+    public async Task SaveReviewChanges(List<ReviewViewModel> reviews)
+    {
+        var updateList = reviews.Select(re => re.ToReviewDto());
+
+        await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand
         {
+            Reviews = updateList.ToArray()
+        });
+    }
+
+    public async Task AddReviewToPlayer(PlayerViewModel player)
+    {
+        await _reviewService.AddReviewToPlayer(player.ToPlayerDto());
+    }
+
+    public async Task SavePlayerChanges(List<PlayerViewModel> players)
+    {
+        var updateList = players.Select(pl => pl.ToPlayerDto());
+
+        await _leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand
+        {
+            Players = updateList.ToArray()
+        });
+    }
+
+
+    public async Task<List<PlayerViewModel>> GetPlayers(int? startIndex, int? count,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var res = await _leagueDataService.RunQueryAsync(new GetPlayersQuery
+            {
+                IncludePlayerSeasons = true,
+                SeasonId = season.Id,
+                Count = count ?? 0,
+                StartIndex = startIndex ?? 0,
+                OrderResults = true
+            });
+            return res.Select(rev => rev.ToPlayerViewModel()).ToList();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            return new List<PlayerViewModel>();
+        }
+    }
+
+    public async Task<List<RankChangeRequestViewModel>> GetRankChangeRequests(int? startIndex, int? count,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var res = await _queueDataService.RunQueryAsync(new GetCommandMessagesQuery
+            {
+                Types = ["RankChangeCommand"]
+            });
+            return res.Select(rev => rev.ToRankChangeRequestViewModel()).ToList();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            return new List<RankChangeRequestViewModel>();
+        }
+    }
+
+
+    public async Task MarkRankChangeRequestComplete(RankChangeRequestViewModel request)
+    {
+        try
+        {
+            _queueDataService.Execute(new SetCommandMessageStatusCommand
+            {
+                CommandMessageId = request.Id,
+                NewStatus = QueueStatus.Completed
+            });
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+            ;
+        }
+    }
+
+    public async Task<List<ReviewViewModel>> GetMissedReviews(int? startIndex, int? count,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery
+            {
+                IncludeMatch = true,
+                IncludeOwner = true,
+                IncludeTeacher = true,
+                Round = [1, 2, 3, 4, 5],
+                ExcludeSeasonIds = [season.Id],
+                Status = [ReviewStatus.Planned, ReviewStatus.Allocated],
+                Count = count ?? 0,
+                StartIndex = startIndex ?? 0
+            });
+            return res.Select(rev => rev.ToViewModel()).ToList();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            return new List<ReviewViewModel>();
+        }
+    }
+
+
+    public async Task DeleteReviews(IEnumerable<ReviewViewModel> reviews)
+    {
+        try
+        {
+            await _leagueDataService.ExecuteAsync(new DeleteReviewsCommand
+                { Reviews = reviews.Select(re => re.ToReviewDto()).ToArray() });
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
+    }
+
+    public async Task UnlinkMatchFromReviews(IEnumerable<ReviewViewModel> reviews, bool deleteMatch = false)
+    {
+        try
+        {
+            await _reviewService.UnlinkMatch(reviews.Select(re => re.ToReviewDto()).ToArray(), deleteMatch);
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
+    }
+
+
+    public async Task SetCanceledReview(IEnumerable<ReviewViewModel> reviews)
+    {
+        try
+        {
+            await _reviewService.SetReviewStatus(new SetReviewStatusInDto
+            {
+                Reviews = reviews.Select(re => re.ToReviewDto()),
+                NewStatus = ReviewStatus.Canceled
+            });
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
+    }
+
+    public async Task ScheduleReviews(IEnumerable<ReviewViewModel> reviews, DateTime reviewEventDate, int teacherId)
+    {
+        try
+        {
+            var teacher = await _leagueDataService.RunQueryAsync(new GetTeacherQuery { Id = teacherId });
+            if (teacher == null)
+                return;
+
+            var games = new List<MatchDto>();
+
+            foreach (var review in reviews)
+            {
+                var toAdd = await _leagueDataService.RunQueryAsync(new GetMatchQuery
+                    { Id = (int)review.MatchId!, IncludePlayers = true });
+                games.Add(toAdd.ToMatchDto());
+            }
+
+            await _discordService.SendReviewEventNotification(new SendReviewEventNotificationInDto
+            {
+                DateTimeUTC = reviewEventDate,
+                Reviews = games.ToArray(),
+                Teacher = teacher.ToTeacherDto()
+            });
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
+    }
+
+    public async Task SendUpcomingMatchesNotification()
+    {
+        var command = new CommandMessage
+        {
+            CreatedAtUtc = DateTime.UtcNow,
+            Type = "SendUpcomingMatchesNotification",
+            Payload = ""
+        };
+
+        await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand
+        {
+            NewCommand = command
+        });
+    }
+
+    public async Task SendRoundStartNotification(int round, DateTime roundDeadline)
+    {
+        try
+        {
+            await _discordService.SendRoundStartNotification(new SendRoundStartNotificationInDto
+            {
+                RoundEnd = roundDeadline,
+                RoundNumber = round
+            });
+            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var players = await _leagueDataService.RunQueryAsync(new GetPlayersForRoundQuery
+            {
+                SeasonId = season.Id,
+                Round = round
+            });
+
+            var message = new RoundStartMessage(season.ToSeasonDto(), round, roundDeadline);
+
+            _queueDataService.ExecuteAsync(new InsertCommandMessageCommand
+            {
+                NewCommand = new CommandMessage
+                {
+                    Type = "SendEmail",
+                    Payload = new SendEmailPayload
+                    {
+                        Bccs = players.Select(pl => pl.EmailAddress).ToArray(),
+                        Subject = message.Subject,
+                        HtmlBody = message.HtmlBody
+                    }.SerializePayload()
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+        }
+    }
+
+    public async Task<List<TeacherViewModel>> GetTeachers()
+    {
+        try
+        {
+            var res = await _leagueDataService.RunQueryAsync(new GetTeachersQuery());
+            return res.Select(te => te.ToTeacherViewModel()).OrderBy(te => te.Name).ToList();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            return new List<TeacherViewModel>();
+        }
+    }
+
+    public async Task AssignTeacherToReviews(IEnumerable<ReviewViewModel> reviews, int teacherId)
+    {
+        await _reviewService.AssignTeacherToReviews(reviews.Select(re => re.ToReviewDto()), teacherId);
+    }
+
+    public async Task SyncMatches()
+    {
+        var command = new CommandMessage
+        {
+            CreatedAtUtc = DateTime.UtcNow,
+            Type = "SyncMatches",
+            Payload = ""
+        };
+
+        await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand
+        {
+            NewCommand = command
+        });
+    }
+
+    public async Task SendReviewSchedule(bool sendDiscordMessage = true, bool sendMail = true)
+    {
+        ReviewScheduleDto[] reviews;
+        try
+        {
+            reviews = await _reviewService.GetReviewSchedule();
+        }
+        catch (Exception ex)
+        {
+            HandleException(ex);
+            return;
+        }
+
+        if (sendDiscordMessage)
             try
             {
-                SendTaskCompletedNotification();
+                await _discordService.SendReviewSchedule(reviews);
             }
-            catch (Exception e)
+            catch (Exception ex)
             {
-                HandleException(e);
+                HandleException(ex);
             }
+    }
+
+    public async Task UpdatePlayers()
+    {
+        try
+        {
+            await UpdatePlayersList();
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
+
+        try
+        {
+            await UpdatePlayersPublicProfiles();
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
+
+        SendTaskCompletedNotification();
+    }
+
+    public async Task UpdatePlayersList()
+    {
+        var activeSeason = _leagueDataService.RunQuery(new GetActiveSeasonQuery());
+
+        if (activeSeason == null)
+            return;
+
+        var getPlayersRes = await _leagoService.GetPlayers(new GetPlayersInDto
+        {
+            TournamentKey = activeSeason.LeagoL1Key
+        });
+
+        var toAdd = new List<Player>();
+
+        _leagueDataService.Execute(new UpdatePlayersDataCommand { Players = getPlayersRes.Players });
+
+        _leagueDataService.Execute(new AddPlayersToSeason
+            { Players = getPlayersRes.Players, SeasonId = activeSeason.Id });
+    }
+
+    public async Task UpdatePlayersPublicProfiles()
+    {
+        var players = _leagueDataService.RunQuery(new GetPlayersQuery());
+
+        var toAdd = new List<PlayerDto>();
+
+        foreach (var player in players)
+        {
+            var pres = await _leagoService.GetProfile(new GetProfileInDto
+            {
+                ProfileKey = player.LeagoKey,
+                ArenaKey = _leagoOptions.Value.ArenaKey
+            });
+
+            toAdd.Add(new PlayerDto
+            {
+                Id = player.Id,
+                DiscordHandle = pres.DiscordHandle,
+                EmailAddress = pres.Email,
+                TimeZone = pres.Timezone
+            });
+        }
+
+        _leagueDataService.Execute(new UpdatePlayersDataCommand { Players = toAdd.ToArray() });
+    }
+
+    public async Task SendMissingPaymentsEmail()
+    {
+        try
+        {
+            SendTaskCompletedNotification();
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
         }
     }
 }

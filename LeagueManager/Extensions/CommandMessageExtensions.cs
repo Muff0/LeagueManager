@@ -8,11 +8,10 @@ public static class CommandMessageExtensions
 {
     public static RankChangeRequestViewModel ToRankChangeRequestViewModel(this CommandMessage commandMessage)
     {
-        return new RankChangeRequestViewModel()
+        return new RankChangeRequestViewModel
         {
             Id = commandMessage.Id,
             Payload = commandMessage.Payload
         };
     }
-
 }

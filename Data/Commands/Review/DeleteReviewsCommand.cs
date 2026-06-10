@@ -1,26 +1,22 @@
 ﻿using Shared.Dto;
 
-namespace Data.Commands.Review
+namespace Data.Commands.Review;
+
+public class DeleteReviewsCommand : Command<LeagueContext>
 {
-    public class DeleteReviewsCommand : Command<LeagueContext>
+    public IEnumerable<ReviewDto> Reviews { get; set; }
+
+    protected override void RunAction(LeagueContext context)
     {
-        public IEnumerable<ReviewDto> Reviews { get; set; }
+        base.RunAction(context);
 
-        protected override void RunAction(LeagueContext context)
+        if (Reviews == null)
+            return;
+
+        foreach (var review in Reviews)
         {
-            base.RunAction(context);
-
-            if (Reviews == null)
-                return;
-
-            foreach (var review in Reviews)
-            {
-                var existingReview = context.Reviews.FirstOrDefault(re => re.Id == review.Id);
-                if (existingReview != null)
-                {
-                    context.Remove(existingReview);
-                }
-            }
+            var existingReview = context.Reviews.FirstOrDefault(re => re.Id == review.Id);
+            if (existingReview != null) context.Remove(existingReview);
         }
     }
 }

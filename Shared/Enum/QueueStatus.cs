@@ -1,10 +1,9 @@
-﻿namespace Shared.Enum
+﻿namespace Shared.Enum;
+
+public enum QueueStatus
 {
-    public enum QueueStatus
-    {
-        Pending = 0,
-        Processing = 1,
-        Failed = 2,
-        Completed = 3,
-    }
+    Pending = 0,
+    Processing = 1,
+    Failed = 2,
+    Completed = 3
 }

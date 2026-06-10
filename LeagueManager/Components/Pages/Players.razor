@@ -1,8 +1,9 @@
 ﻿@page "/players"
 @using LeagueManager.Components.Panels
+@using LeagueManager.Services
 @using LeagueManager.ViewModel
 @using Shared.Enum
-@inject Services.MainService MainService
+@inject MainService MainService
 @rendermode InteractiveServer
 
 <PageTitle>Players</PageTitle>
@@ -11,13 +12,14 @@
     <div class="lm-topbar">
         <div>
             <h1 class="lm-page-title">Players</h1>
-            <span class="lm-page-sub">@(_filteredCount.HasValue ? $"{_filteredCount} player{(_filteredCount == 1 ? "" : "s")}" : "Loading…")</span>
+            <span
+                class="lm-page-sub">@(_filteredCount.HasValue ? $"{_filteredCount} player{(_filteredCount == 1 ? "" : "s")}" : "Loading…")</span>
         </div>
         <div class="lm-search-wrap">
             <i class="ti ti-search" aria-hidden="true"></i>
             <input type="text" placeholder="Search by name, handle, ID…"
                    value="@_searchQuery"
-                   @oninput="HandleSearch" />
+                   @oninput="HandleSearch"/>
         </div>
     </div>
 
@@ -54,7 +56,7 @@
         <PlayerPanel Player="_selectedPlayer"
                      IsOpen="_selectedPlayer != null"
                      OnSave="HandlePanelSave"
-                     OnClose="ClosePanel" />
+                     OnClose="ClosePanel"/>
     </div>
 </div>
 
@@ -91,11 +93,15 @@
         _filteredCount = _displayedPlayers.Count;
     }
 
-    private static bool Contains(string? value, string query) =>
-        value?.Contains(query, StringComparison.OrdinalIgnoreCase) == true;
+    private static bool Contains(string? value, string query)
+    {
+        return value?.Contains(query, StringComparison.OrdinalIgnoreCase) == true;
+    }
 
-    private void SelectPlayer(PlayerViewModel player) =>
+    private void SelectPlayer(PlayerViewModel player)
+    {
         _selectedPlayer = player.Id == _selectedPlayer?.Id ? null : player;
+    }
 
     private async Task HandlePanelSave(PlayerViewModel updated)
     {
@@ -105,5 +111,9 @@
         ApplyFilter();
     }
 
-    private void ClosePanel() => _selectedPlayer = null;
+    private void ClosePanel()
+    {
+        _selectedPlayer = null;
+    }
+
 }

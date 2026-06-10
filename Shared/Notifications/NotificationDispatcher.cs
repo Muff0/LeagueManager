@@ -1,6 +1,7 @@
 using System.Threading.Channels;
 
 namespace Shared.Notifications;
+
 public interface INotificationDispatcher
 {
     void Dispatch(NotificationMessage message);
@@ -13,8 +14,11 @@ public class NotificationDispatcher : INotificationDispatcher
         Channel.CreateUnbounded<NotificationMessage>(
             new UnboundedChannelOptions { SingleReader = true });
 
-    public void Dispatch(NotificationMessage message)
-        => _channel.Writer.TryWrite(message);  // fire-and-forget, never blocks
-
     public ChannelReader<NotificationMessage> Reader => _channel.Reader;
+
+    public void Dispatch(NotificationMessage message)
+    {
+        _channel.Writer.TryWrite(message);
+        // fire-and-forget, never blocks
+    }
 }

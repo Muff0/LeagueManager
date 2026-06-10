@@ -1,10 +1,12 @@
-﻿namespace LeagoClient
+﻿using Newtonsoft.Json;
+using Shared.Converter;
+
+namespace LeagoClient;
+
+public partial class ArenasClient
 {
-    public partial class ArenasClient
+    static partial void UpdateJsonSerializerSettings(JsonSerializerSettings settings)
     {
-        static partial void UpdateJsonSerializerSettings(Newtonsoft.Json.JsonSerializerSettings settings)
-        {
-            settings.Converters.Add(new Shared.Converter.FallbackDateTimeOffsetConverter());
-        }
+        settings.Converters.Add(new FallbackDateTimeOffsetConverter());
     }
 }

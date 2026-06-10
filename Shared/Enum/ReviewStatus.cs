@@ -1,13 +1,12 @@
-﻿namespace Shared.Enum
+﻿namespace Shared.Enum;
+
+public enum ReviewStatus
 {
-    public enum ReviewStatus
-    {
-        Planned = 0,
-        Allocated = 1,
-        Recorded = 2,
-        Uploaded = 3,
-        Notified = 4,
-        Duplicate = 5,
-        Canceled = 6,
-    }
+    Planned = 0,
+    Allocated = 1,
+    Recorded = 2,
+    Uploaded = 3,
+    Notified = 4,
+    Duplicate = 5,
+    Canceled = 6
 }

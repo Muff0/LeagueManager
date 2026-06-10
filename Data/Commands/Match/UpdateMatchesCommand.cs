@@ -1,14 +1,13 @@
-using System.ComponentModel;
-using Data.Model;
 using Microsoft.EntityFrameworkCore;
 using Shared.Dto;
+using Shared.Enum;
 
 namespace Data.Commands.Match;
 
 public class UpdateMatchesCommand : Command<LeagueContext>
 {
     public MatchDto[] ToUpdate { get; set; } = [];
-    
+
     protected override void RunAction(LeagueContext context)
     {
         foreach (var currentMatch in ToUpdate)
@@ -22,23 +21,24 @@ public class UpdateMatchesCommand : Command<LeagueContext>
 
             if (existingMatch == null)
                 continue;
-            
-                existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
-                existingMatch.MatchUrl = currentMatch.GameLink ?? "";
-                existingMatch.IsComplete = currentMatch.Players.Any(pl => pl.Outcome != Shared.Enum.PlayerMatchOutcome.NotReported);
 
-                foreach (PlayerMatchDto playerMatch in currentMatch.Players)
-                {
-                    var existingPlayerMatch = existingMatch.PlayerMatches?.FirstOrDefault(pm => pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
+            existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
+            existingMatch.MatchUrl = currentMatch.GameLink ?? "";
+            existingMatch.IsComplete = currentMatch.Players.Any(pl => pl.Outcome != PlayerMatchOutcome.NotReported);
 
-                    if (existingPlayerMatch == null)
-                        continue;
+            foreach (var playerMatch in currentMatch.Players)
+            {
+                var existingPlayerMatch =
+                    existingMatch.PlayerMatches?.FirstOrDefault(pm =>
+                        pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
 
-                    existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
-                    existingPlayerMatch.Outcome = playerMatch.Outcome;
-                    existingPlayerMatch.Color = playerMatch.Color;
-                }
-            } 
-        
+                if (existingPlayerMatch == null)
+                    continue;
+
+                existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
+                existingPlayerMatch.Outcome = playerMatch.Outcome;
+                existingPlayerMatch.Color = playerMatch.Color;
+            }
+        }
     }
 }

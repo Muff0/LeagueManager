@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto.Discord
+﻿namespace Shared.Dto.Discord;
+
+public class UpdatePlayerRoleInDto
 {
-    public class UpdatePlayerRoleInDto
-    {
-        public ulong[] CurrentPlayers { get; set; } = [];
-    }
+    public ulong[] CurrentPlayers { get; set; } = [];
 }

@@ -1,5 +1,3 @@
-using Shared.Enum;
-
 namespace Shared.Dto.OGS;
 
 public class CheckRankDto

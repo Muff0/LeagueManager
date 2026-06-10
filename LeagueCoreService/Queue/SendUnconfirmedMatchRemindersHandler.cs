@@ -3,30 +3,31 @@ using Data.Commands.Queue;
 using Data.Extensions;
 using Data.Model;
 using Data.Queries;
-using Mail;
 using Mail.MessageBuilders;
 using Shared.Extensions;
 using Shared.Queue;
 
 namespace LeagueCoreService.Queue;
 
-public class SendUnconfirmedMatchRemindersHandler(QueueDataService queueDataService,
+public class SendUnconfirmedMatchRemindersHandler(
+    QueueDataService queueDataService,
     LeagueDataService leagueDataService) : ICommandHandler
 {
     public string CommandType => "SendUnconfirmedMatchReminders";
+
     public async Task HandleAsync(CommandMessage cmd)
     {
         var season = (await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery()))!
             .ToSeasonDto();
         var unconfirmedMatches = (await leagueDataService.RunQueryAsync(
-            new GetUnconfirmedMatchesQuery()
+            new GetUnconfirmedMatchesQuery
             {
                 IncludePlayers = true,
                 SeasonId = season.Id
             })).Select(m => m.ToMatchDto()).ToArray();
         // Hacky but should be ok for now
         var currentRound = unconfirmedMatches.Max(um => um.Round);
-        
+
         foreach (var currentMatch in unconfirmedMatches)
         {
             if (currentMatch.Round != currentRound)
@@ -34,8 +35,8 @@ public class SendUnconfirmedMatchRemindersHandler(QueueDataService queueDataServ
             var msg = new MatchReminderMessage(currentMatch, NextMondayNoon(), season);
             var p1 = currentMatch.Players![0].Player!;
             var p2 = currentMatch.Players![1].Player!;
-            
-            var payload = new SendEmailPayload()
+
+            var payload = new SendEmailPayload
             {
                 HtmlBody = msg.HtmlBody,
                 Subject = msg.Subject,
@@ -43,17 +44,17 @@ public class SendUnconfirmedMatchRemindersHandler(QueueDataService queueDataServ
                 Ccs = [p2.EmailAddress]
             };
             await queueDataService.ExecuteAsync(
-                new InsertCommandMessageCommand()
+                new InsertCommandMessageCommand
                 {
-                    NewCommand = new CommandMessage()
+                    NewCommand = new CommandMessage
                     {
                         Type = "SendEmail",
                         Payload = payload.SerializePayload()
                     }
                 });
-            
-                }
+        }
     }
+
     public DateTime NextMondayNoon()
     {
         var today = DateTime.UtcNow.Date;

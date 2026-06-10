@@ -6,7 +6,6 @@ namespace Data.Model;
 
 public class Poll
 {
-    
     [Key]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
     public int Id { get; set; }

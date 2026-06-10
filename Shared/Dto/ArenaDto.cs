@@ -1,6 +1,5 @@
-﻿namespace Shared.Dto
+﻿namespace Shared.Dto;
+
+public class ArenaDto
 {
-    public class ArenaDto
-    {
-    }
 }

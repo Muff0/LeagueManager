@@ -1,7 +1,7 @@
-using System.ComponentModel;
 using Data.Model;
 using Microsoft.EntityFrameworkCore;
 using Shared.Dto;
+using Shared.Enum;
 
 namespace Data.Commands.Match;
 
@@ -10,10 +10,10 @@ public class AddOrUpdateMatchesCommand : Command<LeagueContext>
     public MatchDto[] ToUpdate { get; set; } = [];
     public int SeasonId { get; set; }
     public int Round { get; set; }
-    
+
     protected override void RunAction(LeagueContext context)
     {
-        var toAdd = new List<Data.Model.Match>();
+        var toAdd = new List<Model.Match>();
         foreach (var currentMatch in ToUpdate)
         {
             if (currentMatch.Players == null)
@@ -25,7 +25,7 @@ public class AddOrUpdateMatchesCommand : Command<LeagueContext>
 
             if (existingMatch == null)
             {
-                var newMatch = new Data.Model.Match()
+                var newMatch = new Model.Match
                 {
                     LeagoKey = currentMatch.LeagoKey,
                     SeasonId = SeasonId,
@@ -35,22 +35,23 @@ public class AddOrUpdateMatchesCommand : Command<LeagueContext>
                     PlayerMatches = new List<PlayerMatch>()
                 };
 
-                foreach (PlayerMatchDto playerMatch in currentMatch.Players)
+                foreach (var playerMatch in currentMatch.Players)
                 {
                     if (playerMatch?.Player == null)
                         continue;
 
-                    var existingPlayer = context.Players.FirstOrDefault(pp => pp.LeagoKey == playerMatch.Player.LeagoKey);
+                    var existingPlayer =
+                        context.Players.FirstOrDefault(pp => pp.LeagoKey == playerMatch.Player.LeagoKey);
 
                     if (existingPlayer == null)
                         continue;
 
-                    var newPlayerMatch = new PlayerMatch()
+                    var newPlayerMatch = new PlayerMatch
                     {
                         Color = playerMatch.Color,
                         PlayerId = existingPlayer.Id,
                         HasConfirmed = playerMatch.HasConfirmed,
-                        Outcome = playerMatch.Outcome,
+                        Outcome = playerMatch.Outcome
                     };
 
                     newMatch.PlayerMatches.Add(newPlayerMatch);
@@ -63,37 +64,41 @@ public class AddOrUpdateMatchesCommand : Command<LeagueContext>
                 existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
                 existingMatch.MatchUrl = currentMatch.GameLink ?? "";
 
-                existingMatch.IsComplete = currentMatch.Players.Any(pl => pl.Outcome != Shared.Enum.PlayerMatchOutcome.NotReported);
+                existingMatch.IsComplete = currentMatch.Players.Any(pl => pl.Outcome != PlayerMatchOutcome.NotReported);
 
-                foreach (PlayerMatchDto playerMatch in currentMatch.Players)
+                foreach (var playerMatch in currentMatch.Players)
                 {
-                    var existingPlayerMatch = existingMatch.PlayerMatches?.FirstOrDefault(pm => pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
+                    var existingPlayerMatch =
+                        existingMatch.PlayerMatches?.FirstOrDefault(pm =>
+                            pm.Player?.LeagoKey == playerMatch.Player?.LeagoKey);
 
                     if (existingPlayerMatch == null)
                     {
                         if (playerMatch?.Player == null)
                             continue;
 
-                        var existingPlayer = context.Players.FirstOrDefault(pp => pp.LeagoKey == playerMatch.Player.LeagoKey);
+                        var existingPlayer =
+                            context.Players.FirstOrDefault(pp => pp.LeagoKey == playerMatch.Player.LeagoKey);
 
                         if (existingPlayer == null)
                             continue;
-                        existingPlayerMatch = new PlayerMatch()
+                        existingPlayerMatch = new PlayerMatch
                         {
                             Color = playerMatch.Color,
                             PlayerId = existingPlayer.Id,
                             HasConfirmed = playerMatch.HasConfirmed,
-                            Outcome = playerMatch.Outcome,
+                            Outcome = playerMatch.Outcome
                         };
-                        existingMatch.PlayerMatches.Add(existingPlayerMatch);   
+                        existingMatch.PlayerMatches.Add(existingPlayerMatch);
                     }
 
                     existingPlayerMatch.HasConfirmed = playerMatch.HasConfirmed;
                     existingPlayerMatch.Outcome = playerMatch.Outcome;
                     existingPlayerMatch.Color = playerMatch.Color;
                 }
-            } 
+            }
         }
+
         context.AddRange(toAdd);
     }
 }

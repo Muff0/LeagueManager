@@ -16,7 +16,6 @@ public class SetMatchesNotifiedCommand : Command<LeagueContext>
                 continue;
 
             existingMatch.NotificationSent = true;
-
         }
     }
 }

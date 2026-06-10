@@ -1,10 +1,9 @@
 ﻿using Shared.Enum;
 
-namespace Shared.Dto
+namespace Shared.Dto;
+
+public class SetReviewStatusInDto
 {
-    public class SetReviewStatusInDto
-    {
-        public IEnumerable<ReviewDto> Reviews { get; set; } = [];
-        public ReviewStatus NewStatus { get; set; }
-    }
+    public IEnumerable<ReviewDto> Reviews { get; set; } = [];
+    public ReviewStatus NewStatus { get; set; }
 }

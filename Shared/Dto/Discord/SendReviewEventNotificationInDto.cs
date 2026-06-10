@@ -1,9 +1,8 @@
-﻿namespace Shared.Dto.Discord
+﻿namespace Shared.Dto.Discord;
+
+public class SendReviewEventNotificationInDto
 {
-    public class SendReviewEventNotificationInDto
-    {
-        public DateTime DateTimeUTC { get; set; }
-        public TeacherDto Teacher { get; set; } = new TeacherDto();
-        public MatchDto[] Reviews { get; set; } = [];
-    }
+    public DateTime DateTimeUTC { get; set; }
+    public TeacherDto Teacher { get; set; } = new();
+    public MatchDto[] Reviews { get; set; } = [];
 }

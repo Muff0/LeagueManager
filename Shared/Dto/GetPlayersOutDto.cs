@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto
+﻿namespace Shared.Dto;
+
+public class GetPlayersOutDto
 {
-    public class GetPlayersOutDto
-    {
-        public PlayerDto[] Players { get; set; } = Array.Empty<PlayerDto>();
-    }
+    public PlayerDto[] Players { get; set; } = Array.Empty<PlayerDto>();
 }

@@ -1,8 +1,7 @@
-﻿namespace Shared.Enum
+﻿namespace Shared.Enum;
+
+public enum PlayerColor
 {
-    public enum PlayerColor
-    {
-        Black = 0,
-        White = 1,
-    }
+    Black = 0,
+    White = 1
 }

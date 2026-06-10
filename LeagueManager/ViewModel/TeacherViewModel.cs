@@ -1,8 +1,7 @@
-﻿namespace LeagueManager.ViewModel
+﻿namespace LeagueManager.ViewModel;
+
+public class TeacherViewModel
 {
-    public class TeacherViewModel
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-    }
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
 }

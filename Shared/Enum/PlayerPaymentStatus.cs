@@ -1,13 +1,12 @@
-﻿namespace Shared.Enum
+﻿namespace Shared.Enum;
+
+public enum PlayerPaymentStatus
 {
-    public enum PlayerPaymentStatus
-    {
-        None = 0,
+    None = 0,
 
-        Paid = 1,
+    Paid = 1,
 
-        Refunded = 2,
+    Refunded = 2,
 
-        Cancelled = 3,
-    }
+    Cancelled = 3
 }

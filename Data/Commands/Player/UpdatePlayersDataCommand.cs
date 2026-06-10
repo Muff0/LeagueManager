@@ -1,66 +1,68 @@
-﻿using Shared.Dto;
+﻿using Microsoft.EntityFrameworkCore;
+using Shared.Dto;
+using Shared.Enum;
 
-namespace Data.Commands.Player
+namespace Data.Commands.Player;
+
+public class UpdatePlayersDataCommand : Command<LeagueContext>
 {
-    public class UpdatePlayersDataCommand : Command<LeagueContext>
+    public PlayerDto[] Players { get; set; } = [];
+
+    protected override void RunAction(LeagueContext context)
     {
-        public PlayerDto[] Players { get; set; } = [];
+        base.RunAction(context);
 
-        protected override void RunAction(LeagueContext context)
+        foreach (var player in Players)
         {
-            base.RunAction(context);
+            var existingPlayer = context.Players.FirstOrDefault(pl => pl.Id == player.Id
+                                                                      || pl.LeagoKey == player.LeagoKey);
 
-            foreach (var player in Players)
+            if (existingPlayer == null)
             {
-                var existingPlayer = context.Players.FirstOrDefault(pl => pl.Id == player.Id
-                    || pl.LeagoKey == player.LeagoKey);
+                var sameName = context.Players
+                    .Where(pl => pl.FirstName == player.FirstName && pl.LastName == player.LastName).ToArray();
+                if (sameName.Length == 1)
+                    existingPlayer = sameName[0];
+            }
 
-                if(existingPlayer == null)
+            if (existingPlayer == null)
+            {
+                existingPlayer = new Model.Player
                 {
-                    var sameName = context.Players.Where(pl => pl.FirstName == player.FirstName && pl.LastName == player.LastName).ToArray();
-                    if (sameName.Length == 1)
-                        existingPlayer = sameName[0];
-                }
+                    FirstName = player.FirstName ?? string.Empty,
+                    LastName = player.LastName ?? string.Empty,
+                    OGSHandle = player.OGSHandle ?? string.Empty,
+                    DiscordHandle = player.DiscordHandle ?? string.Empty,
+                    LeagoMemberId = player.LeagoMemberId ?? string.Empty,
+                    LeagoKey = player.LeagoKey ?? string.Empty,
+                    Rank = player.Rank,
+                    EmailAddress = player.EmailAddress ?? string.Empty,
+                    Timezone = player.TimeZone ?? string.Empty
+                };
+                context.Players.Add(existingPlayer);
+            }
+            else
+            {
+                if (player.Rank != PlayerRank.MinValue)
+                    existingPlayer.Rank = player.Rank;
+                if (player.OGSHandle != null)
+                    existingPlayer.OGSHandle = player.OGSHandle;
+                if (player.LeagoMemberId != null)
+                    existingPlayer.LeagoMemberId = player.LeagoMemberId;
+                if (player.LeagoKey != null)
+                    existingPlayer.LeagoKey = player.LeagoKey;
+                if (player.DiscordHandle != null)
+                    existingPlayer.DiscordHandle = player.DiscordHandle;
+                if (player.EmailAddress != null)
+                    existingPlayer.EmailAddress = player.EmailAddress;
+                if (player.GoMagicUserId != null)
+                    existingPlayer.GoMagicUserId = (int)player.GoMagicUserId;
+                if (player.DiscordId != null)
+                    existingPlayer.DiscordId = player.DiscordId;
+                if (player.TimeZone != null)
+                    existingPlayer.Timezone = player.TimeZone;
 
-                if (existingPlayer == null)
-                {
-                    existingPlayer = new Data.Model.Player()
-                    {
-                        FirstName = player.FirstName ?? string.Empty,
-                        LastName = player.LastName ?? string.Empty,
-                        OGSHandle = player.OGSHandle ?? string.Empty,
-                        DiscordHandle = player.DiscordHandle ?? string.Empty,
-                        LeagoMemberId = player.LeagoMemberId ?? string.Empty,
-                        LeagoKey = player.LeagoKey ?? string.Empty,
-                        Rank = player.Rank,
-                        EmailAddress = player.EmailAddress ?? string.Empty,
-                        Timezone = player.TimeZone ?? string.Empty,
-                    };
-                    context.Players.Add(existingPlayer);
-                }
-                else
-                {
-                    if (player.Rank != Shared.Enum.PlayerRank.MinValue)
-                        existingPlayer.Rank = player.Rank;
-                    if (player.OGSHandle != null)
-                        existingPlayer.OGSHandle = player.OGSHandle;
-                    if (player.LeagoMemberId != null)
-                        existingPlayer.LeagoMemberId = player.LeagoMemberId;
-                    if (player.LeagoKey != null)
-                        existingPlayer.LeagoKey = player.LeagoKey;
-                    if (player.DiscordHandle != null)
-                        existingPlayer.DiscordHandle = player.DiscordHandle;
-                    if (player.EmailAddress != null)
-                        existingPlayer.EmailAddress = player.EmailAddress;
-                    if (player.GoMagicUserId != null)
-                        existingPlayer.GoMagicUserId = (int)player.GoMagicUserId;
-                    if (player.DiscordId != null)
-                        existingPlayer.DiscordId = player.DiscordId;
-                    if (player.TimeZone != null)
-                        existingPlayer.Timezone = player.TimeZone;
-
-                    context.Entry(existingPlayer).State = Microsoft.EntityFrameworkCore.EntityState.Modified;
-                }
+                context.Entry(existingPlayer).State = EntityState.Modified;
             }
         }
     }

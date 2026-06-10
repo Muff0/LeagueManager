@@ -1,9 +1,8 @@
-﻿namespace Shared.Dto.Discord
+﻿namespace Shared.Dto.Discord;
+
+public class PostReviewThreadInDto
 {
-    public class PostReviewThreadInDto
-    {
-        public ReviewDto Review { get; set; } = new ReviewDto();
-        public TeacherDto Teacher { get; set; } = new TeacherDto();
-        public MatchDto Match { get; set; } = new MatchDto();
-    }
+    public ReviewDto Review { get; set; } = new();
+    public TeacherDto Teacher { get; set; } = new();
+    public MatchDto Match { get; set; } = new();
 }

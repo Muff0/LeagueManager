@@ -2,37 +2,36 @@
 using Microsoft.EntityFrameworkCore;
 using Shared.Enum;
 
-namespace Data.Queries
+namespace Data.Queries;
+
+public class GetPlayerSeasonsQuery : Query<LeagueContext, PlayerSeason>
 {
-    public class GetPlayerSeasonsQuery : Query<LeagueContext, PlayerSeason>
+    public bool IncludePlayer { get; set; } = false;
+    public bool IncludeSeason { get; set; } = false;
+
+    public int SeasonId { get; set; } = 0;
+    public PlayerParticipationTier[] ParticipationTiers { get; set; } = [];
+    public bool IncludeReviews { get; set; }
+
+    public override IQueryable<PlayerSeason> BuildQuery(LeagueContext context)
     {
-        public bool IncludePlayer { get; set; } = false;
-        public bool IncludeSeason { get; set; } = false;
+        var query = base.BuildQuery(context);
 
-        public int SeasonId { get; set; } = 0;
-        public PlayerParticipationTier[] ParticipationTiers { get; set; } = [];
-        public bool IncludeReviews { get; set; }
+        if (IncludePlayer)
+            query = query.Include(pm => pm.Player);
 
-        public override IQueryable<PlayerSeason> BuildQuery(LeagueContext context)
-        {
-            var query = base.BuildQuery(context);
+        if (IncludeSeason)
+            query = query.Include(mm => mm.Season);
 
-            if (IncludePlayer)
-                query = query.Include(pm => pm.Player);
+        if (IncludeReviews)
+            query = query.Include(mm => mm.Reviews);
 
-            if (IncludeSeason)
-                query = query.Include(mm => mm.Season);
+        if (SeasonId != 0)
+            query = query.Where(ps => ps.SeasonId == SeasonId);
 
-            if (IncludeReviews)
-                query = query.Include(mm => mm.Reviews);
+        if (ParticipationTiers.Length > 0)
+            query = query.Where(ps => ParticipationTiers.Contains(ps.ParticipationTier));
 
-            if (SeasonId != 0)
-                query = query.Where(ps => ps.SeasonId == SeasonId);
-
-            if (ParticipationTiers.Length > 0)
-                query = query.Where(ps => ParticipationTiers.Contains(ps.ParticipationTier));
-
-            return query;
-        }
+        return query;
     }
 }

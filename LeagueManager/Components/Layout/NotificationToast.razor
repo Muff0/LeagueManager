@@ -1,6 +1,5 @@
 @inject NotificationService Notifications
 @inject ILogger<NotificationToast> Logger
-@using LeagueManager.Services
 @using LeagueManager.ViewModel
 @using Shared.Notifications
 @implements IDisposable
@@ -21,7 +20,8 @@
                 {
                     <div class="toast__detail">@n.Message.Detail</div>
                 }
-                <div class="toast__meta">@n.Message.Source · @n.Message.Timestamp.ToLocalTime().ToString("HH:mm:ss")</div>
+                <div
+                    class="toast__meta">@n.Message.Source · @n.Message.Timestamp.ToLocalTime().ToString("HH:mm:ss")</div>
             </div>
         </div>
     }
@@ -45,13 +45,16 @@
         border-radius: 6px;
         overflow: hidden;
         background: #1e1e2e;
-        box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
         pointer-events: all;
         font-family: 'Consolas', 'Fira Mono', monospace;
         font-size: 0.8rem;
     }
 
-    .toast__bar { width: 4px; flex-shrink: 0; }
+    .toast__bar {
+        width: 4px;
+        flex-shrink: 0;
+    }
 
     .toast__body {
         flex: 1;
@@ -62,8 +65,15 @@
         min-width: 0;
     }
 
-    .toast__header { display: flex; align-items: center; gap: 0.4rem; }
-    .toast__icon { font-size: 0.85rem; }
+    .toast__header {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .toast__icon {
+        font-size: 0.85rem;
+    }
 
     .toast__title {
         font-weight: 600;
@@ -85,7 +95,9 @@
         flex-shrink: 0;
     }
 
-    .toast__close:hover { color: #e2e8f0; }
+    .toast__close:hover {
+        color: #e2e8f0;
+    }
 
     .toast__detail {
         color: #94a3b8;
@@ -99,22 +111,51 @@
         margin-top: 0.1rem;
     }
 
-    .toast--success .toast__bar { background: #22c55e; }
-    .toast--error   .toast__bar { background: #ef4444; }
-    .toast--warning .toast__bar { background: #f59e0b; }
-    .toast--info    .toast__bar { background: #3b82f6; }
+    .toast--success .toast__bar {
+        background: #22c55e;
+    }
+
+    .toast--error .toast__bar {
+        background: #ef4444;
+    }
+
+    .toast--warning .toast__bar {
+        background: #f59e0b;
+    }
+
+    .toast--info .toast__bar {
+        background: #3b82f6;
+    }
 
     @@keyframes slideIn {
-        from { opacity: 0; transform: translateX(120%); }
-        to   { opacity: 1; transform: translateX(0); }
-    }
-    @@keyframes slideOut {
-        from { opacity: 1; transform: translateX(0); }
-        to   { opacity: 0; transform: translateX(120%); }
+        from {
+            opacity: 0;
+            transform: translateX(120%);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
-    .toast--enter { animation: slideIn 0.22s ease forwards; }
-    .toast--exit  { animation: slideOut 0.22s ease forwards; }
+    @@keyframes slideOut {
+        from {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(120%);
+        }
+    }
+
+    .toast--enter {
+        animation: slideIn 0.22s ease forwards;
+    }
+
+    .toast--exit {
+        animation: slideOut 0.22s ease forwards;
+    }
 </style>
 
 @code {
@@ -163,15 +204,20 @@
     }
 
     private void Remove(ToastEntry entry)
-        => _ = InvokeAsync(() => DismissAsync(entry));
-
-    private static string Icon(NotificationLevel level) => level switch
     {
-        NotificationLevel.Success => "✓",
-        NotificationLevel.Error   => "✕",
-        NotificationLevel.Warning => "⚠",
-        _                         => "ℹ",
-    };
+        _ = InvokeAsync(() => DismissAsync(entry));
+    }
+
+    private static string Icon(NotificationLevel level)
+    {
+        return level switch
+        {
+            NotificationLevel.Success => "✓",
+            NotificationLevel.Error => "✕",
+            NotificationLevel.Warning => "⚠",
+            _ => "ℹ"
+        };
+    }
 
     public void Dispose()
     {
@@ -179,4 +225,5 @@
         _disposed = true;
         Notifications.OnNotification -= HandleNotification;
     }
+
 }

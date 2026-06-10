@@ -5,8 +5,8 @@ namespace Shared.Extensions;
 
 public static class ICommandPayloadExtensions
 {
-    
-    public static string SerializePayload(this ICommandPayload payload) 
-        => JsonConvert.SerializeObject(payload);
-    
+    public static string SerializePayload(this ICommandPayload payload)
+    {
+        return JsonConvert.SerializeObject(payload);
+    }
 }

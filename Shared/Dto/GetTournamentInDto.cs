@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto
+﻿namespace Shared.Dto;
+
+public class GetTournamentInDto
 {
-    public class GetTournamentInDto
-    {
-        public string TournamentName { get; set; } = string.Empty;
-    }
+    public string TournamentName { get; set; } = string.Empty;
 }

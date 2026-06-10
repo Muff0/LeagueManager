@@ -1,25 +1,31 @@
 using Data;
 using Data.Commands.Match;
 using Data.Model;
+using Data.Queries;
 using Discord;
-using LeagueCoreService.Services;
 using Microsoft.Extensions.Options;
 using Shared.Dto.Discord;
 using Shared.Settings;
 
 namespace LeagueCoreService.Queue;
 
-public class PostUpcomingMatchesHandler(LeagueDataService leagueDataService,
+public class PostUpcomingMatchesHandler(
+    LeagueDataService leagueDataService,
     ILogger<PostUpcomingMatchesHandler> logger,
     DiscordService discordService,
-    IOptions<SchedulerSettings> settings) 
+    IOptions<SchedulerSettings> settings)
     : ICommandHandler
 {
     public string CommandType => "PostUpcomingMatches";
-    
-    public async Task<Data.Model.Match[]> GetUpcomingMatches()
+
+    public async Task HandleAsync(CommandMessage cmd)
     {
-        var query = new Data.Queries.GetMatchesByTimeQuery()
+        await SendUpcomingMatchesNotification();
+    }
+
+    public async Task<Match[]> GetUpcomingMatches()
+    {
+        var query = new GetMatchesByTimeQuery
         {
             InlcudePlayers = true,
             IncludeCompleted = false,
@@ -44,20 +50,18 @@ public class PostUpcomingMatchesHandler(LeagueDataService leagueDataService,
             if (resm.Length == 0)
                 return;
             var dto = resm.Select(mm => mm.ToMatchDto()).ToArray();
-            await discordService.SendUpcomingMatchesNotification(new SendUpcomingMatchesNotificationInDto()
+            await discordService.SendUpcomingMatchesNotification(new SendUpcomingMatchesNotificationInDto
             {
                 Matches = dto
             });
-            await leagueDataService.ExecuteAsync(new SetMatchesNotifiedCommand()
+            await leagueDataService.ExecuteAsync(new SetMatchesNotifiedCommand
             {
                 Matches = dto
             });
         }
         catch (Exception ex)
         {
-            logger.LogError(ex,ex.Message);
+            logger.LogError(ex, ex.Message);
         }
     }
-    public async Task HandleAsync(CommandMessage cmd)
-        => await SendUpcomingMatchesNotification();
 }

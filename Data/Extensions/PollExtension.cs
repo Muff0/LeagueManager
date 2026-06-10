@@ -5,8 +5,8 @@ namespace Data;
 
 public static class PollExtension
 {
-    
-    public static T? GetPayload<T>(this Poll cm) 
-        => JsonConvert.DeserializeObject<T>(cm.Payload);
-
+    public static T? GetPayload<T>(this Poll cm)
+    {
+        return JsonConvert.DeserializeObject<T>(cm.Payload);
+    }
 }

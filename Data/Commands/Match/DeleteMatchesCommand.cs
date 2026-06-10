@@ -1,22 +1,18 @@
-﻿namespace Data.Commands.Match
+﻿namespace Data.Commands.Match;
+
+public class DeleteMatchesCommand : Command<LeagueContext>
 {
-    public class DeleteMatchesCommand : Command<LeagueContext>
+    public int[] MatchIds { get; set; } = [];
+
+    protected override void RunAction(LeagueContext context)
     {
-        public int[] MatchIds { get; set; } = [];
+        base.RunAction(context);
 
-        protected override void RunAction(LeagueContext context)
+        foreach (var id in MatchIds)
         {
-            base.RunAction(context);
+            var existing = context.Matches.FirstOrDefault(mm => mm.Id == id);
 
-            foreach (var id in MatchIds)
-            {
-                var existing = context.Matches.FirstOrDefault(mm => mm.Id == id);
-
-                if (existing != null)
-                {
-                    context.Matches.Remove(existing);
-                }
-            }
+            if (existing != null) context.Matches.Remove(existing);
         }
     }
 }

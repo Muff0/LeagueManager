@@ -1,12 +1,11 @@
 ﻿using Data.Model;
 
-namespace Data.Queries
+namespace Data.Queries;
+
+public class GetTeachersQuery : Query<LeagueContext, Teacher>
 {
-    public class GetTeachersQuery : Query<LeagueContext, Teacher>
+    public override IQueryable<Teacher> BuildQuery(LeagueContext context)
     {
-        public override IQueryable<Teacher> BuildQuery(LeagueContext context)
-        {
-            return base.BuildQuery(context);
-        }
+        return base.BuildQuery(context);
     }
 }

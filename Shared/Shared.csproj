@@ -1,48 +1,48 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-  </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.10" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.8" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.10" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="10.0.8" />
-    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.5-beta1" />
-  </ItemGroup>
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.10"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Common" Version="10.0.8"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.2.10"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.Json" Version="10.0.8"/>
+        <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.8"/>
+        <PackageReference Include="Newtonsoft.Json" Version="13.0.5-beta1"/>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="MailTemplates.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>MailTemplates.resx</DependentUpon>
-    </Compile>
-    <Compile Update="Templates.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Templates.resx</DependentUpon>
-    </Compile>
-  </ItemGroup>
+    <ItemGroup>
+        <Compile Update="MailTemplates.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>MailTemplates.resx</DependentUpon>
+        </Compile>
+        <Compile Update="Templates.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Templates.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Update="MailTemplates.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>MailTemplates.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="Templates.resx">
-      <Generator>PublicResXFileCodeGenerator</Generator>
-      <LastGenOutput>Templates.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
+    <ItemGroup>
+        <EmbeddedResource Update="MailTemplates.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>MailTemplates.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Templates.resx">
+            <Generator>PublicResXFileCodeGenerator</Generator>
+            <LastGenOutput>Templates.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
 
-  <ItemGroup>
-    <Reference Include="Microsoft.Extensions.Logging.Abstractions">
-      <HintPath>..\..\..\.nuget\packages\microsoft.extensions.logging.abstractions\10.0.3\lib\net10.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
-    </Reference>
-  </ItemGroup>
+    <ItemGroup>
+        <Reference Include="Microsoft.Extensions.Logging.Abstractions">
+            <HintPath>..\..\..\.nuget\packages\microsoft.extensions.logging.abstractions\10.0.3\lib\net10.0\Microsoft.Extensions.Logging.Abstractions.dll</HintPath>
+        </Reference>
+    </ItemGroup>
 
 </Project>

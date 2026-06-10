@@ -1,12 +1,10 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace Shared.Dto.OGS
+namespace Shared.Dto.OGS;
+
+public class GetPlayersResult
 {
-    public class GetPlayersResult
-    {
-        [JsonPropertyName("count")]
-        public int Count { get; set; }
-        [JsonPropertyName("results")]
-        public OGSPlayer[] Results{ get; set; }
-    }
+    [JsonPropertyName("count")] public int Count { get; set; }
+
+    [JsonPropertyName("results")] public OGSPlayer[] Results { get; set; }
 }

@@ -1,25 +1,25 @@
 ﻿using Shared.Dto;
 
-namespace Data.Commands.Player
+namespace Data.Commands.Player;
+
+public class UpdatePlayerSeasons : Command<LeagueContext>
 {
-    public class UpdatePlayerSeasons : Command<LeagueContext>
+    public PlayerRegistrationDto[] PlayerRegistrations { get; set; } = [];
+
+    protected override void RunAction(LeagueContext context)
     {
-        public PlayerRegistrationDto[] PlayerRegistrations { get; set; } = [];
+        base.RunAction(context);
 
-        protected override void RunAction(LeagueContext context)
+        foreach (var player in PlayerRegistrations)
         {
-            base.RunAction(context);
+            var existingPlayerSeason = context.PlayerSeasons.FirstOrDefault(ps =>
+                ps.PlayerId == player.PlayerId && ps.SeasonId == player.SeasonId);
 
-            foreach (var player in PlayerRegistrations)
-            {
-                var existingPlayerSeason = context.PlayerSeasons.FirstOrDefault(ps => ps.PlayerId == player.PlayerId && ps.SeasonId == player.SeasonId);
+            if (existingPlayerSeason == null)
+                continue;
 
-                if (existingPlayerSeason == null)
-                    continue;
-
-                existingPlayerSeason.ParticipationTier = player.PlayerParticipationTier;
-                existingPlayerSeason.PaymentStatus = player.PlayerPaymentStatus;
-            }
+            existingPlayerSeason.ParticipationTier = player.PlayerParticipationTier;
+            existingPlayerSeason.PaymentStatus = player.PlayerPaymentStatus;
         }
     }
 }

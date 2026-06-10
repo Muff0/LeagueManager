@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto
+﻿namespace Shared.Dto;
+
+public class GetLeagueOutDto
 {
-    public class GetLeagueOutDto
-    {
-        public LeagueDto? Result { get; set; }
-    }
+    public LeagueDto? Result { get; set; }
 }

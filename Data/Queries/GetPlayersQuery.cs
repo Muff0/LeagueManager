@@ -1,32 +1,31 @@
 ﻿using Data.Model;
 using Microsoft.EntityFrameworkCore;
 
-namespace Data.Queries
+namespace Data.Queries;
+
+public class GetPlayersQuery : Query<LeagueContext, Player>
 {
-    public class GetPlayersQuery : Query<LeagueContext, Player>
+    public bool IncludePlayerSeasons { get; set; } = false;
+    public bool IncludePlayerMatches { get; set; } = false;
+
+    public int SeasonId { get; set; } = 0;
+
+    public override IQueryable<Player> BuildQuery(LeagueContext context)
     {
-        public bool IncludePlayerSeasons { get; set; } = false;
-        public bool IncludePlayerMatches { get; set; } = false;
+        var query = base.BuildQuery(context);
 
-        public int SeasonId { get; set; } = 0;
+        if (IncludePlayerSeasons)
+            query = query.Include(mm => mm.PlayerSeasons);
 
-        public override IQueryable<Player> BuildQuery(LeagueContext context)
-        {
-            var query = base.BuildQuery(context);
+        if (IncludePlayerMatches)
+            query = query.Include(mm => mm.PlayerMatches);
 
-            if (IncludePlayerSeasons)
-                query = query.Include(mm => mm.PlayerSeasons);
+        if (SeasonId != 0)
+            query = query.Where(pl => pl.PlayerSeasons.Any(pl => pl.SeasonId == SeasonId));
 
-            if (IncludePlayerMatches)
-                query = query.Include(mm => mm.PlayerMatches);
+        if (OrderResults)
+            query = query.OrderBy(pl => pl.LastName).ThenBy(pl => pl.LastName);
 
-            if (SeasonId != 0)
-                query = query.Where(pl => pl.PlayerSeasons.Any(pl => pl.SeasonId == SeasonId));
-
-            if (OrderResults)
-                query = query.OrderBy(pl => pl.LastName).ThenBy(pl => pl.LastName);
-
-            return query;
-        }
+        return query;
     }
 }

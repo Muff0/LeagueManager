@@ -1,14 +1,13 @@
 ﻿using Data.Model;
 using Shared.Dto;
 
-namespace Data
+namespace Data;
+
+public static class ReviewExtensions
 {
-    public static class ReviewExtensions
+    public static ReviewDto ToReviewDto(this Review review)
     {
-
-
-
-        public static ReviewDto ToReviewDto(this Review review) => new ReviewDto()
+        return new ReviewDto
         {
             Id = review.Id,
             ReviewStatus = review.ReviewStatus,

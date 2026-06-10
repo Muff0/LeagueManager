@@ -1,22 +1,22 @@
 ﻿using Data.Model;
 using Shared.Dto;
 
-namespace Data
+namespace Data;
+
+public static class PlayerMatchExtensions
 {
-    public static class PlayerMatchExtensions
+    public static PlayerMatchDto ToPlayerMatchDto(this PlayerMatch playerMatch, bool skipMatch = false,
+        bool skipPlayer = false)
     {
-        public static PlayerMatchDto ToPlayerMatchDto(this PlayerMatch playerMatch, bool skipMatch = false, bool skipPlayer = false)
+        return new PlayerMatchDto
         {
-            return new PlayerMatchDto()
-            {
-                PlayerId = playerMatch.PlayerId,
-                MatchId = playerMatch.MatchId,
-                Player = skipPlayer ? null : playerMatch.Player?.ToPlayerDto(),
-                Match = skipMatch ? null : playerMatch.Match?.ToMatchDto(),
-                HasConfirmed = playerMatch.HasConfirmed,
-                Color = playerMatch.Color,
-                Outcome = playerMatch.Outcome,
-            };
-        }
+            PlayerId = playerMatch.PlayerId,
+            MatchId = playerMatch.MatchId,
+            Player = skipPlayer ? null : playerMatch.Player?.ToPlayerDto(),
+            Match = skipMatch ? null : playerMatch.Match?.ToMatchDto(),
+            HasConfirmed = playerMatch.HasConfirmed,
+            Color = playerMatch.Color,
+            Outcome = playerMatch.Outcome
+        };
     }
 }

@@ -1,6 +1,7 @@
 ﻿@page "/orders"
+@using LeagueManager.Services
 @using Shared.Dto
-@inject Services.MainService MainService
+@inject MainService MainService
 @rendermode InteractiveServer
 
 <PageTitle>Orders</PageTitle>
@@ -8,17 +9,17 @@
 <h1>Orders</h1>
 
 
-<InputFile OnChange="OnFileUploaded" />
+<InputFile OnChange="OnFileUploaded"/>
 
 
 <button class="btn btn-primary" @onclick="GetMissingPayments">Get Missing Payments</button>
 
-<HxGrid @ref="_missingRegistrationsGrid" TItem="PaymentDataDto" 
+<HxGrid @ref="_missingRegistrationsGrid" TItem="PaymentDataDto"
         DataProvider="GetGridData"
         MultiSelectionEnabled="true" PageSize="300" Responsive="true">
     <Columns>
-        <HxGridColumn HeaderText="Player" ItemTextSelector="rev => rev.BillingName" />
-        <HxGridColumn HeaderText="Billing Mail" ItemTextSelector="rev => rev.BillingEmail" />
+        <HxGridColumn HeaderText="Player" ItemTextSelector="rev => rev.BillingName"/>
+        <HxGridColumn HeaderText="Billing Mail" ItemTextSelector="rev => rev.BillingEmail"/>
         <HxGridColumn HeaderText="User Mail" ItemTextSelector="rev => rev.UserEmail"/>
         <HxGridColumn HeaderText="Go Magic Id" ItemTextSelector="rev => rev.UserId.ToString()"/>
     </Columns>
@@ -32,28 +33,30 @@
     private IEnumerable<PaymentDataDto> missingPayments;
     private string _missingpayments = "...";
 
-    private async  void GetMissingPayments()
+    private async void GetMissingPayments()
     {
         var resMp = await MainService.GetMissingPayments();
 
         _missingpayments = string.Join("; ", resMp.Select(pl => pl.EmailAddress));
     }
 
-    
+
     private Task<GridDataProviderResult<PaymentDataDto>> GetGridData(GridDataProviderRequest<PaymentDataDto> request)
     {
         return Task.FromResult(request.ApplyTo(missingPayments));
     }
+
     private async void OnFileUploaded(InputFileChangeEventArgs e)
     {
-            var file = e.File;
-            if (file is not null)
-            {
-                using var stream = file.OpenReadStream(maxAllowedSize: 10_000_000); // 10 MB limit
-                var result = await MainService.UploadOrdersFile(stream);
+        var file = e.File;
+        if (file is not null)
+        {
+            using var stream = file.OpenReadStream(10_000_000); // 10 MB limit
+            var result = await MainService.UploadOrdersFile(stream);
 
-                missingPayments = result.MissingRegistrations.Concat(result.NoMatches);
-                await _missingRegistrationsGrid.RefreshDataAsync();
-            }
+            missingPayments = result.MissingRegistrations.Concat(result.NoMatches);
+            await _missingRegistrationsGrid.RefreshDataAsync();
+        }
     }
+
 }

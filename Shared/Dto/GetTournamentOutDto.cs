@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto
+﻿namespace Shared.Dto;
+
+public class GetTournamentOutDto
 {
-    public class GetTournamentOutDto
-    {
-        public TournamentDto? Result { get; set; }
-    }
+    public TournamentDto? Result { get; set; }
 }

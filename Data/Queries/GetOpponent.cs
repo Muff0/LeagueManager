@@ -2,7 +2,7 @@ using Data.Model;
 
 namespace Data.Queries;
 
-public class GetOpponentQuery :Scalar<LeagueContext,Player>
+public class GetOpponentQuery : Scalar<LeagueContext, Player>
 {
     public int PlayerId { get; set; }
     public int Round { get; set; }

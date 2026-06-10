@@ -7,16 +7,18 @@ using Shared.Dto;
 
 namespace LeagueCoreService.Queue;
 
-public class SyncMatchesHandler(LeagueDataService leagueDataService,
-    LeagoMainService leagoService) 
+public class SyncMatchesHandler(
+    LeagueDataService leagueDataService,
+    LeagoMainService leagoService)
     : ICommandHandler
 {
     public string CommandType => "SyncMatches";
-    
+
     public async Task HandleAsync(CommandMessage cmd)
-        => await SyncMatches();
-    
-    
+    {
+        await SyncMatches();
+    }
+
 
     public async Task SyncMatchesForRound(int round)
     {
@@ -24,7 +26,7 @@ public class SyncMatchesHandler(LeagueDataService leagueDataService,
         if (activeSeason == null)
             return;
 
-        var getMatchesRes = await leagoService.GetMatches(new GetMatchesInDto()
+        var getMatchesRes = await leagoService.GetMatches(new GetMatchesInDto
         {
             RoundKey = round,
             TournamentKey = activeSeason.LeagoL2Key,
@@ -32,20 +34,18 @@ public class SyncMatchesHandler(LeagueDataService leagueDataService,
         });
 
         if (getMatchesRes != null)
-        {
             await leagueDataService.ExecuteAsync(
-                new AddOrUpdateMatchesCommand()
+                new AddOrUpdateMatchesCommand
                 {
                     ToUpdate = getMatchesRes.Matches,
                     SeasonId = activeSeason.Id,
                     Round = round
                 });
-        }
     }
 
     private async Task SyncMatches()
     {
-            for (int ii = 0; ii < 5; ii++)
-                await SyncMatchesForRound(ii + 1);
+        for (var ii = 0; ii < 5; ii++)
+            await SyncMatchesForRound(ii + 1);
     }
 }

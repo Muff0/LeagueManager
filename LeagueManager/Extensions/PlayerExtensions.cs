@@ -2,11 +2,13 @@
 using LeagueManager.ViewModel;
 using Shared.Dto;
 
-namespace LeagueManager.Extensions
+namespace LeagueManager.Extensions;
+
+public static class PlayerExtensions
 {
-    public static class PlayerExtensions
+    public static PlayerViewModel ToPlayerViewModel(this Player player)
     {
-        public static PlayerViewModel ToPlayerViewModel(this Player player) => new PlayerViewModel()
+        return new PlayerViewModel
         {
             Id = player.Id,
             LeagoMemberId = player.LeagoMemberId,
@@ -17,23 +19,24 @@ namespace LeagueManager.Extensions
             FirstName = player.FirstName,
             LastName = player.LastName,
             LeagoKey = player.LeagoKey,
-            Rank = player.Rank,
+            Rank = player.Rank
         };
-        public static PlayerDto ToPlayerDto(this PlayerViewModel player)
+    }
+
+    public static PlayerDto ToPlayerDto(this PlayerViewModel player)
+    {
+        return new PlayerDto
         {
-            return new PlayerDto()
-            {
-                Id = player.Id,
-                LeagoMemberId = player.LeagoMemberId,
-                OGSHandle = player.OgsHandle,
-                DiscordHandle = player.DiscordHandle,
-                DiscordId = player.DiscordId,
-                EmailAddress = player.EmailAddress,
-                FirstName = player.FirstName,
-                LastName = player.LastName,
-                LeagoKey = player.LeagoKey,
-                Rank = player.Rank,
-            };
-        }
+            Id = player.Id,
+            LeagoMemberId = player.LeagoMemberId,
+            OGSHandle = player.OgsHandle,
+            DiscordHandle = player.DiscordHandle,
+            DiscordId = player.DiscordId,
+            EmailAddress = player.EmailAddress,
+            FirstName = player.FirstName,
+            LastName = player.LastName,
+            LeagoKey = player.LeagoKey,
+            Rank = player.Rank
+        };
     }
 }

@@ -2,8 +2,8 @@ namespace Shared.Settings;
 
 public class SchedulerSettings
 {
-    public DayOfWeek PollPostDay { get; set; }   // e.g. "Monday"
-    public int PollPostHour { get; set; }          // e.g. 9 (UTC)
+    public DayOfWeek PollPostDay { get; set; } // e.g. "Monday"
+    public int PollPostHour { get; set; } // e.g. 9 (UTC)
     public int SyncMatchesIntervalMinutes { get; set; } = 60;
     public int SendUpcomingMatchesIntervalMinutes { get; set; } = 15;
     public int UpcomingMatchesTimeSpanMinutes { get; set; } = 15;

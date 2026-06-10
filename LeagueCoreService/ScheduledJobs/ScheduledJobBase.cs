@@ -6,21 +6,23 @@ using Shared.Services;
 
 namespace LeagueCoreService.ScheduledJobs;
 
-public abstract class ScheduledJobBase<T>(QueueDataService queueDataService, T schedulerService) : IScheduledJob where T : IJobSchedulerService
+public abstract class ScheduledJobBase<T>(QueueDataService queueDataService, T schedulerService)
+    : IScheduledJob where T : IJobSchedulerService
 {
-
     public DateTime LastRun { get; protected set; } = DateTime.MinValue;
-    
+
+    public abstract string Command { get; }
+
     public virtual Task<bool> ShouldRun(DateTime now)
-    {   
+    {
         var nextOccurrence = schedulerService.GetNextOccurrence(LastRun, now);
         return Task.FromResult(now >= nextOccurrence);
     }
-    
-    
+
+
     public virtual async Task Init()
     {
-        var lastRun = await queueDataService.RunQueryAsync(new GetCommandMessageLastRunQuery()
+        var lastRun = await queueDataService.RunQueryAsync(new GetCommandMessageLastRunQuery
         {
             CommandMessageType = Command
         });
@@ -28,34 +30,31 @@ public abstract class ScheduledJobBase<T>(QueueDataService queueDataService, T s
             LastRun = lastRun.ProcessedAtUtc;
     }
 
-    public abstract string Command { get; }
 
-    protected virtual string BuildPayload()
-    {
-        return "";
-    }
-
-    
     public async Task Enqueue()
     {
-        var command = new CommandMessage()
+        var command = new CommandMessage
         {
             CreatedAtUtc = DateTime.UtcNow,
             Type = Command,
             Payload = BuildPayload()
         };
 
-        await queueDataService.ExecuteAsync(new InsertCommandMessageCommand()
+        await queueDataService.ExecuteAsync(new InsertCommandMessageCommand
         {
-            NewCommand = command,
+            NewCommand = command
         });
 
         LastRun = DateTime.Now;
         await OnEnqueued();
     }
 
-    public async virtual Task OnEnqueued()
+    protected virtual string BuildPayload()
     {
-        return;
+        return "";
+    }
+
+    public virtual async Task OnEnqueued()
+    {
     }
 }

@@ -1,8 +1,7 @@
-﻿namespace LeagueManager.ViewModel
+﻿namespace LeagueManager.ViewModel;
+
+public class NotificationViewModel
 {
-    public class NotificationViewModel
-    {
-        public int Round { get; set; } = 1;
-        public DateTime? Deadline { get; set; } = DateTime.Now;
-    }
+    public int Round { get; set; } = 1;
+    public DateTime? Deadline { get; set; } = DateTime.Now;
 }

@@ -29,6 +29,8 @@ public class InteractionHandler(
             await interaction.SendResponseAsync(
                 InteractionCallback.Message(failResult.Message));
         }
-        catch { }
+        catch
+        {
+        }
     }
 }

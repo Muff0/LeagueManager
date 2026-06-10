@@ -3,74 +3,71 @@ using Duende.IdentityModel.OidcClient;
 using Microsoft.Extensions.Options;
 using Shared.Settings;
 
-namespace LeagoService
+namespace LeagoService;
+
+public class LeagoAuthenticatedHttpHandler : DelegatingHandler
 {
-    public class LeagoAuthenticatedHttpHandler : DelegatingHandler
+    private readonly ITokenProvider _tokenProvider;
+
+    public LeagoAuthenticatedHttpHandler(ITokenProvider tokenProvider)
     {
-        private readonly ITokenProvider _tokenProvider;
-
-        public LeagoAuthenticatedHttpHandler(ITokenProvider tokenProvider)
-        {
-            _tokenProvider = tokenProvider;
-        }
-
-        protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            var token = await _tokenProvider.GetAccessTokenAsync();
-            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            return await base.SendAsync(request, cancellationToken);
-        }
+        _tokenProvider = tokenProvider;
     }
 
-    public class LeagoTokenProvider : ITokenProvider
+    protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request,
+        CancellationToken cancellationToken)
     {
-        private readonly OidcClient _oidcClient;
-        private readonly IOptions<LeagoSettings> _leagoOptions;
-        private string? _accessToken;
-        private DateTimeOffset _expiresAt;
-        private OidcClientOptions _clientOptions;
-        private readonly string _authority = "https://id.leago.gg/";
+        var token = await _tokenProvider.GetAccessTokenAsync();
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        return await base.SendAsync(request, cancellationToken);
+    }
+}
 
-        public LeagoTokenProvider(IOptions<LeagoSettings> leagoOptions)
+public class LeagoTokenProvider : ITokenProvider
+{
+    private readonly string _authority = "https://id.leago.gg/";
+    private readonly OidcClientOptions _clientOptions;
+    private readonly IOptions<LeagoSettings> _leagoOptions;
+    private readonly OidcClient _oidcClient;
+    private string? _accessToken;
+    private DateTimeOffset _expiresAt;
+
+    public LeagoTokenProvider(IOptions<LeagoSettings> leagoOptions)
+    {
+        _leagoOptions = leagoOptions;
+
+        var browser = new SystemBrowser(63136);
+        var redirectUri = string.Format($"http://127.0.0.1:{browser.Port}");
+
+        _clientOptions = new OidcClientOptions
         {
-            _leagoOptions = leagoOptions;
+            Authority = _authority,
+            ClientId = "leago.public",
+            // ClientId = "interactive.public",
+            RedirectUri = redirectUri,
+            // Scope = "openid profile api",
+            Scope = "openid profile Leago.WebAPI",
+            FilterClaims = false,
+            Browser = browser
+        };
 
-            var browser = new SystemBrowser(63136);
-            string redirectUri = string.Format($"http://127.0.0.1:{browser.Port}");
-
-            _clientOptions = new OidcClientOptions
-            {
-                Authority = _authority,
-                ClientId = "leago.public",
-                // ClientId = "interactive.public",
-                RedirectUri = redirectUri,
-                // Scope = "openid profile api",
-                Scope = "openid profile Leago.WebAPI",
-                FilterClaims = false,
-                Browser = browser,
-            };
-
-            _oidcClient = new OidcClient(_clientOptions);
-        }
-
-        public async Task<string> GetAccessTokenAsync()
-        {
-            if (!string.IsNullOrEmpty(_accessToken) && DateTime.UtcNow < _expiresAt)
-            {
-                return _accessToken!;
-            }
-
-            var loginResult = await _oidcClient.LoginAsync();
-
-            _accessToken = loginResult.AccessToken;
-            _expiresAt = loginResult.AccessTokenExpiration;
-
-            return _accessToken!;
-        }
+        _oidcClient = new OidcClient(_clientOptions);
     }
 
-    public interface ITokenProvider
+    public async Task<string> GetAccessTokenAsync()
     {
-        Task<string> GetAccessTokenAsync();
+        if (!string.IsNullOrEmpty(_accessToken) && DateTime.UtcNow < _expiresAt) return _accessToken!;
+
+        var loginResult = await _oidcClient.LoginAsync();
+
+        _accessToken = loginResult.AccessToken;
+        _expiresAt = loginResult.AccessTokenExpiration;
+
+        return _accessToken!;
     }
+}
+
+public interface ITokenProvider
+{
+    Task<string> GetAccessTokenAsync();
 }

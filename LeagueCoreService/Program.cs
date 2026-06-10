@@ -2,6 +2,7 @@ using Data;
 using Discord;
 using Discord.Logging;
 using LeagoClient;
+using LeagoService;
 using LeagueCoreService;
 using LeagueCoreService.Queue;
 using LeagueCoreService.ScheduledJobs;
@@ -68,11 +69,11 @@ var logConfig = new LoggerConfiguration()
 if (!string.IsNullOrEmpty(discordSettings.AlertWebhookUrl))
     logConfig.WriteTo.WriteToDiscordWebhook(
         discordSettings.AlertWebhookUrl,
-        minimumLevel: LogEventLevel.Error);
+        LogEventLevel.Error);
 
 Log.Logger = logConfig.CreateLogger();
 
-builder.Services.AddSingleton<ILoggerFactory>(new SerilogLoggerFactory(Log.Logger, dispose: true));
+builder.Services.AddSingleton<ILoggerFactory>(new SerilogLoggerFactory(Log.Logger, true));
 builder.Services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
 
 // Read connection string from appsettings.json
@@ -100,12 +101,12 @@ builder.Services.AddDbContextFactory<QueueContext>(options =>
 
 builder.Services.AddSingleton<LeagueDataService>();
 builder.Services.AddSingleton<QueueDataService>();
-builder.Services.AddScoped<LeagoService.LeagoMainService>();
+builder.Services.AddScoped<LeagoMainService>();
 builder.Services.AddScoped<MailService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<OGSService>();
 builder.Services.AddScoped<MainService>();
-builder.Services.AddScoped<Discord.DiscordService>();
+builder.Services.AddScoped<DiscordService>();
 builder.Services.AddScoped<CommandOrchestrator>();
 
 builder.Services.AddSingleton<PollSchedulerService>();
@@ -123,14 +124,11 @@ builder.Services.AddScoped<MailService>();
 // Start the Discord service
 
 
-builder.Services.AddDiscordGateway(o =>
-    {
-        o.Token = discordSettings.Token;
-    })
+builder.Services.AddDiscordGateway(o => { o.Token = discordSettings.Token; })
     .AddApplicationCommands<ApplicationCommandInteraction, ApplicationCommandContext>()
     .AddGatewayHandlers(typeof(InteractionHandler).Assembly);
 
-builder.Services.AddScoped<LeagueCoreService.Services.MainService>();
+builder.Services.AddScoped<MainService>();
 
 typeof(QueueWorker).Assembly.GetTypes()
     .Where(t => !t.IsAbstract && typeof(ICommandHandler).IsAssignableFrom(t))
@@ -141,7 +139,7 @@ typeof(QueueWorker).Assembly.GetTypes()
 typeof(QueueWorker).Assembly.GetTypes()
     .Where(t => !t.IsAbstract && typeof(IScheduledJob).IsAssignableFrom(t))
     .ToList()
-    .ForEach(t => builder.Services.AddSingleton( t));
+    .ForEach(t => builder.Services.AddSingleton(t));
 
 builder.Services.AddHostedService<QueueWorker>();
 builder.Services.AddHostedService<SchedulerWorker>();
@@ -160,8 +158,7 @@ using (var scope = host.Services.CreateScope())
     const int maxRetries = 10;
     var delay = TimeSpan.FromSeconds(3);
 
-    for (int i = 0; i < maxRetries; i++)
-    {
+    for (var i = 0; i < maxRetries; i++)
         try
         {
             var queueDb = services.GetRequiredService<QueueContext>();
@@ -180,6 +177,6 @@ using (var scope = host.Services.CreateScope())
             Console.WriteLine($"Migration failed. Retrying in {delay.TotalSeconds}s...");
             Thread.Sleep(delay);
         }
-    }
 }
+
 await host.RunAsync();

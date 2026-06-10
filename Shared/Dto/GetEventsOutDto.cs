@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto
+﻿namespace Shared.Dto;
+
+public class GetEventsOutDto
 {
-    public class GetEventsOutDto
-    {
-        public EventDto[] Events { get; set; } = Array.Empty<EventDto>();
-    }
+    public EventDto[] Events { get; set; } = Array.Empty<EventDto>();
 }

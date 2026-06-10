@@ -12,7 +12,6 @@ namespace LeagoService;
 
 public class SystemBrowser : IBrowser
 {
-    public int Port { get; }
     private readonly string? _path;
 
     public SystemBrowser(int? port = null, string? path = null)
@@ -20,25 +19,14 @@ public class SystemBrowser : IBrowser
         _path = path;
 
         if (!port.HasValue)
-        {
             Port = GetRandomUnusedPort();
-        }
         else
-        {
             Port = port.Value;
-        }
     }
 
-    private int GetRandomUnusedPort()
-    {
-        var listener = new TcpListener(IPAddress.Loopback, 0);
-        listener.Start();
-        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
-        listener.Stop();
-        return port;
-    }
+    public int Port { get; }
 
-    public async Task<BrowserResult> InvokeAsync(BrowserOptions options, CancellationToken cancellationToken = default(CancellationToken))
+    public async Task<BrowserResult> InvokeAsync(BrowserOptions options, CancellationToken cancellationToken = default)
     {
         using (var listener = new LoopbackHttpListener(Port, _path))
         {
@@ -47,10 +35,8 @@ public class SystemBrowser : IBrowser
             try
             {
                 var result = await listener.WaitForCallbackAsync();
-                if (String.IsNullOrWhiteSpace(result))
-                {
+                if (string.IsNullOrWhiteSpace(result))
                     return new BrowserResult { ResultType = BrowserResultType.UnknownError, Error = "Empty response." };
-                }
 
                 return new BrowserResult { Response = result, ResultType = BrowserResultType.Success };
             }
@@ -65,24 +51,26 @@ public class SystemBrowser : IBrowser
         }
     }
 
+    private int GetRandomUnusedPort()
+    {
+        var listener = new TcpListener(IPAddress.Loopback, 0);
+        listener.Start();
+        var port = ((IPEndPoint)listener.LocalEndpoint).Port;
+        listener.Stop();
+        return port;
+    }
+
     public static void OpenBrowser(string url)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-        {
             Process.Start(new ProcessStartInfo
             {
                 FileName = url,
-                UseShellExecute = true,
+                UseShellExecute = true
             });
-        }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
-        {
             Process.Start("xdg-open", url);
-        }
-        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
-        {
-            Process.Start("open", url);
-        }
+        else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) Process.Start("open", url);
     }
 }
 
@@ -90,26 +78,25 @@ public class LoopbackHttpListener : IDisposable
 {
     private const int DefaultTimeout = 60 * 5; // 5 mins (in seconds)
 
-    private IWebHost _host;
-    private TaskCompletionSource<string> _source = new TaskCompletionSource<string>();
-    private string _url;
-
-    public string Url => _url;
+    private readonly IWebHost _host;
+    private readonly TaskCompletionSource<string> _source = new();
 
     public LoopbackHttpListener(int port, string? path = null)
     {
-        path = path ?? String.Empty;
+        path = path ?? string.Empty;
         if (path.StartsWith("/")) path = path.Substring(1);
 
-        _url = $"http://127.0.0.1:{port}/{path}";
+        Url = $"http://127.0.0.1:{port}/{path}";
 
         _host = new WebHostBuilder()
             .UseKestrel()
-            .UseUrls(_url)
+            .UseUrls(Url)
             .Configure(Configure)
             .Build();
         _host.Start();
     }
+
+    public string Url { get; }
 
     public void Dispose()
     {
@@ -132,18 +119,15 @@ public class LoopbackHttpListener : IDisposable
             }
             else if (ctx.Request.Method == "POST")
             {
-                if (ctx.Request.ContentType?.Equals("application/x-www-form-urlencoded", StringComparison.OrdinalIgnoreCase) == false)
-                {
+                if (ctx.Request.ContentType?.Equals("application/x-www-form-urlencoded",
+                        StringComparison.OrdinalIgnoreCase) == false)
                     ctx.Response.StatusCode = 415;
-                }
                 else
-                {
                     using (var sr = new StreamReader(ctx.Request.Body, Encoding.UTF8))
                     {
                         var body = await sr.ReadToEndAsync();
                         await SetResultAsync(body, ctx);
                     }
-                }
             }
             else
             {

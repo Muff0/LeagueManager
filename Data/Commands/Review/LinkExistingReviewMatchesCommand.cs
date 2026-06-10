@@ -1,30 +1,28 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Data.Commands.Review
+namespace Data.Commands.Review;
+
+/// <summary>
+///     Links reviews to the corresponding Matches, if they exist
+/// </summary>
+public class LinkExistingReviewMatchesCommand : Command<LeagueContext>
 {
-
-    /// <summary>
-    /// Links reviews to the corresponding Matches, if they exist
-    /// </summary>
-    public class LinkExistingReviewMatchesCommand : Command<LeagueContext>
+    protected override void RunAction(LeagueContext context)
     {
-        protected override void RunAction(LeagueContext context)
+        base.RunAction(context);
+
+        // Just take the unassigned ones
+        var reviews = context.Reviews.Where(re => re.MatchId == null).ToList();
+
+        foreach (var review in reviews)
         {
-            base.RunAction(context);
+            var match = context.PlayerMatches.Include(pm => pm.Match)
+                .FirstOrDefault(pm => pm.PlayerId == review.OwnerPlayerId
+                                      && pm.Match!.Round == review.Round
+                                      && pm.Match!.SeasonId == review.SeasonId);
 
-            // Just take the unassigned ones
-            var reviews = context.Reviews.Where(re => re.MatchId == null).ToList();
-
-            foreach (var review in reviews)
-            {
-                var match = context.PlayerMatches.Include(pm => pm.Match)
-                    .FirstOrDefault(pm => pm.PlayerId == review.OwnerPlayerId
-                        && pm.Match!.Round == review.Round
-                        && pm.Match!.SeasonId == review.SeasonId);
-
-                if (match != null)
-                    review.MatchId = match.MatchId;
-            }
+            if (match != null)
+                review.MatchId = match.MatchId;
         }
     }
 }

@@ -1,26 +1,25 @@
 ﻿using Shared.Dto;
 using Shared.Enum;
 
-namespace Data.Commands.Review
+namespace Data.Commands.Review;
+
+public class SetReviewStatusCommand : Command<LeagueContext>
 {
-    public class SetReviewStatusCommand : Command<LeagueContext>
+    public ReviewStatus NewStatus { get; set; }
+    public IEnumerable<ReviewDto> ReviewList { get; set; } = [];
+
+    protected override void RunAction(LeagueContext context)
     {
-        public ReviewStatus NewStatus { get; set; }
-        public IEnumerable<ReviewDto> ReviewList { get; set; } = [];
+        base.RunAction(context);
 
-        protected override void RunAction(LeagueContext context)
+        foreach (var currentReview in ReviewList)
         {
-            base.RunAction(context);
+            var existingReview = context.Reviews.FirstOrDefault(re => re.Id == currentReview.Id);
 
-            foreach (var currentReview in ReviewList)
-            {
-                var existingReview = context.Reviews.FirstOrDefault(re => re.Id == currentReview.Id);
+            if (existingReview == null)
+                continue;
 
-                if (existingReview == null)
-                    continue;
-
-                existingReview.ReviewStatus = NewStatus;
-            }
+            existingReview.ReviewStatus = NewStatus;
         }
     }
 }

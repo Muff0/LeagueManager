@@ -1,6 +1,5 @@
 @using LeagueManager.ViewModel
 @using Shared.Enum
-
 <div class="lm-panel @(IsOpen ? "" : "hidden")">
     @if (IsOpen && Player != null)
     {
@@ -43,13 +42,13 @@
                     <label>Handle</label>
                     <input type="text" @bind="_editHandle"
                            class="@(_editHandle != Player.DiscordHandle ? "edited" : "")"
-                           placeholder="username" />
+                           placeholder="username"/>
                 </div>
                 <div class="lm-field">
                     <label>Discord ID</label>
                     <input type="text" @bind="_editDiscordId"
                            class="@(_editDiscordId != Player.DiscordId?.ToString() ? "edited" : "")"
-                           placeholder="snowflake ID" />
+                           placeholder="snowflake ID"/>
                 </div>
             </div>
 
@@ -84,7 +83,8 @@
     private string _editHandle = "";
     private string _editDiscordId = "";
 
-    private string Initials => Player is null ? ""
+    private string Initials => Player is null
+        ? ""
         : $"{Player.FirstName?[0]}{Player.LastName?[0]}".ToUpperInvariant();
 
     private bool IsDirty =>
@@ -114,8 +114,9 @@
             GoMagicUserId = Player.GoMagicUserId,
             TimeZone = Player.TimeZone,
             DiscordHandle = string.IsNullOrWhiteSpace(_editHandle) ? null : _editHandle,
-            DiscordId = ulong.TryParse(_editDiscordId, out var id) ? id : null,
+            DiscordId = ulong.TryParse(_editDiscordId, out var id) ? id : null
         };
         await OnSave.InvokeAsync(updated);
     }
+
 }

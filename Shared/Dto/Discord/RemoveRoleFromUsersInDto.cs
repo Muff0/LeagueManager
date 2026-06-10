@@ -1,8 +1,7 @@
-﻿namespace Shared.Dto.Discord
+﻿namespace Shared.Dto.Discord;
+
+public class RemoveRoleFromUsersInDto
 {
-    public class RemoveRoleFromUsersInDto
-    {
-        public ulong RoleId { get; set; }
-        public ulong[] UserIds { get; set; } = [];
-    }
+    public ulong RoleId { get; set; }
+    public ulong[] UserIds { get; set; } = [];
 }

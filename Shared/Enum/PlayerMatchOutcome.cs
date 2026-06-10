@@ -1,17 +1,16 @@
-﻿namespace Shared.Enum
+﻿namespace Shared.Enum;
+
+public enum PlayerMatchOutcome
 {
-    public enum PlayerMatchOutcome
-    {
-        NotReported = 0,
+    NotReported = 0,
 
-        Win = 1,
+    Win = 1,
 
-        Loss = 2,
+    Loss = 2,
 
-        Draw = 3,
+    Draw = 3,
 
-        Forfeit = 4,
+    Forfeit = 4,
 
-        ReportNoResult = 5,
-    }
+    ReportNoResult = 5
 }

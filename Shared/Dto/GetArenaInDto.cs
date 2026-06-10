@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto
+﻿namespace Shared.Dto;
+
+public class GetArenaInDto
 {
-    public class GetArenaInDto
-    {
-        public string ArenaKey { get; set; } = string.Empty;
-    }
+    public string ArenaKey { get; set; } = string.Empty;
 }

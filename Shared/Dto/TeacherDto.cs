@@ -1,12 +1,11 @@
 ﻿using Shared.Enum;
 
-namespace Shared.Dto
+namespace Shared.Dto;
+
+public class TeacherDto
 {
-    public class TeacherDto
-    {
-        public int Id { get; set; }
-        public string Name { get; set; } = string.Empty;
-        public PlayerRank Rank { get; set; } = PlayerRank.MinValue;
-        public ulong DiscordId { get; set; }
-    }
+    public int Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public PlayerRank Rank { get; set; } = PlayerRank.MinValue;
+    public ulong DiscordId { get; set; }
 }

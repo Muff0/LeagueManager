@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto.Discord
+﻿namespace Shared.Dto.Discord;
+
+public class SendUpcomingMatchesNotificationInDto
 {
-    public class SendUpcomingMatchesNotificationInDto
-    {
-        public MatchDto[] Matches { get; set; } = Array.Empty<MatchDto>();
-    }
+    public MatchDto[] Matches { get; set; } = Array.Empty<MatchDto>();
 }

@@ -1,20 +1,19 @@
 ﻿using Data.Model;
 
-namespace Data.Commands.Queue
+namespace Data.Commands.Queue;
+
+public class InsertCommandMessageCommand : Command<QueueContext>
 {
-    public class InsertCommandMessageCommand : Command<QueueContext>
+    public CommandMessage? NewCommand { get; set; }
+
+    protected override void RunAction(QueueContext context)
     {
-        public CommandMessage? NewCommand { get; set; }
+        base.RunAction(context);
 
-        protected override void RunAction(QueueContext context)
+        if (NewCommand != null)
         {
-            base.RunAction(context);
-
-            if (NewCommand != null)
-            {
-                NewCommand.CreatedAtUtc = DateTime.UtcNow;
-                context.Add(NewCommand);
-            }
+            NewCommand.CreatedAtUtc = DateTime.UtcNow;
+            context.Add(NewCommand);
         }
     }
 }

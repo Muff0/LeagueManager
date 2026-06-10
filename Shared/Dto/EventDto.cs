@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto
+﻿namespace Shared.Dto;
+
+public class EventDto
 {
-    public class EventDto
-    {
-        public string Name { get; set; } = String.Empty;
-    }
+    public string Name { get; set; } = string.Empty;
 }

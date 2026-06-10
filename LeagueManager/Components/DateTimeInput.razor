@@ -4,7 +4,7 @@
 <input type="datetime-local"
        class="@CssClass"
        value="@CurrentValueAsString"
-       @onchange="OnChange" />
+       @onchange="OnChange"/>
 
 @code {
     [Parameter] public TValue Value { get; set; } = default!;
@@ -20,7 +20,8 @@
                 var dt = (DateTime)(object)Value!;
                 return dt.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture);
             }
-            else if (typeof(TValue) == typeof(DateTime?))
+
+            if (typeof(TValue) == typeof(DateTime?))
             {
                 var dt = (DateTime?)(object?)Value;
                 return dt?.ToString("yyyy-MM-ddTHH:mm", CultureInfo.InvariantCulture) ?? "";
@@ -46,5 +47,6 @@
             await ValueChanged.InvokeAsync((TValue)(object?)null);
         }
     }
+
 }
 

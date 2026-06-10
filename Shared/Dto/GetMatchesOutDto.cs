@@ -1,7 +1,6 @@
-﻿namespace Shared.Dto
+﻿namespace Shared.Dto;
+
+public class GetMatchesOutDto
 {
-    public class GetMatchesOutDto
-    {
-        public MatchDto[] Matches { get; set; } = Array.Empty<MatchDto>();
-    }
+    public MatchDto[] Matches { get; set; } = Array.Empty<MatchDto>();
 }

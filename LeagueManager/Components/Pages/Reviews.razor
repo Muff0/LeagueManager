@@ -1,7 +1,9 @@
 ﻿@page "/reviews"
 @using LeagueManager.Extensions
+@using LeagueManager.Services
 @using LeagueManager.ViewModel
-@inject Services.MainService MainService
+@inject MainService MainService
+@inject ReviewService ReviewService
 @rendermode InteractiveServer
 
 <PageTitle>Reviews</PageTitle>
@@ -38,27 +40,29 @@
                     SelectedDataItemChanged="HandleSelectedOverviewReviewChanged"
                     MultiSelectionEnabled="true" PageSize="300" Responsive="true">
                 <Columns>
-                    <HxGridColumn HeaderText="Season" ItemTextSelector="rev => rev.SeasonName" />
+                    <HxGridColumn HeaderText="Season" ItemTextSelector="rev => rev.SeasonName"/>
                     <HxGridColumn HeaderText="Round">
                         <ItemTemplate Context="review">
                             @if (review == _selectedOverviewReview)
                             {
-                                <InputNumber @bind-Value="review.Round" />
+                            <InputNumber @bind-Value="review.Round"/>
                             }
                             else
                             {
-                                @review.Round
+                            @review.Round
                             }
                         </ItemTemplate>
                     </HxGridColumn>
-                    <HxGridColumn HeaderText="Black" ItemTextSelector="rev => rev.BlackPlayerName + ' ' + rev.BlackPlayerRank" />
-                    <HxGridColumn HeaderText="White" ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank" />
-                    <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName" />
-                    <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerName" />
-                    <HxGridColumn HeaderText="Owner TZ" ItemTextSelector="rev => rev.OwnerTimezone" />
+                    <HxGridColumn HeaderText="Black"
+                                  ItemTextSelector="rev => rev.BlackPlayerName + ' ' + rev.BlackPlayerRank"/>
+                    <HxGridColumn HeaderText="White"
+                                  ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank"/>
+                    <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName"/>
+                    <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerName"/>
+                    <HxGridColumn HeaderText="Owner TZ" ItemTextSelector="rev => rev.OwnerTimezone"/>
                     <HxGridColumn HeaderText="IsPlayed">
                         <ItemTemplate Context="rev">
-                            <HxCheckbox @bind-Value="rev.IsPlayed" Enabled="false" />
+                            <HxCheckbox @bind-Value="rev.IsPlayed" Enabled="false"/>
                         </ItemTemplate>
                     </HxGridColumn>
                 </Columns>
@@ -74,7 +78,7 @@
                     <InputSelect @bind-Value="_selectedTeacherId">
                         @foreach (var opt in _teacherList)
                         {
-                            <option value="@opt.Id">@opt.Name</option>
+                        <option value="@opt.Id">@opt.Name</option>
                         }
                     </InputSelect>
                     <button class="btn btn-primary" @onclick="AssignTeacher">AssignTeacher</button>
@@ -87,25 +91,28 @@
                     <button class="btn btn-primary grid-item" @onclick="UnlinkMatch">Unlink Match</button>
                 </div>
                 <div class="grid-item">
-                    <HxCheckbox @bind-Value="_schedulingIncludeNoMatch" Text="Include no Match" @ontoggle="RefreshScheduleGrid"></HxCheckbox>
-                    </div>
+                    <HxCheckbox @bind-Value="_schedulingIncludeNoMatch" Text="Include no Match"
+                                @ontoggle="RefreshScheduleGrid"></HxCheckbox>
+                </div>
 
             </div>
 
             <button class="btn btn-primary" @onclick="RefreshScheduleGrid">Refresh</button>
             <HxGrid @ref="_schedulingGrid" TItem="ReviewViewModel" DataProvider="GetSchedulingGridData"
-            @bind-SelectedDataItems="_selectedSchedulingReviews"
-            MultiSelectionEnabled="true" PageSize="20" Responsive="true">
+                    @bind-SelectedDataItems="_selectedSchedulingReviews"
+                    MultiSelectionEnabled="true" PageSize="20" Responsive="true">
                 <Columns>
-                    <HxGridColumn HeaderText="Round" ItemTextSelector="rev => rev.Round.ToString()" />
-                    <HxGridColumn HeaderText="Black" ItemTextSelector="rev => rev.BlackPlayerName + ' '+  rev.BlackPlayerRank " />
-                    <HxGridColumn HeaderText="White" ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank " />
-                    <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName" />
-                    <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerName" />
-                    <HxGridColumn HeaderText="Owner TZ" ItemTextSelector="rev => rev.OwnerTimezone" />
+                    <HxGridColumn HeaderText="Round" ItemTextSelector="rev => rev.Round.ToString()"/>
+                    <HxGridColumn HeaderText="Black"
+                                  ItemTextSelector="rev => rev.BlackPlayerName + ' '+  rev.BlackPlayerRank "/>
+                    <HxGridColumn HeaderText="White"
+                                  ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank "/>
+                    <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName"/>
+                    <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerName"/>
+                    <HxGridColumn HeaderText="Owner TZ" ItemTextSelector="rev => rev.OwnerTimezone"/>
                     <HxGridColumn HeaderText="IsPlayed">
                         <ItemTemplate Context="rev">
-                            <HxCheckbox @bind-Value="rev.IsPlayed" Enabled="false" />
+                            <HxCheckbox @bind-Value="rev.IsPlayed" Enabled="false"/>
                         </ItemTemplate>
                     </HxGridColumn>
                 </Columns>
@@ -128,30 +135,32 @@
             </div>
 
             <HxGrid @ref="_postingGrid" TItem="ReviewViewModel" DataProvider="GetPostingGridData"
-            SelectedDataItem="_selectedPostingReview"
-            SelectedDataItems="_selectedPostingReviews"
-            SelectedDataItemChanged="HandleSelectePostingReviewChanged"
-            MultiSelectionEnabled="true" PageSize="20" Responsive="true">
+                    SelectedDataItem="_selectedPostingReview"
+                    SelectedDataItems="_selectedPostingReviews"
+                    SelectedDataItemChanged="HandleSelectePostingReviewChanged"
+                    MultiSelectionEnabled="true" PageSize="20" Responsive="true">
                 <Columns>
-                    <HxGridColumn HeaderText="Black" ItemTextSelector="rev => rev.BlackPlayerName + ' '+  rev.BlackPlayerRank " />
-                    <HxGridColumn HeaderText="White" ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank " />
-                    <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName" />
-                    <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerHandle" />
-                    <HxGridColumn HeaderText="Link" ItemTextSelector="rev => rev.MatchUrl" />
+                    <HxGridColumn HeaderText="Black"
+                                  ItemTextSelector="rev => rev.BlackPlayerName + ' '+  rev.BlackPlayerRank "/>
+                    <HxGridColumn HeaderText="White"
+                                  ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank "/>
+                    <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName"/>
+                    <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerHandle"/>
+                    <HxGridColumn HeaderText="Link" ItemTextSelector="rev => rev.MatchUrl"/>
                     <HxGridColumn HeaderText="Video Url">
                         <ItemTemplate Context="review">
                             @if(review == _selectedPostingReview)
                             {
-                                <InputText @bind-Value="review.ReviewUrl"
-                                           @onkeydown="HandleSelectedPostingReviewKeyDown"/>
+                            <InputText @bind-Value="review.ReviewUrl"
+                                       @onkeydown="HandleSelectedPostingReviewKeyDown"/>
                             }
                             else
                             {
-                                @review.ReviewUrl
+                            @review.ReviewUrl
                             }
                         </ItemTemplate>
                     </HxGridColumn>
-                    <HxGridColumn HeaderText="Match String" ItemTextSelector="rev => rev.BuildLongMatchTitle()" />
+                    <HxGridColumn HeaderText="Match String" ItemTextSelector="rev => rev.BuildLongMatchTitle()"/>
                 </Columns>
             </HxGrid>
         </Content>
@@ -164,14 +173,16 @@
                     @bind-SelectedDataItems="_selectedMissedReviews"
                     MultiSelectionEnabled="true" PageSize="20" Responsive="true">
                 <Columns>
-                    <HxGridColumn HeaderText="Black" ItemTextSelector="rev => rev.BlackPlayerName + ' ' + rev.BlackPlayerRank" />
-                    <HxGridColumn HeaderText="White" ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank" />
-                    <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName" />
-                    <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerName" />
-                    <HxGridColumn HeaderText="Owner TZ" ItemTextSelector="rev => rev.OwnerTimezone" />
+                    <HxGridColumn HeaderText="Black"
+                                  ItemTextSelector="rev => rev.BlackPlayerName + ' ' + rev.BlackPlayerRank"/>
+                    <HxGridColumn HeaderText="White"
+                                  ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank"/>
+                    <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName"/>
+                    <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerName"/>
+                    <HxGridColumn HeaderText="Owner TZ" ItemTextSelector="rev => rev.OwnerTimezone"/>
                     <HxGridColumn HeaderText="IsPlayed">
                         <ItemTemplate Context="rev">
-                            <HxCheckbox @bind-Value="rev.IsPlayed" Enabled="false" />
+                            <HxCheckbox @bind-Value="rev.IsPlayed" Enabled="false"/>
                         </ItemTemplate>
                     </HxGridColumn>
                 </Columns>
@@ -181,365 +192,365 @@
 </HxTabPanel>
 
 @code {
-    private bool _schedulingIncludeNoMatch;
-    private HxGrid<ReviewViewModel>? _schedulingGrid, _postingGrid, _missedGrid, _overviewGrid;
-    private List<ReviewViewModel>? _reviewList;
-    private HashSet<ReviewViewModel>? _selectedSchedulingReviews, _selectedMissedReviews, _selectedOverviewReviews, _selectedPostingReviews;
+private bool _schedulingIncludeNoMatch;
+private HxGrid<ReviewViewModel>? _schedulingGrid, _postingGrid, _missedGrid, _overviewGrid;
+private List<ReviewViewModel>? _reviewList;
+private HashSet<ReviewViewModel>? _selectedSchedulingReviews, _selectedMissedReviews, _selectedOverviewReviews, _selectedPostingReviews;
 
-    private ReviewViewModel? _selectedPostingReview,_selectedOverviewReview;
-    private string _message = "Loading...";
-    private string _activeTab = "";
-    private DateTime? _reviewEventDate;
-    private int  _selectedTeacherId;
-    private List<TeacherViewModel> _teacherList = new List<TeacherViewModel>();
+private ReviewViewModel? _selectedPostingReview,_selectedOverviewReview;
+private string _message = "Loading...";
+private string _activeTab = "";
+private DateTime? _reviewEventDate;
+private int  _selectedTeacherId;
+private List<TeacherViewModel> _teacherList = new();
 
 
-    private async Task HandleSelectedOverviewReviewChanged(ReviewViewModel newSelectedDataItem)
+private async Task HandleSelectedOverviewReviewChanged(ReviewViewModel newSelectedDataItem)
+{
+    if (_selectedOverviewReview != null)
     {
-        if (_selectedOverviewReview != null)
-        {
-            // save the changes to original selectedDataItem first
-            await MainService.SaveReviewChanges(new List<ReviewViewModel>() { _selectedOverviewReview });
-        }
-        // update selectedDataItem to new selection
-        _selectedOverviewReview = newSelectedDataItem;
+        // save the changes to original selectedDataItem first
+        await MainService.SaveReviewChanges(new List<ReviewViewModel> { _selectedOverviewReview });
     }
 
-    private async Task HandleSelectePostingReviewChanged(ReviewViewModel newSelectedDataItem)
+    // update selectedDataItem to new selection
+    _selectedOverviewReview = newSelectedDataItem;
+}
+
+private async Task HandleSelectePostingReviewChanged(ReviewViewModel newSelectedDataItem)
+{
+    if (_selectedPostingReview != null)
     {
-        if (_selectedPostingReview != null)
-        {
-            // save the changes to original selectedDataItem first
-            await MainService.SaveReviewChanges(new List<ReviewViewModel>(){_selectedPostingReview});
-        }
-        // update selectedDataItem to new selection
-        _selectedPostingReview = newSelectedDataItem;
+        // save the changes to original selectedDataItem first
+        await MainService.SaveReviewChanges(new List<ReviewViewModel> { _selectedPostingReview });
     }
 
-    private async void LinkReviewMatches()
+    // update selectedDataItem to new selection
+    _selectedPostingReview = newSelectedDataItem;
+}
+
+private async void LinkReviewMatches()
+{
+    await MainService.LinkReviewMatches();
+}
+
+protected override async Task OnInitializedAsync()
+{
+    await base.OnInitializedAsync();
+    _teacherList = await MainService.GetTeachers();
+}
+
+private async void PostReviews()
+{
+    try
     {
-        await MainService.LinkReviewMatches();
+        await MainService.PostReviews();
     }
-
-    protected override async Task OnInitializedAsync()
+    catch (Exception e)
     {
-        await base.OnInitializedAsync();
-        _teacherList = await MainService.GetTeachers();
+        _message = "Error";
     }
+}
 
-    private async void PostReviews()
+private async Task SaveChanges()
+{
+    try
     {
-        try
-        {
-            await MainService.PostReviews();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
-    }
+        if (_reviewList == null)
+            return;
 
-    private async Task SaveChanges()
+        await MainService.SaveReviewChanges(_reviewList);
+    }
+    catch (Exception e)
     {
-        try
-        {
-            if (_reviewList == null)
-                return;
-
-            await MainService.SaveReviewChanges(_reviewList);
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        _message = "Error";
     }
+}
 
-    private IEnumerable<ReviewViewModel>? GetCurrentTabSelectedList()
+private IEnumerable<ReviewViewModel>? GetCurrentTabSelectedList()
+{
+    if (_activeTab == "overview")
+        return _selectedOverviewReviews;
+    if (_activeTab == "scheduling")
+        return _selectedSchedulingReviews;
+    if (_activeTab == "posting")
+        return _selectedMissedReviews;
+    if (_activeTab == "missed")
+        return _selectedMissedReviews;
+
+    return new ReviewViewModel[0];
+}
+
+
+private void RefreshCurrentGrid()
+{
+    if (_activeTab == "overview")
+        RefreshOverviewGrid();
+    if (_activeTab == "scheduling")
+        RefreshScheduleGrid();
+    if (_activeTab == "posting")
+        RefreshPostingGrid();
+    if (_activeTab == "missed")
+        RefreshMissedGrid();
+}
+
+private async void UnlinkMatch()
+{
+    try
     {
-        if (_activeTab == "overview")
-            return _selectedOverviewReviews;
-        if (_activeTab == "scheduling")
-            return _selectedSchedulingReviews;
-        if (_activeTab == "posting")
-            return _selectedMissedReviews;
-        if (_activeTab == "missed")
-            return _selectedMissedReviews;
+        if (_selectedSchedulingReviews == null)
+            return;
 
-        return new ReviewViewModel[0];
+        if (_selectedSchedulingReviews.Count > 0)
+            await MainService.UnlinkMatchFromReviews(_selectedSchedulingReviews, true);
+
+        RefreshScheduleGrid();
     }
-
-
-    private void RefreshCurrentGrid()
+    catch (Exception e)
     {
-        if (_activeTab == "overview")
-            RefreshOverviewGrid();
-        if (_activeTab == "scheduling")
-            RefreshScheduleGrid();
-        if (_activeTab == "posting")
-            RefreshPostingGrid();
-        if (_activeTab == "missed")
-            RefreshMissedGrid();
+        _message = "Error";
     }
-
-    private async void UnlinkMatch()
+}
+private async void DeleteReviews()
+{
+    try
     {
-        try
-        {
-            if (_selectedSchedulingReviews == null)
-                return;
+        if (_selectedOverviewReviews == null)
+            return;
 
-            if (_selectedSchedulingReviews.Count > 0)
-                await MainService.UnlinkMatchFromReviews(_selectedSchedulingReviews, true);
+        if (_selectedOverviewReviews.Count > 0)
+            await MainService.DeleteReviews(_selectedOverviewReviews);
 
-            RefreshScheduleGrid();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        RefreshScheduleGrid();
     }
-    private async void DeleteReviews()
+    catch (Exception e)
     {
-        try
-        {
-            if (_selectedOverviewReviews == null)
-                return;
-
-            if (_selectedOverviewReviews.Count > 0)
-                await MainService.DeleteReviews(_selectedOverviewReviews);
-
-            RefreshScheduleGrid();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        _message = "Error";
     }
+}
 
-    private async void UnlinkMatchFromOverview()
+private async void UnlinkMatchFromOverview()
+{
+    try
     {
-        try
-        {
-            if (_selectedOverviewReviews == null)
-                return;
+        if (_selectedOverviewReviews == null)
+            return;
 
-            if (_selectedOverviewReviews.Count > 0)
-                await MainService.UnlinkMatchFromReviews(_selectedOverviewReviews, true);
+        if (_selectedOverviewReviews.Count > 0)
+            await MainService.UnlinkMatchFromReviews(_selectedOverviewReviews, true);
 
-            RefreshScheduleGrid();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        RefreshScheduleGrid();
     }
-
-    private async void CancelReview()
+    catch (Exception e)
     {
-        try
-        {
-            var currentlySelected = GetCurrentTabSelectedList();
-            if (currentlySelected == null)
-                return;
-
-            if (currentlySelected.Any())
-                await MainService.SetDuplicateReview(currentlySelected);
-
-            RefreshCurrentGrid();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        _message = "Error";
     }
+}
 
-    private async void SetDuplicate()
+private async void CancelReview()
+{
+    try
     {
-        try
-        {
-            var currentlySelected = GetCurrentTabSelectedList();
-            if (currentlySelected == null)
-                return;
+        var currentlySelected = GetCurrentTabSelectedList();
+        if (currentlySelected == null)
+            return;
 
-            if (currentlySelected.Any())
-                await MainService.SetCanceledReview(currentlySelected);
+        if (currentlySelected.Any())
+            await ReviewService.SetDuplicateReview(currentlySelected);
 
-            RefreshCurrentGrid();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        RefreshCurrentGrid();
     }
-
-    private async void MoveToAllocated()
+    catch (Exception e)
     {
-        try
-        {
-            if (_selectedSchedulingReviews == null)
-                return;
-
-            if (_selectedSchedulingReviews.Count > 0)
-                await MainService.MoveToAllocated(_selectedSchedulingReviews);
-
-            RefreshScheduleGrid();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        _message = "Error";
     }
+}
 
-    private async void SendReviewNotice()
+private async void SetDuplicate()
+{
+    try
     {
-        try
-        {
-            if (_selectedSchedulingReviews == null)
-                return;
+        var currentlySelected = GetCurrentTabSelectedList();
+        if (currentlySelected == null)
+            return;
 
-            if (_selectedSchedulingReviews.Count > 0)
-            {
-                await MainService.ScheduleReviews(_selectedSchedulingReviews, _reviewEventDate.GetValueOrDefault(), _selectedTeacherId);
-                await MainService.MoveToAllocated(_selectedSchedulingReviews);                
-            }
+        if (currentlySelected.Any())
+            await MainService.SetCanceledReview(currentlySelected);
 
-            RefreshScheduleGrid();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        RefreshCurrentGrid();
     }
-
-    private async void AssignTeacher()
+    catch (Exception e)
     {
-        try
-        {
-            if (_selectedSchedulingReviews == null)
-                return;
-
-            if (_selectedSchedulingReviews.Count > 0)
-                await MainService.AssignTeacherToReviews(_selectedSchedulingReviews, _selectedTeacherId);
-
-            RefreshScheduleGrid();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        _message = "Error";
     }
+}
 
-
-    private async Task<GridDataProviderResult<ReviewViewModel>> GetOverviewGridData(GridDataProviderRequest<ReviewViewModel> request)
+private async void MoveToAllocated()
+{
+    try
     {
-        var response = await MainService.GetOverviewReviews(request.StartIndex, request.Count, request.CancellationToken);
-        return new GridDataProviderResult<ReviewViewModel>()
-        {
-            Data = response,
-            TotalCount = response.Count
-        };
-    }
+        if (_selectedSchedulingReviews == null)
+            return;
 
-    private async Task<GridDataProviderResult<ReviewViewModel>> GetMissedGridData(GridDataProviderRequest<ReviewViewModel> request)
-    {
-        var response = await MainService.GetMissedReviews(request.StartIndex, request.Count, request.CancellationToken);
-        return new GridDataProviderResult<ReviewViewModel>()
-        {
-            Data = response,
-            TotalCount = response.Count
-        };
-    }
-    private async Task<GridDataProviderResult<ReviewViewModel>> GetSchedulingGridData(GridDataProviderRequest<ReviewViewModel> request)
-    {
-        var response = await MainService.GetReviewsToSchedule(request.StartIndex, request.Count, request.CancellationToken, _schedulingIncludeNoMatch);
-        return new GridDataProviderResult<ReviewViewModel>()
-            {
-                Data = response,
-                TotalCount = response.Count
-            };
-    }
-    private async Task<GridDataProviderResult<ReviewViewModel>> GetPostingGridData(GridDataProviderRequest<ReviewViewModel> request)
-    {
-        var response = await MainService.GetReviewsToPost(request.StartIndex, request.Count, request.CancellationToken);
-        return new GridDataProviderResult<ReviewViewModel>()
-            {
-                Data = response,
-                TotalCount = response.Count
-            };
-    }
+        if (_selectedSchedulingReviews.Count > 0)
+            await ReviewService.MoveToAllocated(_selectedSchedulingReviews);
 
-    private async void RefreshOverviewGrid()
-    {
-        try
-        {
-            if (_overviewGrid == null)
-                return;
-            await _overviewGrid.RefreshDataAsync();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        RefreshScheduleGrid();
     }
-    private async void RefreshMissedGrid()
+    catch (Exception e)
     {
-        try
-        {
-            if (_missedGrid == null)
-                return;
-            await _missedGrid.RefreshDataAsync();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        _message = "Error";
     }
-    private async void RefreshScheduleGrid()
-    {
-        try
-        {
-            if (_schedulingGrid == null)
-                return;
-            await _schedulingGrid.RefreshDataAsync();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
-    }
+}
 
-    private async void RefreshPostingGrid()
+private async void SendReviewNotice()
+{
+    try
     {
-        try
-        {
+        if (_selectedSchedulingReviews == null)
+            return;
 
-            if (_postingGrid == null)
-                return;
-            await _postingGrid.RefreshDataAsync();
-        }
-        catch (Exception e)
+        if (_selectedSchedulingReviews.Count > 0)
         {
-            _message = "Error";
+            await MainService.ScheduleReviews(_selectedSchedulingReviews, _reviewEventDate.GetValueOrDefault(), _selectedTeacherId);
+            await ReviewService.MoveToAllocated(_selectedSchedulingReviews);
         }
+
+        RefreshScheduleGrid();
     }
-
-    private async void GenerateReviews()
+    catch (Exception e)
     {
-        try
-        {
-
-            await MainService.BuildReviews();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
+        _message = "Error";
     }
+}
 
-    private async void HandleSelectedPostingReviewKeyDown(KeyboardEventArgs e)
+private async void AssignTeacher()
+{
+    try
     {
-        if (e.Key == "Enter")
-            await SaveChanges();
+        if (_selectedSchedulingReviews == null)
+            return;
+
+        if (_selectedSchedulingReviews.Count > 0)
+            await MainService.AssignTeacherToReviews(_selectedSchedulingReviews, _selectedTeacherId);
+
+        RefreshScheduleGrid();
     }
+    catch (Exception e)
+    {
+        _message = "Error";
+    }
+}
+
+
+private async Task<GridDataProviderResult<ReviewViewModel>> GetOverviewGridData(GridDataProviderRequest<ReviewViewModel> request)
+{
+    var response = await ReviewService.GetOverviewReviews(request.StartIndex, request.Count, request.CancellationToken);
+    return new GridDataProviderResult<ReviewViewModel>
+    {
+        Data = response,
+        TotalCount = response.Count
+    };
+}
+
+private async Task<GridDataProviderResult<ReviewViewModel>> GetMissedGridData(GridDataProviderRequest<ReviewViewModel> request)
+{
+    var response = await MainService.GetMissedReviews(request.StartIndex, request.Count, request.CancellationToken);
+    return new GridDataProviderResult<ReviewViewModel>
+    {
+        Data = response,
+        TotalCount = response.Count
+    };
+}
+private async Task<GridDataProviderResult<ReviewViewModel>> GetSchedulingGridData(GridDataProviderRequest<ReviewViewModel> request)
+{
+    var response = await ReviewService.GetReviewsToSchedule(request.StartIndex, request.Count, request.CancellationToken, _schedulingIncludeNoMatch);
+    return new GridDataProviderResult<ReviewViewModel>
+    {
+        Data = response,
+        TotalCount = response.Count
+    };
+}
+private async Task<GridDataProviderResult<ReviewViewModel>> GetPostingGridData(GridDataProviderRequest<ReviewViewModel> request)
+{
+    var response = await ReviewService.GetReviewsToPost(request.StartIndex, request.Count, request.CancellationToken);
+    return new GridDataProviderResult<ReviewViewModel>
+    {
+        Data = response,
+        TotalCount = response.Count
+    };
+}
+
+private async void RefreshOverviewGrid()
+{
+    try
+    {
+        if (_overviewGrid == null)
+            return;
+        await _overviewGrid.RefreshDataAsync();
+    }
+    catch (Exception e)
+    {
+        _message = "Error";
+    }
+}
+private async void RefreshMissedGrid()
+{
+    try
+    {
+        if (_missedGrid == null)
+            return;
+        await _missedGrid.RefreshDataAsync();
+    }
+    catch (Exception e)
+    {
+        _message = "Error";
+    }
+}
+private async void RefreshScheduleGrid()
+{
+    try
+    {
+        if (_schedulingGrid == null)
+            return;
+        await _schedulingGrid.RefreshDataAsync();
+    }
+    catch (Exception e)
+    {
+        _message = "Error";
+    }
+}
+
+private async void RefreshPostingGrid()
+{
+    try
+    {
+        if (_postingGrid == null)
+            return;
+        await _postingGrid.RefreshDataAsync();
+    }
+    catch (Exception e)
+    {
+        _message = "Error";
+    }
+}
+
+private async void GenerateReviews()
+{
+    try
+    {
+        await ReviewService.BuildReviews();
+    }
+    catch (Exception e)
+    {
+        _message = "Error";
+    }
+}
+
+private async void HandleSelectedPostingReviewKeyDown(KeyboardEventArgs e)
+{
+    if (e.Key == "Enter")
+        await SaveChanges();
+}
 
 }

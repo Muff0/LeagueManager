@@ -1,9 +1,8 @@
-﻿namespace Shared.Enum
+﻿namespace Shared.Enum;
+
+public enum MatchStatus
 {
-    public enum MatchStatus
-    {
-        Created,
-        Played,
-        Cancelled,
-    }
+    Created,
+    Played,
+    Cancelled
 }

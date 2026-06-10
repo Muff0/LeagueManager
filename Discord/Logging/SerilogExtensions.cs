@@ -3,6 +3,7 @@ using Serilog.Configuration;
 using Serilog.Events;
 
 namespace Discord.Logging;
+
 // Discord/Logging/SerilogExtensions.cs
 public static class SerilogExtensions
 {

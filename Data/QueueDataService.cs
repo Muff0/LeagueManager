@@ -1,11 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 
-namespace Data
+namespace Data;
+
+public class QueueDataService : DataServiceBase<QueueContext>
 {
-    public class QueueDataService : DataServiceBase<QueueContext>
+    public QueueDataService(IDbContextFactory<QueueContext> contextFactory) : base(contextFactory)
     {
-        public QueueDataService(IDbContextFactory<QueueContext> contextFactory) : base(contextFactory)
-        {
-        }
     }
 }

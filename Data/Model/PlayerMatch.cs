@@ -1,16 +1,15 @@
 ﻿using Shared.Enum;
 
-namespace Data.Model
-{
-    public class PlayerMatch
-    {
-        public int PlayerId { get; set; }
-        public int MatchId { get; set; }
+namespace Data.Model;
 
-        public Player? Player { get; set; }
-        public Match? Match { get; set; }
-        public PlayerColor Color { get; set; }
-        public bool HasConfirmed { get; set; }
-        public PlayerMatchOutcome Outcome { get; set; } = PlayerMatchOutcome.NotReported;
-    }
+public class PlayerMatch
+{
+    public int PlayerId { get; set; }
+    public int MatchId { get; set; }
+    public string OgsInviteLink { get; set; } = string.Empty;
+    public Player? Player { get; set; }
+    public Match? Match { get; set; }
+    public PlayerColor Color { get; set; }
+    public bool HasConfirmed { get; set; }
+    public PlayerMatchOutcome Outcome { get; set; } = PlayerMatchOutcome.NotReported;
 }

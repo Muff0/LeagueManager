@@ -1,6 +1,5 @@
-﻿namespace Shared.Queue
+﻿namespace Shared.Queue;
+
+public class CommandMessagePayload
 {
-    public class CommandMessagePayload
-    {
-    }
 }

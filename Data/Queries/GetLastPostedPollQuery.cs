@@ -1,20 +1,19 @@
 using Data.Model;
+using Shared.Enum;
 
-namespace Data.Queries
+namespace Data.Queries;
+
+public class GetLastPostedPollQuery : Scalar<QueueContext, Poll>
 {
-    
-    public class GetLastPostedPollQuery : Scalar<QueueContext, Poll>
+    protected override IQueryable<Poll> BuildQuery(QueueContext context)
     {
-        protected override IQueryable<Poll> BuildQuery(QueueContext context)
-        {
-            var query = base.BuildQuery(context);
+        var query = base.BuildQuery(context);
 
-            query = query.Where(cm => cm.Status == Shared.Enum.QueueStatus.Completed
-                && cm.ProcessedAtUtc != null);
-            
-            query = query.OrderByDescending(cm => cm.ProcessedAtUtc);
+        query = query.Where(cm => cm.Status == QueueStatus.Completed
+                                  && cm.ProcessedAtUtc != null);
 
-            return query;
-        }
+        query = query.OrderByDescending(cm => cm.ProcessedAtUtc);
+
+        return query;
     }
 }

@@ -1,34 +1,33 @@
 ﻿using Data.Model;
 using Microsoft.EntityFrameworkCore;
 
-namespace Data
+namespace Data;
+
+public class QueueContext : DbContext
 {
-    public class QueueContext : DbContext
+    public QueueContext(DbContextOptions<QueueContext> options) : base(options)
     {
-        public QueueContext(DbContextOptions<QueueContext> options) : base(options)
-        {
-        }
+    }
 
-        public DbSet<CommandMessage> CommandQueue { get; set; }
-        public DbSet<DomainEvent> EventQueue { get; set; }
-        public DbSet<OutgoingMessage> MessageQueue { get; set; }
-        public DbSet<Poll>PollQueue { get; set; }
+    public DbSet<CommandMessage> CommandQueue { get; set; }
+    public DbSet<DomainEvent> EventQueue { get; set; }
+    public DbSet<OutgoingMessage> MessageQueue { get; set; }
+    public DbSet<Poll> PollQueue { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            base.OnModelCreating(modelBuilder);
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
 
-            modelBuilder.Entity<CommandMessage>()
-                .HasIndex(cm => cm.Status);
+        modelBuilder.Entity<CommandMessage>()
+            .HasIndex(cm => cm.Status);
 
-            modelBuilder.Entity<DomainEvent>()
-                .HasIndex(de => de.Status);
+        modelBuilder.Entity<DomainEvent>()
+            .HasIndex(de => de.Status);
 
-            modelBuilder.Entity<OutgoingMessage>()
-                .HasIndex(om => om.Status);
-            
-            modelBuilder.Entity<Poll>()
-                .HasIndex(po => po.Status);
-        }
+        modelBuilder.Entity<OutgoingMessage>()
+            .HasIndex(om => om.Status);
+
+        modelBuilder.Entity<Poll>()
+            .HasIndex(po => po.Status);
     }
 }
