@@ -29,15 +29,18 @@ using Shared.Settings;
 
 namespace LeagueManager.Services;
 
-public class MainService : ServiceBase
+public class MainService(QueueDataService queueDataService,
+    LeagueDataService leagueDataService,
+    LeagoMainService leagoService,
+    IOptions<LeagoSettings> leagoOptions,
+    DiscordService discordService,
+    ReviewService reviewService,
+    MailService mailService,
+    OGSService ogsService,
+    INotificationDispatcher notificationService,
+    StatService statService,
+    ILogger<MainService> logger) : ServiceBase(logger)
 {
-    private readonly DiscordService _discordService;
-    private readonly IOptions<LeagoSettings> _leagoOptions;
-    private readonly LeagoMainService _leagoService;
-    private readonly LeagueDataService _leagueDataService;
-    private readonly MailService _mailService;
-    private readonly INotificationDispatcher _notificationService;
-    private readonly OGSService _ogsService;
 
     private readonly Dictionary<string, PlayerParticipationTier> _participationTiers = new()
     {
@@ -54,33 +57,11 @@ public class MainService : ServiceBase
     private readonly QueueDataService _queueDataService;
     private readonly ReviewService _reviewService;
 
-    public MainService(QueueDataService queueDataService,
-        LeagueDataService leagueDataService,
-        LeagoMainService leagoService,
-        IOptions<LeagoSettings> leagoOptions,
-        DiscordService discordService,
-        ReviewService reviewService,
-        MailService mailService,
-        OGSService ogsService,
-        INotificationDispatcher notificationService,
-        ILogger<MainService> logger) : base(logger)
-    {
-        _queueDataService = queueDataService;
-        _leagueDataService = leagueDataService;
-        _leagoService = leagoService;
-        _leagoOptions = leagoOptions;
-        _discordService = discordService;
-        _reviewService = reviewService;
-        _mailService = mailService;
-        _notificationService = notificationService;
-        _ogsService = ogsService;
-    }
-
 
     protected override void HandleException(Exception e)
     {
         base.HandleException(e);
-        _notificationService.Dispatch(NotificationMessage.Error(e.GetType().ToString(), e.Message, e.Source));
+        notificationService.Dispatch(NotificationMessage.Error(e.GetType().ToString(), e.Message, e.Source));
     }
 
 
@@ -153,7 +134,7 @@ public class MainService : ServiceBase
     {
         try
         {
-            var players = await _leagueDataService.RunQueryAsync(new GetPlayersQuery());
+            var players = await leagueDataService.RunQueryAsync(new GetPlayersQuery());
 
             var missingIds = players.Where(pl => pl.DiscordHandle != null
                                                  && pl.DiscordHandle != ""
@@ -163,7 +144,7 @@ public class MainService : ServiceBase
 
             foreach (var player in missingIds)
             {
-                var id = await _discordService.GetDiscordUserId(player.DiscordHandle);
+                var id = await discordService.GetDiscordUserId(player.DiscordHandle);
                 if (id != null)
                     updateList.Add(new PlayerDto
                     {
@@ -172,7 +153,7 @@ public class MainService : ServiceBase
                     });
             }
 
-            await _leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand { Players = updateList.ToArray() });
+            await leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand { Players = updateList.ToArray() });
             SendTaskCompletedNotification();
         }
         catch (Exception ex)
@@ -183,7 +164,7 @@ public class MainService : ServiceBase
 
     public void SendTaskCompletedNotification()
     {
-        _notificationService.Dispatch(
+        notificationService.Dispatch(
             new NotificationMessage(
                 "Task Completed",
                 null,
@@ -197,14 +178,14 @@ public class MainService : ServiceBase
     {
         try
         {
-            var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-            var currentPlayers = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
+            var activeSeason = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var currentPlayers = await leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
             {
                 IncludePlayer = true,
                 SeasonId = activeSeason.Id
             });
 
-            await _discordService.UpdatePlayerRole(new UpdatePlayerRoleInDto
+            await discordService.UpdatePlayerRole(new UpdatePlayerRoleInDto
             {
                 CurrentPlayers = currentPlayers.Select(ps => ps.Player)
                     .Where(pl => pl!.DiscordId != null)
@@ -224,8 +205,8 @@ public class MainService : ServiceBase
     {
         var cutoffDate = new DateTime(2026, 4, 1);
 
-        var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery { IncludePlayerSeasons = true });
-        var players = await _leagueDataService.RunQueryAsync(new GetPlayersQuery());
+        var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery { IncludePlayerSeasons = true });
+        var players = await leagueDataService.RunQueryAsync(new GetPlayersQuery());
 
         var noMatch = new List<PaymentDataDto>();
         var noReg = new List<PaymentDataDto>();
@@ -279,8 +260,8 @@ public class MainService : ServiceBase
                 });
         }
 
-        _leagueDataService.Execute(new UpdatePlayerSeasons { PlayerRegistrations = toUpdate.ToArray() });
-        _leagueDataService.Execute(new UpdatePlayersDataCommand { Players = updateGoMagicIdList.ToArray() });
+        leagueDataService.Execute(new UpdatePlayerSeasons { PlayerRegistrations = toUpdate.ToArray() });
+        leagueDataService.Execute(new UpdatePlayersDataCommand { Players = updateGoMagicIdList.ToArray() });
 
         return new ProcessPaymentDataOutDto
         {
@@ -291,8 +272,8 @@ public class MainService : ServiceBase
 
     public async Task<PlayerDto[]> GetMissingPayments()
     {
-        var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-        var resGetMp = await _leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery { SeasonId = season.Id });
+        var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var resGetMp = await leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery { SeasonId = season.Id });
 
         return resGetMp.Select(pl => new PlayerDto
         {
@@ -331,8 +312,8 @@ public class MainService : ServiceBase
         try
         {
             var results = new List<CheckRankDto>();
-            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-            var players = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
+            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var players = await leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
             {
                 IncludePlayer = true,
                 SeasonId = season.Id
@@ -343,7 +324,7 @@ public class MainService : ServiceBase
                 if (player.Player == null || player.Player.OGSHandle == "")
                     continue;
 
-                var ogsPl = await _ogsService.GetPlayer(player.Player.OGSHandle);
+                var ogsPl = await ogsService.GetPlayer(player.Player.OGSHandle);
 
                 if (ogsPl == null)
                     continue;
@@ -351,7 +332,7 @@ public class MainService : ServiceBase
                 results.Add(new CheckRankDto
                 {
                     Player = player.Player.ToPlayerDto(),
-                    OGSRank = _ogsService.RatingToRank(ogsPl.Rating),
+                    OGSRank = ogsService.RatingToRank(ogsPl.Rating),
                     OGSRating = ogsPl.Rating
                 });
             }
@@ -369,7 +350,7 @@ public class MainService : ServiceBase
     {
         try
         {
-            var unposted = await _leagueDataService.RunQueryAsync(new GetReviewsQuery
+            var unposted = await leagueDataService.RunQueryAsync(new GetReviewsQuery
             {
                 IncludeMatch = true,
                 IncludeTeacher = true,
@@ -382,7 +363,7 @@ public class MainService : ServiceBase
             foreach (var review in unposted)
             {
                 var reviewDto = review.ToReviewDto();
-                await _discordService.PostReviewThread(new PostReviewThreadInDto
+                await discordService.PostReviewThread(new PostReviewThreadInDto
                 {
                     Review = reviewDto,
                     Match = review.Match!.ToMatchDto(),
@@ -393,7 +374,7 @@ public class MainService : ServiceBase
                 posted.Add(reviewDto);
             }
 
-            await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand { Reviews = posted.ToArray() });
+            await leagueDataService.ExecuteAsync(new UpdateReviewsCommand { Reviews = posted.ToArray() });
         }
         catch (Exception ex)
         {
@@ -429,7 +410,7 @@ public class MainService : ServiceBase
     {
         var updateList = reviews.Select(re => re.ToReviewDto());
 
-        await _leagueDataService.ExecuteAsync(new UpdateReviewsCommand
+        await leagueDataService.ExecuteAsync(new UpdateReviewsCommand
         {
             Reviews = updateList.ToArray()
         });
@@ -444,7 +425,7 @@ public class MainService : ServiceBase
     {
         var updateList = players.Select(pl => pl.ToPlayerDto());
 
-        await _leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand
+        await leagueDataService.ExecuteAsync(new UpdatePlayersDataCommand
         {
             Players = updateList.ToArray()
         });
@@ -456,8 +437,8 @@ public class MainService : ServiceBase
     {
         try
         {
-            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-            var res = await _leagueDataService.RunQueryAsync(new GetPlayersQuery
+            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var res = await leagueDataService.RunQueryAsync(new GetPlayersQuery
             {
                 IncludePlayerSeasons = true,
                 SeasonId = season.Id,
@@ -515,8 +496,8 @@ public class MainService : ServiceBase
     {
         try
         {
-            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-            var res = await _leagueDataService.RunQueryAsync(new GetReviewsQuery
+            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var res = await leagueDataService.RunQueryAsync(new GetReviewsQuery
             {
                 IncludeMatch = true,
                 IncludeOwner = true,
@@ -541,7 +522,7 @@ public class MainService : ServiceBase
     {
         try
         {
-            await _leagueDataService.ExecuteAsync(new DeleteReviewsCommand
+            await leagueDataService.ExecuteAsync(new DeleteReviewsCommand
                 { Reviews = reviews.Select(re => re.ToReviewDto()).ToArray() });
         }
         catch (Exception e)
@@ -583,7 +564,7 @@ public class MainService : ServiceBase
     {
         try
         {
-            var teacher = await _leagueDataService.RunQueryAsync(new GetTeacherQuery { Id = teacherId });
+            var teacher = await leagueDataService.RunQueryAsync(new GetTeacherQuery { Id = teacherId });
             if (teacher == null)
                 return;
 
@@ -591,12 +572,12 @@ public class MainService : ServiceBase
 
             foreach (var review in reviews)
             {
-                var toAdd = await _leagueDataService.RunQueryAsync(new GetMatchQuery
+                var toAdd = await leagueDataService.RunQueryAsync(new GetMatchQuery
                     { Id = (int)review.MatchId!, IncludePlayers = true });
                 games.Add(toAdd.ToMatchDto());
             }
 
-            await _discordService.SendReviewEventNotification(new SendReviewEventNotificationInDto
+            await discordService.SendReviewEventNotification(new SendReviewEventNotificationInDto
             {
                 DateTimeUTC = reviewEventDate,
                 Reviews = games.ToArray(),
@@ -628,13 +609,13 @@ public class MainService : ServiceBase
     {
         try
         {
-            await _discordService.SendRoundStartNotification(new SendRoundStartNotificationInDto
+            await discordService.SendRoundStartNotification(new SendRoundStartNotificationInDto
             {
                 RoundEnd = roundDeadline,
                 RoundNumber = round
             });
-            var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
-            var players = await _leagueDataService.RunQueryAsync(new GetPlayersForRoundQuery
+            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var players = await leagueDataService.RunQueryAsync(new GetPlayersForRoundQuery
             {
                 SeasonId = season.Id,
                 Round = round
@@ -666,7 +647,7 @@ public class MainService : ServiceBase
     {
         try
         {
-            var res = await _leagueDataService.RunQueryAsync(new GetTeachersQuery());
+            var res = await leagueDataService.RunQueryAsync(new GetTeachersQuery());
             return res.Select(te => te.ToTeacherViewModel()).OrderBy(te => te.Name).ToList();
         }
         catch (Exception ex)
@@ -712,7 +693,7 @@ public class MainService : ServiceBase
         if (sendDiscordMessage)
             try
             {
-                await _discordService.SendReviewSchedule(reviews);
+                await discordService.SendReviewSchedule(reviews);
             }
             catch (Exception ex)
             {
@@ -745,36 +726,36 @@ public class MainService : ServiceBase
 
     public async Task UpdatePlayersList()
     {
-        var activeSeason = _leagueDataService.RunQuery(new GetActiveSeasonQuery());
+        var activeSeason = leagueDataService.RunQuery(new GetActiveSeasonQuery());
 
         if (activeSeason == null)
             return;
 
-        var getPlayersRes = await _leagoService.GetPlayers(new GetPlayersInDto
+        var getPlayersRes = await leagoService.GetPlayers(new GetPlayersInDto
         {
             TournamentKey = activeSeason.LeagoL1Key
         });
 
         var toAdd = new List<Data.Model.Player>();
 
-        _leagueDataService.Execute(new UpdatePlayersDataCommand { Players = getPlayersRes.Players });
+        leagueDataService.Execute(new UpdatePlayersDataCommand { Players = getPlayersRes.Players });
 
-        _leagueDataService.Execute(new AddPlayersToSeason
+        leagueDataService.Execute(new AddPlayersToSeason
             { Players = getPlayersRes.Players, SeasonId = activeSeason.Id });
     }
 
     public async Task UpdatePlayersPublicProfiles()
     {
-        var players = _leagueDataService.RunQuery(new GetPlayersQuery());
+        var players = leagueDataService.RunQuery(new GetPlayersQuery());
 
         var toAdd = new List<PlayerDto>();
 
         foreach (var player in players)
         {
-            var pres = await _leagoService.GetProfile(new GetProfileInDto
+            var pres = await leagoService.GetProfile(new GetProfileInDto
             {
                 ProfileKey = player.LeagoKey,
-                ArenaKey = _leagoOptions.Value.ArenaKey
+                ArenaKey = leagoOptions.Value.ArenaKey
             });
 
             toAdd.Add(new PlayerDto
@@ -786,14 +767,15 @@ public class MainService : ServiceBase
             });
         }
 
-        _leagueDataService.Execute(new UpdatePlayersDataCommand { Players = toAdd.ToArray() });
+        leagueDataService.Execute(new UpdatePlayersDataCommand { Players = toAdd.ToArray() });
     }
 
     public async Task SendMissingPaymentsEmail()
     {
         try
         {
-            await _ogsService.Test();
+            var stats = await statService.GetStreakData();   
+            await discordService.SendRoundStatsMessage(stats);
             SendTaskCompletedNotification();
         }
         catch (Exception e)

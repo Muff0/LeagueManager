@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Discord.MessageBuilders;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetCord;
 using NetCord.Rest;
@@ -174,6 +175,8 @@ public class DiscordService : ServiceBase
         return res;
     }
 
+    
+    
     protected MessageProperties BuildMessageProperties(string content)
     {
         return new MessageProperties()
@@ -275,6 +278,12 @@ public class DiscordService : ServiceBase
                 .WithContent(content));
     }
 
+    public async Task SendRoundStatsMessage(StreakDataDto streakData)
+    {
+        var messageProperties = BuildMessageProperties(StreakMessageBuilder.Compose(streakData));
+
+        await _restClient.SendMessageAsync(_settings.Value.AdminNotificationChannelId, messageProperties);
+    }
 
     public async Task SendPollNotification(int pollsInQueue, DateTime pollTime, string message,
         DiscordNotificationType notificationType)

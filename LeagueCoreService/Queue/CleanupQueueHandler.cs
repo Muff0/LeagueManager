@@ -11,6 +11,9 @@ public class CleanupQueueHandler(QueueDataService queueDataService)
 
     public async Task HandleAsync(CommandMessage cmd)
     {
-        await queueDataService.ExecuteAsync(new DeleteOldCommandMessagesCommand());
+        await queueDataService.ExecuteAsync(new DeleteOldCommandMessagesCommand()
+        {
+            ExcludeCommandTypes = ["AwardApplicationCommand","RankChangeCommand"]
+        });
     }
 }

@@ -33,7 +33,7 @@ public class CommandOrchestrator
                 DiscordHandle = discordHandle
             });
     }
-
+    
     public async Task<string> GetOpponentAsync(GetOpponentAsyncInDto inDto)
     {
         var resGetP = await GetPlayerByDiscordIdAsync(inDto.PlayerDiscordId, inDto.PlayerDiscordHandle);

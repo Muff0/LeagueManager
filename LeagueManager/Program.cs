@@ -88,16 +88,18 @@ builder.Services.AddDbContextFactory<LeagueContext>(options =>
 builder.Services.AddDbContextFactory<QueueContext>(options =>
     options.UseNpgsql(connectionString));
 
+
 // Custom services registrations
 
-builder.Services.AddScoped<LeagueDataService>();
-builder.Services.AddScoped<QueueDataService>();
+builder.Services.AddSingleton<LeagueDataService>();
+builder.Services.AddSingleton<QueueDataService>();
 builder.Services.AddScoped<LeagoMainService>();
 builder.Services.AddScoped<MailService>();
 builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<OGSService>();
-builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<DiscordService>();
+builder.Services.AddSingleton<StatService>();
+builder.Services.AddScoped<MainService>();
 // Notification Services
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<NotificationDispatcher>();

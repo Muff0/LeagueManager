@@ -17,7 +17,7 @@ namespace Data.Migrations.League
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.3")
+                .HasAnnotation("ProductVersion", "10.0.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -46,6 +46,10 @@ namespace Data.Migrations.League
 
                     b.Property<bool>("NotificationSent")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("OgsLeagueMatchId")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int?>("PlayerSeasonPlayerId")
                         .HasColumnType("integer");
@@ -137,6 +141,10 @@ namespace Data.Migrations.League
 
                     b.Property<bool>("HasConfirmed")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("OgsInviteLink")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("Outcome")
                         .HasColumnType("integer");

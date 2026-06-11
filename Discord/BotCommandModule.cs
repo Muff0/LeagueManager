@@ -20,7 +20,7 @@ public class BotCommandModule : ApplicationCommandModule<ApplicationCommandConte
     {
         await Context.Interaction.SendResponseAsync(InteractionCallback.DeferredMessage());
     }
-
+    
     [SlashCommand("my-opponent", "Get your opponent for a specific round")]
     public async Task MyOpponent(int round)
     {
