@@ -282,7 +282,7 @@ public class DiscordService : ServiceBase
     {
         var messageProperties = BuildMessageProperties(StreakMessageBuilder.Compose(streakData));
 
-        await _restClient.SendMessageAsync(_settings.Value.AdminNotificationChannelId, messageProperties);
+        await _restClient.SendMessageAsync(_settings.Value.LeagueAnnouncementsChannelId, messageProperties);
     }
 
     public async Task SendPollNotification(int pollsInQueue, DateTime pollTime, string message,

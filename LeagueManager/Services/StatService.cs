@@ -8,14 +8,59 @@ namespace LeagueManager.Services;
 
 public class StatService(LeagueDataService leagueDataService)
 {
-    public async Task<StreakDataDto> GetStreakData()
+    public async Task<StatsDto> GetStats()
     {
+        
         var players = await leagueDataService.RunQueryAsync(new GetPlayersQuery()
         {
             IncludePlayerMatches = true,
             IncludeMatches = true
         });
 
+        var res = new StatsDto();
+        res.RivalryData = await GetRivalryData();
+        res.StreakData = await GetStreakData(players);
+        return res;
+    }
+
+    private async Task<RivalryDataDto> GetRivalryData()
+    {
+        var matches = await leagueDataService.RunQueryAsync(new GetMatchesQuery()
+        {
+            IncludePlayers = true
+
+        });
+        var canonList = matches
+            .GroupBy(mm =>new 
+            {
+                Min = Math.Min(mm.PlayerMatches.First().PlayerId,mm.PlayerMatches.Last().PlayerId),
+                Max = Math.Max(mm.PlayerMatches.First().PlayerId,mm.PlayerMatches.Last().PlayerId)
+            });
+        int maxplayed = 0;
+        Player[] rivals = [];
+        Match[] history = [];
+        
+        foreach (var pair in canonList)
+        {
+            // some malformed matches, must skip
+            if (pair.Key.Min == pair.Key.Max)
+                continue;
+            var count = pair.Count();
+            if (count > maxplayed)
+            {
+                maxplayed = count;
+                rivals = pair.First().PlayerMatches.Select(pm => pm.Player).ToArray();
+                history = pair.ToArray();
+            }
+        }
+        
+        var res = new RivalryDataDto();
+        return res;
+
+    }
+
+    public async Task<StreakDataDto> GetStreakData(IList<Player> players)
+    {
 
         var resStreak = new StreakDataDto();
 

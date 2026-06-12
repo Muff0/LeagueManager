@@ -774,8 +774,8 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var stats = await statService.GetStreakData();   
-            await discordService.SendRoundStatsMessage(stats);
+            var stats = await statService.GetStats();   
+            await discordService.SendRoundStatsMessage(stats.StreakData);
             SendTaskCompletedNotification();
         }
         catch (Exception e)
