@@ -356,7 +356,10 @@
 
     private async void PostReviews()
     {
-        try { await MainService.PostReviews(); }
+        try {
+         await MainService.PostReviews(); 
+         RefreshPostingGrid();
+         }
         catch { _message = "Error"; }
     }
 
