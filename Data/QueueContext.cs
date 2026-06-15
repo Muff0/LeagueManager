@@ -10,6 +10,7 @@ public class QueueContext : DbContext
     }
 
     public DbSet<CommandMessage> CommandQueue { get; set; }
+    public DbSet<GameAnalysis> GameAnalysis { get; set; }
     public DbSet<DomainEvent> EventQueue { get; set; }
     public DbSet<OutgoingMessage> MessageQueue { get; set; }
     public DbSet<Poll> PollQueue { get; set; }
@@ -25,6 +26,8 @@ public class QueueContext : DbContext
             .HasIndex(de => de.Status);
 
         modelBuilder.Entity<OutgoingMessage>()
+            .HasIndex(om => om.Status);
+        modelBuilder.Entity<GameAnalysis>()
             .HasIndex(om => om.Status);
 
         modelBuilder.Entity<Poll>()

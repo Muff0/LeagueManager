@@ -121,11 +121,6 @@ builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<DiscordService>();
 builder.Services.AddScoped<CommandOrchestrator>();
 
-builder.Services.AddSingleton<PollSchedulerService>();
-builder.Services.AddSingleton<SyncMatchesSchedulerService>();
-builder.Services.AddSingleton<PostUpcomingMatchesSchedulerService>();
-builder.Services.AddSingleton<CleanupQueueSchedulerService>();
-builder.Services.AddSingleton<SendUnconfirmedMatchRemindersSchedulerService>();
 
 
 // Mail Service
@@ -142,16 +137,23 @@ builder.Services.AddDiscordGateway(o => { o.Token = discordSettings.Token; })
 
 builder.Services.AddScoped<MainService>();
 
+// Register all the Queue management classes
+
+typeof(SchedulerSettings).Assembly.GetTypes()
+    .Where(t => !t.IsAbstract && typeof(IJobSchedulerService).IsAssignableFrom(t))
+    .ToList()
+    .ForEach(t => builder.Services.AddSingleton(t));
+
 typeof(QueueWorker).Assembly.GetTypes()
     .Where(t => !t.IsAbstract && typeof(ICommandHandler).IsAssignableFrom(t))
     .ToList()
     .ForEach(t => builder.Services.AddScoped(typeof(ICommandHandler), t));
 
-
 typeof(QueueWorker).Assembly.GetTypes()
     .Where(t => !t.IsAbstract && typeof(IScheduledJob).IsAssignableFrom(t))
     .ToList()
     .ForEach(t => builder.Services.AddSingleton(t));
+
 
 builder.Services.AddHostedService<QueueWorker>();
 builder.Services.AddHostedService<SchedulerWorker>();
@@ -173,11 +175,11 @@ using (var scope = host.Services.CreateScope())
     for (var i = 0; i < maxRetries; i++)
         try
         {
-            var queueDb = services.GetRequiredService<QueueContext>();
-            queueDb.Database.Migrate();
-
             var leagueDb = services.GetRequiredService<LeagueContext>();
             leagueDb.Database.Migrate();
+            
+            var queueDb = services.GetRequiredService<QueueContext>();
+            queueDb.Database.Migrate();
 
             break;
         }

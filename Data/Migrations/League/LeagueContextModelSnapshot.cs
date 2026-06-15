@@ -30,6 +30,13 @@ namespace Data.Migrations.League
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<int>("GameAnalysisStatus")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("GameAnalysisUrl")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTime?>("GameTimeUTC")
                         .HasColumnType("timestamp with time zone");
 

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using Shared.Enum;
 
 namespace Data.Model;
 
@@ -25,4 +26,8 @@ public class Match
     public DateTime? GameTimeUTC { get; set; }
 
     [Required] public string LeagoKey { get; set; } = string.Empty;
+    [MaxLength(100)]
+    public string? GameAnalysisUrl { get; set; }
+    public GameAnalysisStatus GameAnalysisStatus { get; set; }
+    
 }

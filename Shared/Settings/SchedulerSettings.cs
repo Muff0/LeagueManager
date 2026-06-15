@@ -10,4 +10,5 @@ public class SchedulerSettings
     public int CleanupQueueIntervalDays { get; set; } = 1;
     public DayOfWeek UnconfirmedMatchReminderDay { get; set; }
     public int UnconfirmedMatchReminderHour { get; set; }
+    public int QueueGameAnalysisIntervalMinutes { get; set; } = 15;
 }

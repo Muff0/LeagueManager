@@ -12,6 +12,7 @@ public class OGSService(HttpClient httpClient,
                                ILogger<OGSService> logger) : ServiceBase(logger)
 {
     private readonly string _baseAddress = "https://online-go.com";
+    private readonly string gameUrlFormat = "https://online-go.com/game/";
     private readonly double A = 525;
     private readonly double C = 23.15;
     private readonly double MAX_RATING = 6000;
@@ -41,5 +42,30 @@ public class OGSService(HttpClient httpClient,
     public async Task Test()
     {
         var pl = await playerClient.GetPlayersAsync("muff0");
+    }
+
+    public async Task<string> GetSgf(string gameId)
+    {
+        return "";
+    }
+
+    private bool IsValidGameUrl(string url) => url.Contains(gameUrlFormat);
+    private string GetIdFromGameUrl(string url) => url.Replace(gameUrlFormat, string.Empty);
+    
+    public async Task<string> GetMatchIdFromLeagueUrl(string matchMatchUrl)
+    {
+        if (IsValidGameUrl(matchMatchUrl))
+            return GetIdFromGameUrl(matchMatchUrl);
+        
+        using var request = new HttpRequestMessage(HttpMethod.Head, matchMatchUrl);
+        using var response = await httpClient.SendAsync(
+            request,
+            HttpCompletionOption.ResponseHeadersRead);
+
+        var resAddress = response.RequestMessage!.RequestUri!.ToString();
+        if (IsValidGameUrl(resAddress))
+            return GetIdFromGameUrl(resAddress);
+        
+        return string.Empty;
     }
 }

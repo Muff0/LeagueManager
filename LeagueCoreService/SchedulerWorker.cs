@@ -24,7 +24,8 @@ public class SchedulerWorker : BackgroundService
             scope.ServiceProvider.GetRequiredService<CleanupQueueScheduledJob>(),
             scope.ServiceProvider.GetRequiredService<PostUpcomingMatchesScheduledJob>(),
             scope.ServiceProvider.GetRequiredService<PostDiscordPollScheduledJob>(),
-            scope.ServiceProvider.GetRequiredService<SendUnconfirmedMatchRemindersScheduledJob>()
+            scope.ServiceProvider.GetRequiredService<SendUnconfirmedMatchRemindersScheduledJob>(),
+            scope.ServiceProvider.GetRequiredService<QueueGameAnalysisScheduledJob>()
         ];
     }
 
