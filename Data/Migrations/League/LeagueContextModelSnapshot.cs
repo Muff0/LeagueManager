@@ -54,9 +54,8 @@ namespace Data.Migrations.League
                     b.Property<bool>("NotificationSent")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("OgsLeagueMatchId")
-                        .IsRequired()
-                        .HasColumnType("text");
+                    b.Property<int>("OgsLeagueMatchId")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("PlayerSeasonPlayerId")
                         .HasColumnType("integer");

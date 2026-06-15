@@ -169,7 +169,7 @@ using (var scope = host.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
 
-    const int maxRetries = 10;
+    const int maxRetries = 2;
     var delay = TimeSpan.FromSeconds(3);
 
     for (var i = 0; i < maxRetries; i++)

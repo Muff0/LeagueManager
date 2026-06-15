@@ -10,45 +10,30 @@ namespace LeagoService;
 
 public class LeagoMainService : ServiceBase
 {
-    private readonly AccountClient _accountClient;
-    private readonly ArenaMembersClient _arenaMembersClient;
     private readonly ArenasClient _arenasClient;
     private readonly EventsClient _eventsClient;
     private readonly HealthClient _healthClient;
     private readonly LeaguesClient _leaguesClient;
-    private readonly MatchesClient _matchesClient;
-    private readonly PaymentsClient _paymentsClient;
     private readonly ProfilesClient _profilesClient;
     private readonly RoundsClient _roundsClient;
     private readonly TournamentsClient _tournamentsClient;
-    private readonly UsersClient _usersClient;
-
-    public LeagoMainService(AccountClient accountClient,
-        ArenaMembersClient arenaMembersClient,
+    public LeagoMainService(
         ArenasClient arenasClient,
         EventsClient eventsClient,
         HealthClient healthClient,
         LeaguesClient leaguesClient,
-        MatchesClient matchesClient,
-        PaymentsClient paymentsClient,
         ProfilesClient profilesClient,
         RoundsClient roundsClient,
         TournamentsClient tournamentsClient,
-        UsersClient usersClient,
         ILogger<LeagoMainService> logger) : base(logger)
     {
-        _accountClient = accountClient;
-        _arenaMembersClient = arenaMembersClient;
         _arenasClient = arenasClient;
         _eventsClient = eventsClient;
         _healthClient = healthClient;
         _leaguesClient = leaguesClient;
-        _matchesClient = matchesClient;
-        _paymentsClient = paymentsClient;
         _profilesClient = profilesClient;
         _roundsClient = roundsClient;
         _tournamentsClient = tournamentsClient;
-        _usersClient = usersClient;
     }
 
     public Task GetHealth()
@@ -76,6 +61,14 @@ public class LeagoMainService : ServiceBase
         return res;
     }
 
+    private int TryGetIdFromLeagueMatchUrl(string matchUrl)
+    {
+        var idString =  matchUrl.Split('/').Last();
+        if (int.TryParse(idString, out var id))
+            return id;
+        return 0;
+    }
+    
     public async Task<GetMatchesOutDto> GetMatches(GetMatchesInDto inDto)
     {
         var res = new GetMatchesOutDto();
@@ -88,8 +81,7 @@ public class LeagoMainService : ServiceBase
             LeagoKey = mm.Key,
             ScheduleTime = mm.WallTime.GetValueOrDefault().UtcDateTime,
             GameLink = mm.OnlineGameUrl,
-            MatchSetLevel = mm.MatchSetLevel,
-            OgsLeagueMatchId = mm.MatchSetKey,
+            OgsLeagueMatchId = TryGetIdFromLeagueMatchUrl(mm.OnlineGameUrl),
             Players = mm.Players.Select(pp => new PlayerMatchDto
             {
                 Player = new PlayerDto
@@ -132,9 +124,9 @@ public class LeagoMainService : ServiceBase
                 OGSHandle = p.OnlineHandle ?? ""
             }).ToArray();
         }
-        catch
+        catch(Exception e)
         {
-            // k
+            HandleException(e);
         }
 
         return res;
@@ -152,8 +144,9 @@ public class LeagoMainService : ServiceBase
                 Name = i.Name
             }).ToArray();
         }
-        catch
+        catch(Exception e)
         {
+            HandleException(e);
         }
 
         return res;
@@ -182,28 +175,14 @@ public class LeagoMainService : ServiceBase
 
             res.Result = league;
         }
-        catch
+        catch(Exception e)
         {
+            HandleException(e);
         }
 
         return res;
     }
 
-    public async Task<GetArenaOutDto> GetArena(GetArenaInDto inDto)
-    {
-        var res = new GetArenaOutDto();
-        try
-        {
-            var ires = await _arenasClient.GetArenaAsync(inDto.ArenaKey);
-
-            res.Result = new ArenaDto();
-        }
-        catch
-        {
-        }
-
-        return res;
-    }
 
     public async Task<GetProfileOutDto> GetProfile(GetProfileInDto inDto)
     {
@@ -216,8 +195,9 @@ public class LeagoMainService : ServiceBase
             res.Email = rres.Email;
             res.DiscordHandle = ires.Discord;
         }
-        catch
+        catch(Exception e)
         {
+            HandleException(e);
         }
 
         return res;

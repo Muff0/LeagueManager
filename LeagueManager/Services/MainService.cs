@@ -11,6 +11,7 @@ using Data.Model;
 using Data.Queries;
 using Discord;
 using LeagoService;
+using LeagueCoreService.Queue;
 using LeagueManager.Extensions;
 using LeagueManager.ViewModel;
 using Mail;
@@ -772,8 +773,8 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var stats = await statService.GetStats();   
-            await discordService.SendRoundStatsMessage(stats.StreakData);
+            var handler =  new QueueGameAnalysisHandler(leagueDataService,queueDataService, ogsService);
+            await handler.HandleAsync(new CommandMessage());
             SendTaskCompletedNotification();
         }
         catch (Exception e)

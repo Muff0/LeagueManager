@@ -13,6 +13,8 @@ public class OGSService(HttpClient httpClient,
 {
     private readonly string _baseAddress = "https://online-go.com";
     private readonly string gameUrlFormat = "https://online-go.com/game/";
+    private readonly string leagueGameUrlFormat = "https://online-go.com/online-league/league-game/";
+    
     private readonly double A = 525;
     private readonly double C = 23.15;
     private readonly double MAX_RATING = 6000;
@@ -51,20 +53,16 @@ public class OGSService(HttpClient httpClient,
 
     private bool IsValidGameUrl(string url) => url.Contains(gameUrlFormat);
     private string GetIdFromGameUrl(string url) => url.Replace(gameUrlFormat, string.Empty);
-    
+    private string GetLeagueIdFromGameUrl(string url) => url.Replace(leagueGameUrlFormat, string.Empty);
+
     public async Task<string> GetMatchIdFromLeagueUrl(string matchMatchUrl)
     {
         if (IsValidGameUrl(matchMatchUrl))
             return GetIdFromGameUrl(matchMatchUrl);
+        var id = GetIdFromGameUrl(matchMatchUrl);
+        var intId = int.Parse(id);
         
-        using var request = new HttpRequestMessage(HttpMethod.Head, matchMatchUrl);
-        using var response = await httpClient.SendAsync(
-            request,
-            HttpCompletionOption.ResponseHeadersRead);
-
-        var resAddress = response.RequestMessage!.RequestUri!.ToString();
-        if (IsValidGameUrl(resAddress))
-            return GetIdFromGameUrl(resAddress);
+        await ogsClient.GetMatchAsync(intId);
         
         return string.Empty;
     }

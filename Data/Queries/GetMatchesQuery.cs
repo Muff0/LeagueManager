@@ -9,6 +9,7 @@ public class GetMatchesQuery : Query<LeagueContext, Match>
     public bool IncludePlayers { get; set; }
     public bool? HasGameAnalysisUrl { get; set; } = null;
     public bool? HasScheduledGameAnalysis { get; set; } = null;
+    public bool? IsPlayed { get; set; } = null;
     public int? SeasonId { get; set; } = null;
     public int? Round { get; set; } = null;
     
@@ -29,7 +30,8 @@ public class GetMatchesQuery : Query<LeagueContext, Match>
             query = query.Where(mm => (mm.GameAnalysisUrl != null) == HasGameAnalysisUrl.Value);
         if (HasScheduledGameAnalysis.HasValue)
             query = query.Where(mm => (mm.GameAnalysisStatus != GameAnalysisStatus.NotQueued)  == HasScheduledGameAnalysis.Value);
-        
+        if (IsPlayed.HasValue)
+            query = query.Where(mm => mm.PlayerMatches.Any(pm => pm.Outcome == PlayerMatchOutcome.Loss) == IsPlayed.Value);
         return query;
     }
 }

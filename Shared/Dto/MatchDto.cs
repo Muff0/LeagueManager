@@ -9,12 +9,7 @@ public class MatchDto
     public DateTime? ScheduleTime { get; set; }
     public string GameLink { get; set; } = string.Empty;
     public bool IsPlayed { get; set; } = false;
-    public bool WhiteConfirmed { get; set; } = false;
-    public bool BlackConfirmed { get; set; } = false;
-    public int? MatchSetLevel { get; set; }
-
-    public string OgsLeagueMatchId { get; set; } = string.Empty;
-
+    public int OgsLeagueMatchId { get; set; }
     public int Round { get; set; }
     public int SeasonId { get; set; }
     public SeasonDto? Season { get; set; }

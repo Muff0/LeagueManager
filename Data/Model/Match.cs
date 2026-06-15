@@ -14,8 +14,6 @@ public class Match
     public string MatchUrl { get; set; } = string.Empty;
 
     public bool IsComplete { get; set; } = false;
-    public string OgsLeagueMatchId { get; set; } = string.Empty;
-
     public int Round { get; set; }
     public int SeasonId { get; set; }
 
@@ -29,5 +27,6 @@ public class Match
     [MaxLength(100)]
     public string? GameAnalysisUrl { get; set; }
     public GameAnalysisStatus GameAnalysisStatus { get; set; }
-    
+    public int OgsLeagueMatchId { get; set; }
+
 }
