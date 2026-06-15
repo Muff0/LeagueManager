@@ -47,10 +47,6 @@ namespace Data.Migrations.League
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("MatchUrl")
-                        .IsRequired()
-                        .HasColumnType("text");
-
                     b.Property<bool>("NotificationSent")
                         .HasColumnType("boolean");
 
