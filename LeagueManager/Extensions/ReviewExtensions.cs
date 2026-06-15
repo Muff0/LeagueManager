@@ -66,7 +66,7 @@ public static class ReviewExtensions
             WhitePlayerName = whitePlayer?.FirstName + " " + whitePlayer?.LastName,
             BlackPlayerRank = blackPlayer?.Rank.GetDisplayName() ?? string.Empty,
             WhitePlayerRank = whitePlayer?.Rank.GetDisplayName() ?? string.Empty,
-            MatchUrl = review.Match?.MatchUrl ?? string.Empty,
+            MatchUrl = $"""https://online-go.com/online-league/league-game/{review.Match?.OgsLeagueMatchId}""" ,
             IsPlayed = review.Match?.IsPlayed() ?? false,
             MatchTime = review.Match?.GameTimeUTC ?? DateTime.MinValue
         };

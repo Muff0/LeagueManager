@@ -30,7 +30,6 @@ public class AddOrUpdateMatchesCommand : Command<LeagueContext>
                     LeagoKey = currentMatch.LeagoKey,
                     SeasonId = SeasonId,
                     Round = Round,
-                    MatchUrl = currentMatch.GameLink ?? "",
                     GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime(),
                     PlayerMatches = new List<PlayerMatch>(),
                     OgsLeagueMatchId = currentMatch.OgsLeagueMatchId
@@ -63,7 +62,6 @@ public class AddOrUpdateMatchesCommand : Command<LeagueContext>
             else
             {
                 existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
-                existingMatch.MatchUrl = currentMatch.GameLink ?? "";
                 existingMatch.IsComplete = currentMatch.Players.Any(pl => pl.Outcome != PlayerMatchOutcome.NotReported);
                 existingMatch.OgsLeagueMatchId = currentMatch.OgsLeagueMatchId;
                 

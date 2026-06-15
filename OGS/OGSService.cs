@@ -26,7 +26,7 @@ public class OGSService(HttpClient httpClient,
     {
         return Math.Log(Math.Min(MAX_RATING, Math.Max(MIN_RATING, rating)) / A) * C;
     }
-
+    
     public async Task<OGSPlayer?> GetPlayer(string userId)
     {
         var url = _baseAddress + "/api/v1/players?username=" + userId;

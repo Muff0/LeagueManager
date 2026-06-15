@@ -80,7 +80,6 @@ public class LeagoMainService : ServiceBase
         {
             LeagoKey = mm.Key,
             ScheduleTime = mm.WallTime.GetValueOrDefault().UtcDateTime,
-            GameLink = mm.OnlineGameUrl,
             OgsLeagueMatchId = TryGetIdFromLeagueMatchUrl(mm.OnlineGameUrl),
             Players = mm.Players.Select(pp => new PlayerMatchDto
             {

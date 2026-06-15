@@ -7,7 +7,6 @@ public class MatchDto
     public PlayerMatchDto[]? Players { get; set; } = Array.Empty<PlayerMatchDto>();
 
     public DateTime? ScheduleTime { get; set; }
-    public string GameLink { get; set; } = string.Empty;
     public bool IsPlayed { get; set; } = false;
     public int OgsLeagueMatchId { get; set; }
     public int Round { get; set; }

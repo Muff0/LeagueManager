@@ -11,8 +11,7 @@ public class Match
     public int Id { get; set; }
 
     public ICollection<PlayerMatch> PlayerMatches { get; set; } = new List<PlayerMatch>();
-    public string MatchUrl { get; set; } = string.Empty;
-
+   
     public bool IsComplete { get; set; } = false;
     public int Round { get; set; }
     public int SeasonId { get; set; }

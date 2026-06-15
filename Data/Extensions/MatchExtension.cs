@@ -13,7 +13,7 @@ public static class MatchExtension
             Id = match.Id,
             LeagoKey = match.LeagoKey,
             ScheduleTime = match.GameTimeUTC.GetValueOrDefault(),
-            GameLink = match.MatchUrl,
+            OgsLeagueMatchId =  match.OgsLeagueMatchId,
             IsPlayed = match.IsComplete,
             Players = match.PlayerMatches?.Select(pm => pm.ToPlayerMatchDto(true)).ToArray(),
             Round = match.Round,
@@ -21,6 +21,9 @@ public static class MatchExtension
         };
     }
 
+    public static string GetMatchUrl(this MatchDto dto) =>
+        $"""https://online-go.com/online-league/league-game/{dto.OgsLeagueMatchId}""";
+    
     public static bool IsPlayed(this Match match)
     {
         return match.PlayerMatches.Any(pm => pm.Outcome == PlayerMatchOutcome.Win);

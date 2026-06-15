@@ -23,7 +23,6 @@ public class UpdateMatchesCommand : Command<LeagueContext>
                 continue;
 
             existingMatch.GameTimeUTC = currentMatch.ScheduleTime.GetValueOrDefault().ToUniversalTime();
-            existingMatch.MatchUrl = currentMatch.GameLink ?? "";
             existingMatch.IsComplete = currentMatch.Players.Any(pl => pl.Outcome != PlayerMatchOutcome.NotReported);
             existingMatch.OgsLeagueMatchId = currentMatch.OgsLeagueMatchId;
             

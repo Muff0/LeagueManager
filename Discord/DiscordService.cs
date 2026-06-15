@@ -1,4 +1,5 @@
-﻿using Discord.MessageBuilders;
+﻿using Data;
+using Discord.MessageBuilders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NetCord;
@@ -171,7 +172,7 @@ public class DiscordService : ServiceBase
     {
         var res = "**" + match.BuildMatchTitle() + "**" + Environment.NewLine
                   + "Game Time: " + BuildTimeTag(match.ScheduleTime.GetValueOrDefault()) + Environment.NewLine
-                  + match.GameLink;
+                  + match.GetMatchUrl();
         return res;
     }
 
