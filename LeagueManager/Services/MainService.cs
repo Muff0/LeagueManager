@@ -54,8 +54,6 @@ public class MainService(QueueDataService queueDataService,
         { "Go Magic League - Lectures + 5 reviews", PlayerParticipationTier.DojoTier3 }
     };
 
-    private readonly QueueDataService _queueDataService;
-    private readonly ReviewService _reviewService;
 
 
     protected override void HandleException(Exception e)
@@ -103,7 +101,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            await _reviewService.LinkExistingReviewMatches();
+            await reviewService.LinkExistingReviewMatches();
         }
         catch (Exception ex)
         {
@@ -418,7 +416,7 @@ public class MainService(QueueDataService queueDataService,
 
     public async Task AddReviewToPlayer(PlayerViewModel player)
     {
-        await _reviewService.AddReviewToPlayer(player.ToPlayerDto());
+        await reviewService.AddReviewToPlayer(player.ToPlayerDto());
     }
 
     public async Task SavePlayerChanges(List<PlayerViewModel> players)
@@ -460,7 +458,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var res = await _queueDataService.RunQueryAsync(new GetCommandMessagesQuery
+            var res = await queueDataService.RunQueryAsync(new GetCommandMessagesQuery
             {
                 Types = ["RankChangeCommand"]
             });
@@ -478,7 +476,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            _queueDataService.Execute(new SetCommandMessageStatusCommand
+            queueDataService.Execute(new SetCommandMessageStatusCommand
             {
                 CommandMessageId = request.Id,
                 NewStatus = QueueStatus.Completed
@@ -535,7 +533,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            await _reviewService.UnlinkMatch(reviews.Select(re => re.ToReviewDto()).ToArray(), deleteMatch);
+            await reviewService.UnlinkMatch(reviews.Select(re => re.ToReviewDto()).ToArray(), deleteMatch);
         }
         catch (Exception e)
         {
@@ -548,7 +546,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            await _reviewService.SetReviewStatus(new SetReviewStatusInDto
+            await reviewService.SetReviewStatus(new SetReviewStatusInDto
             {
                 Reviews = reviews.Select(re => re.ToReviewDto()),
                 NewStatus = ReviewStatus.Canceled
@@ -599,7 +597,7 @@ public class MainService(QueueDataService queueDataService,
             Payload = ""
         };
 
-        await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand
+        await queueDataService.ExecuteAsync(new InsertCommandMessageCommand
         {
             NewCommand = command
         });
@@ -623,7 +621,7 @@ public class MainService(QueueDataService queueDataService,
 
             var message = new RoundStartMessage(season.ToSeasonDto(), round, roundDeadline);
 
-            _queueDataService.ExecuteAsync(new InsertCommandMessageCommand
+            queueDataService.ExecuteAsync(new InsertCommandMessageCommand
             {
                 NewCommand = new CommandMessage
                 {
@@ -659,7 +657,7 @@ public class MainService(QueueDataService queueDataService,
 
     public async Task AssignTeacherToReviews(IEnumerable<ReviewViewModel> reviews, int teacherId)
     {
-        await _reviewService.AssignTeacherToReviews(reviews.Select(re => re.ToReviewDto()), teacherId);
+        await reviewService.AssignTeacherToReviews(reviews.Select(re => re.ToReviewDto()), teacherId);
     }
 
     public async Task SyncMatches()
@@ -671,7 +669,7 @@ public class MainService(QueueDataService queueDataService,
             Payload = ""
         };
 
-        await _queueDataService.ExecuteAsync(new InsertCommandMessageCommand
+        await queueDataService.ExecuteAsync(new InsertCommandMessageCommand
         {
             NewCommand = command
         });
@@ -682,7 +680,7 @@ public class MainService(QueueDataService queueDataService,
         ReviewScheduleDto[] reviews;
         try
         {
-            reviews = await _reviewService.GetReviewSchedule();
+            reviews = await reviewService.GetReviewSchedule();
         }
         catch (Exception ex)
         {
