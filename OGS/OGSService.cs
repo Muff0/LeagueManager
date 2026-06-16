@@ -7,8 +7,8 @@ using Shared.Dto.OGS;
 namespace OGS;
 
 public class OGSService(HttpClient httpClient,
-    IOnlineLeagueClient ogsClient,
     IOgsPlayerClient playerClient,
+    IUnauthenticatedOgsClient ogsClient,
                                ILogger<OGSService> logger) : ServiceBase(logger)
 {
     private readonly string _baseAddress = "https://online-go.com";
@@ -46,24 +46,21 @@ public class OGSService(HttpClient httpClient,
         var pl = await playerClient.GetPlayersAsync("muff0");
     }
 
-    public async Task<string> GetSgf(string gameId)
+    public async Task<string> GetSgf(int gameId)
     {
-        return "";
+        var sgf = await ogsClient.GetSgfAsync(gameId);
+        return sgf;
     }
 
     private bool IsValidGameUrl(string url) => url.Contains(gameUrlFormat);
     private string GetIdFromGameUrl(string url) => url.Replace(gameUrlFormat, string.Empty);
     private string GetLeagueIdFromGameUrl(string url) => url.Replace(leagueGameUrlFormat, string.Empty);
 
-    public async Task<string> GetMatchIdFromLeagueUrl(string matchMatchUrl)
+    public async Task<int> GetMatchIdFromLeagueId(int matchId)
     {
-        if (IsValidGameUrl(matchMatchUrl))
-            return GetIdFromGameUrl(matchMatchUrl);
-        var id = GetIdFromGameUrl(matchMatchUrl);
-        var intId = int.Parse(id);
         
-        await ogsClient.GetMatchAsync(intId);
+        var match = await ogsClient.GetOnlineLeagueMatchInfoAsync(matchId);
         
-        return string.Empty;
+        return match.Game ?? 0;
     }
 }

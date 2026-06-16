@@ -1,6 +1,8 @@
 using Data;
 using Discord;
 using Discord.Logging;
+using Kifubara;
+using Kifubara.Client;
 using LeagoClient;
 using LeagoService;
 using LeagueCoreService;
@@ -31,6 +33,7 @@ builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("Di
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
 builder.Services.Configure<SchedulerSettings>(builder.Configuration.GetSection("Scheduler"));
 builder.Services.Configure<OgsSettings>(builder.Configuration.GetSection("Ogs"));
+builder.Services.Configure<KifubaraSettings>(builder.Configuration.GetSection("Kifubara"));
 
 // Needed to handle bad datetime values without altering the generated code
 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -60,12 +63,23 @@ builder.Services.AddHttpClient<IOnlineLeagueClient, OnlineLeagueClient>();
 // OGS online_league API: OAuth2 client-credentials auth + bearer token handler.
 builder.Services.AddSingleton<IOgsTokenProvider, OgsTokenProvider>();
 builder.Services.AddTransient<OgsAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<IGamesClient, GamesClient>(c =>
+        c.BaseAddress = new Uri("https://online-go.com/api/v1/"))
+    .AddHttpMessageHandler<OgsAuthenticatedHttpHandler>();
 builder.Services.AddHttpClient<IOnlineLeagueClient, OnlineLeagueClient>(c =>
         c.BaseAddress = new Uri("https://online-go.com/api/v1/"))
     .AddHttpMessageHandler<OgsAuthenticatedHttpHandler>();
 builder.Services.AddHttpClient<IOgsPlayerClient, OgsPlayerClient>(c =>
         c.BaseAddress = new Uri("https://online-go.com/api/v1/"))
     .AddHttpMessageHandler<OgsAuthenticatedHttpHandler>();
+
+// Kifubara API 
+
+builder.Services.AddTransient<KifubaraAuthenticatedHttpHandler>();
+var kifubaraSettings = builder.Configuration.GetSection("Kifubara").Get<KifubaraSettings>()!;
+builder.Services.AddHttpClient<IKifubaraClient, KifubaraClient>(c =>
+    c.BaseAddress = new Uri(kifubaraSettings.BaseUrl))
+    .AddHttpMessageHandler<KifubaraAuthenticatedHttpHandler>();
 
 // Logging
 var discordSettings = builder.Configuration.GetSection("Discord").Get<DiscordSettings>()!;
@@ -120,6 +134,7 @@ builder.Services.AddScoped<OGSService>();
 builder.Services.AddScoped<MainService>();
 builder.Services.AddScoped<DiscordService>();
 builder.Services.AddScoped<CommandOrchestrator>();
+builder.Services.AddScoped<KifubaraService>();
 
 
 

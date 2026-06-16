@@ -13,7 +13,6 @@ public class GameAnalysis
     public string Sgf { get; set; }
     public int MatchId { get; set; }
     public QueueStatus Status { get; set; } = QueueStatus.Pending;
-    public DateTime DateTime { get; set; }
     public DateTime CreatedAtUtc { get; set; }
     public DateTime ProcessedAtUtc { get; set; }
 }

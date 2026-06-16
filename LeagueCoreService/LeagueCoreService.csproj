@@ -24,6 +24,7 @@
     <ItemGroup>
         <ProjectReference Include="..\Data\Data.csproj"/>
         <ProjectReference Include="..\Discord\Discord.csproj"/>
+        <ProjectReference Include="..\Kifubara\Kifubara.csproj" />
         <ProjectReference Include="..\LeagoService\LeagoService.csproj"/>
         <ProjectReference Include="..\Mail\Mail.csproj"/>
         <ProjectReference Include="..\OGS\OGS.csproj"/>

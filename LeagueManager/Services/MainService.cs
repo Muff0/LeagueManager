@@ -10,6 +10,7 @@ using Data.Extensions;
 using Data.Model;
 using Data.Queries;
 using Discord;
+using Kifubara;
 using LeagoService;
 using LeagueCoreService.Queue;
 using LeagueManager.Extensions;
@@ -36,10 +37,9 @@ public class MainService(QueueDataService queueDataService,
     IOptions<LeagoSettings> leagoOptions,
     DiscordService discordService,
     ReviewService reviewService,
-    MailService mailService,
     OGSService ogsService,
+    KifubaraService kifubaraService,
     INotificationDispatcher notificationService,
-    StatService statService,
     ILogger<MainService> logger) : ServiceBase(logger)
 {
 
@@ -773,7 +773,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var handler =  new QueueGameAnalysisHandler(leagueDataService,queueDataService, ogsService);
+            var handler =  new SendGameAnalysisHandler(queueDataService,leagueDataService,kifubaraService);
             await handler.HandleAsync(new CommandMessage());
             SendTaskCompletedNotification();
         }

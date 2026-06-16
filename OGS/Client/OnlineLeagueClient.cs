@@ -88,13 +88,6 @@ public class OnlineLeagueClient : IOnlineLeagueClient
     }
 
     // -------------------------------------------------------------------------
-    // Match info (public)
-    // -------------------------------------------------------------------------
-
-    public async Task<OnlineLeagueMatchInfo> GetMatchInfoAsync(int id, CancellationToken ct = default)
-        => await GetAsync<OnlineLeagueMatchInfo>($"online_league/match/{id}", ct);
-
-    // -------------------------------------------------------------------------
     // Members
     // -------------------------------------------------------------------------
 

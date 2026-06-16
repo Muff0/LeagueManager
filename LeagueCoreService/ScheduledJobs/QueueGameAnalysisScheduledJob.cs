@@ -1,4 +1,5 @@
 using Data;
+using Data.Queries;
 using Shared.Services;
 
 namespace LeagueCoreService.ScheduledJobs;
@@ -7,4 +8,5 @@ public class QueueGameAnalysisScheduledJob(QueueDataService queueDataService, Sy
     : ScheduledJobBase<SyncMatchesSchedulerService>(queueDataService, schedulerService)
 {
     public override string Command => "QueueGameAnalysis";
+
 }

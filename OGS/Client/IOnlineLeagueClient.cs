@@ -40,11 +40,6 @@ public interface IOnlineLeagueClient
     /// </summary>
     Task GetMatchAsync(int matchId, CancellationToken ct = default);
 
-    // -------------------------------------------------------------------------
-    // Match info (public view — no invite links or ratings)
-    // -------------------------------------------------------------------------
-
-    Task<OnlineLeagueMatchInfo> GetMatchInfoAsync(int id, CancellationToken ct = default);
 
     // -------------------------------------------------------------------------
     // Members

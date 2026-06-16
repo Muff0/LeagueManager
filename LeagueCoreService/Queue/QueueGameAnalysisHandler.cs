@@ -34,7 +34,8 @@ public class QueueGameAnalysisHandler(LeagueDataService leagueDataService,
         var queued = new List<MatchDto>();
         foreach (var match in matchesToSchedule)
         {
-            var sgf = "";
+            var matchId = await ogsService.GetMatchIdFromLeagueId(match.OgsLeagueMatchId);
+            var sgf = await ogsService.GetSgf(matchId);
             if (IsValidSgfFormat(sgf))
             {
                 var gameAnalysis = new GameAnalysis()

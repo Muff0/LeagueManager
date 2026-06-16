@@ -1,6 +1,8 @@
 using Data;
 using Discord;
 using Havit.Blazor.Components.Web;
+using Kifubara;
+using Kifubara.Client;
 using LeagoClient;
 using LeagoService;
 using LeagueManager.Components;
@@ -27,6 +29,7 @@ builder.Services.Configure<LeagoSettings>(builder.Configuration.GetSection("Leag
 builder.Services.Configure<DiscordSettings>(builder.Configuration.GetSection("Discord"));
 builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
 builder.Services.Configure<OgsSettings>(builder.Configuration.GetSection("Ogs"));
+builder.Services.Configure<KifubaraSettings>(builder.Configuration.GetSection("Kifubara"));
 
 // Needed to handle bad datetime values without altering the generated code
 JsonConvert.DefaultSettings = () => new JsonSerializerSettings
@@ -66,11 +69,24 @@ builder.Services.AddHttpClient<TournamentsClient>()
 builder.Services.AddHttpClient<UsersClient>()
     .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
 
-builder.Services.AddHttpClient<IOnlineLeagueClient,OnlineLeagueClient>();
+// Kifubara API 
+
+builder.Services.AddTransient<KifubaraAuthenticatedHttpHandler>();
+var kifubaraSettings = builder.Configuration.GetSection("Kifubara").Get<KifubaraSettings>()!;
+builder.Services.AddHttpClient<IKifubaraClient, KifubaraClient>(c =>
+        c.BaseAddress = new Uri(kifubaraSettings.BaseUrl))
+    .AddHttpMessageHandler<KifubaraAuthenticatedHttpHandler>();
+
 
 // OGS online_league API: OAuth2 client-credentials auth + bearer token handler.
 builder.Services.AddSingleton<IOgsTokenProvider, OgsTokenProvider>();
 builder.Services.AddTransient<OgsAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<IUnauthenticatedOgsClient, UnauthenticatedOgsClient>(c =>
+        c.BaseAddress = new Uri("https://online-go.com/api/v1/"));
+
+builder.Services.AddHttpClient<IGamesClient, GamesClient>(c =>
+        c.BaseAddress = new Uri("https://online-go.com/api/v1/"))
+    .AddHttpMessageHandler<OgsAuthenticatedHttpHandler>();
 builder.Services.AddHttpClient<IOnlineLeagueClient, OnlineLeagueClient>(c =>
         c.BaseAddress = new Uri("https://online-go.com/api/v1/"))
     .AddHttpMessageHandler<OgsAuthenticatedHttpHandler>();
@@ -99,7 +115,9 @@ builder.Services.AddScoped<ReviewService>();
 builder.Services.AddScoped<OGSService>();
 builder.Services.AddScoped<DiscordService>();
 builder.Services.AddSingleton<StatService>();
+builder.Services.AddScoped<KifubaraService>();
 builder.Services.AddScoped<MainService>();
+
 // Notification Services
 builder.Services.AddSignalR();
 builder.Services.AddSingleton<NotificationDispatcher>();
