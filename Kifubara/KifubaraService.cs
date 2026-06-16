@@ -4,7 +4,7 @@ namespace Kifubara;
 
 public class KifubaraService(IKifubaraClient kifubaraClient)
 {
-    public async Task<string> SendSgf(string nextGameSgf)
+    public async Task<AnalyzeGameResponse> SendSgf(string nextGameSgf)
     {
         var res = await kifubaraClient.AnalyzeAsync(
             new AnalyzeGameRequest()
@@ -12,6 +12,6 @@ public class KifubaraService(IKifubaraClient kifubaraClient)
                 Sgf = nextGameSgf,
             });
 
-        return res.ShareUrl;
+        return res;
     }
 }

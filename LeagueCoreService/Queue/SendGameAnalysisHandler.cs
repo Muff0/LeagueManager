@@ -3,35 +3,49 @@ using Data.Commands.Match;
 using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
-using Kifubara;
+using Mail.MessageBuilders;
 using Shared.Enum;
+using Shared.Extensions;
+using Shared.Queue;
 
 namespace LeagueCoreService.Queue;
 
-public class SendGameAnalysisHandler(QueueDataService queueDataService,
-    LeagueDataService leagueDataService,
-    KifubaraService kifubaraService)
-    : ICommandHandler
+public class SendGameAnalysisHandler(LeagueDataService leagueDataService,
+    QueueDataService queueDataService) : ICommandHandler
 {
     public string CommandType => "SendGameAnalysis";
     public async Task HandleAsync(CommandMessage cmd)
     {
-        var nextGame = await queueDataService.RunQueryAsync(
-            new GetNextGameAnalysisQuery());
-        
-        var gameLink = await kifubaraService.SendSgf(nextGame.Sgf);
+        var games = await leagueDataService.RunQueryAsync(
+            new GetMatchesQuery()
+            {
+                IncludePlayers = true,
+                WithGameAnalysisStatus = GameAnalysisStatus.Completed
+            });
 
-        await leagueDataService.ExecuteAsync(new SetMatchGameAnalysisUrlCommand()
+        foreach (var game in games)
         {
-            MatchId = nextGame.MatchId,
-            GameAnalysisUrl = gameLink
-        });
-
-        await queueDataService.ExecuteAsync(new SetGameAnalysisStatusCommand()
-        {
-            NewStatus = QueueStatus.Completed,
-            UpdateProcessedTime = true,
-            GameAnalysisId = nextGame.Id
-        });
+            await leagueDataService.ExecuteAsync(new UpdateMatchGameAnalysisCommand()
+            {
+                MatchId = game.Id,
+                SetNewStatus = GameAnalysisStatus.Sent
+            });
+            
+            var message = new GameAnalysisReadyMessage(game.ToMatchDto());
+            await queueDataService.ExecuteAsync(new
+                InsertCommandMessageCommand()
+                {
+                    NewCommand = new CommandMessage()
+                    {
+                        Type = "SendEmail",
+                        Payload = new SendEmailPayload()
+                        {
+                            Subject = message.Subject,
+                            HtmlBody = message.HtmlBody,
+                            Tos = game.PlayerMatches.Select(pm => pm.Player.EmailAddress).ToArray()
+                        }.SerializePayload()
+                    }
+                });
+        }
     }
 }

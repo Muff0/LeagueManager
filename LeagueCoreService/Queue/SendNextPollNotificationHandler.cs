@@ -17,7 +17,7 @@ public class SendNextPollNotificationHandler(
     public async Task HandleAsync(CommandMessage cmd)
     {
         var payload = cmd.GetPayload<SendNextPollNotificationPayload>();
-        var lastRun = await queueDataService.RunQueryAsync(new GetLastPostedPollQuery());
+        var lastRun = await queueDataService.TakeFirstAsync(new GetLastPostedPollQuery());
         var nextRun = pollSchedulerService.GetNextOccurrence(lastRun.ProcessedAtUtc.GetValueOrDefault());
 
         var pollQueue = await queueDataService.CountAsync(new GetPollsInQueueQuery());

@@ -22,7 +22,7 @@ public abstract class ScheduledJobBase<T>(QueueDataService queueDataService, T s
 
     public virtual async Task Init()
     {
-        var lastRun = await queueDataService.RunQueryAsync(new GetCommandMessageLastRunQuery
+        var lastRun = await queueDataService.TakeFirstAsync(new GetCommandMessageLastRunQuery
         {
             CommandMessageType = Command
         });

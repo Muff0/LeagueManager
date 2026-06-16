@@ -61,9 +61,9 @@ public class DataServiceBase<T> : IDataService<T> where T : DbContext
             await ExecuteAsync(batch);
     }
 
-    public T2? RunQuery<T2>(Scalar<T, T2> queryObject) where T2 : class
+    public T1? TakeFirst<T1>(Query<T, T1> queryObject) where T1 : class
     {
-        return queryObject.Execute(GetDbContext());
+        return queryObject.BuildQuery(GetDbContext()).FirstOrDefault();
     }
 
     public IList<T2> RunQuery<T2>(Query<T, T2> queryObject) where T2 : class
@@ -71,9 +71,9 @@ public class DataServiceBase<T> : IDataService<T> where T : DbContext
         return queryObject.Execute(GetDbContext());
     }
 
-    public async Task<T2?> RunQueryAsync<T2>(Scalar<T, T2> queryObject) where T2 : class
+    public async Task<T1?> TakeFirstAsync<T1>(Query<T, T1> queryObject) where T1 : class
     {
-        return await queryObject.ExecuteAsync(GetDbContext());
+        return await queryObject.BuildQuery(GetDbContext()).FirstOrDefaultAsync();
     }
 
     public async Task<IList<T2>> RunQueryAsync<T2>(Query<T, T2> queryObject) where T2 : class

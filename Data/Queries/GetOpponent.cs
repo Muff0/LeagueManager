@@ -2,13 +2,13 @@ using Data.Model;
 
 namespace Data.Queries;
 
-public class GetOpponentQuery : Scalar<LeagueContext, Player>
+public class GetOpponentQuery : Query<LeagueContext, Player>
 {
     public int PlayerId { get; set; }
     public int Round { get; set; }
     public int? SeasonId { get; set; }
 
-    protected override IQueryable<Player> BuildQuery(LeagueContext context)
+    public override IQueryable<Player> BuildQuery(LeagueContext context)
     {
         return base.BuildQuery(context)
             .Where(p => p.PlayerMatches

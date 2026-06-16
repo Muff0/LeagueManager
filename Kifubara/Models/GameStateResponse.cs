@@ -12,8 +12,8 @@ public class GameStateResponse
     public string GameId { get; set; } = string.Empty;
 
     /// <summary>
-    /// One of: <see cref="GameAnalysisState.Queued"/>, <see cref="GameAnalysisState.Analyzing"/>,
-    /// <see cref="GameAnalysisState.Done"/>, <see cref="GameAnalysisState.Error"/>.
+    /// One of: <see cref="KifubaraGameAnalysisState.Queued"/>, <see cref="KifubaraGameAnalysisState.Analyzing"/>,
+    /// <see cref="KifubaraGameAnalysisState.Done"/>, <see cref="KifubaraGameAnalysisState.Error"/>.
     /// </summary>
     [JsonProperty("state")]
     public string State { get; set; } = string.Empty;
@@ -28,7 +28,7 @@ public class GameStateResponse
     [JsonProperty("match_id")]
     public string? MatchId { get; set; }
 
-    /// <summary>Error description when <see cref="State"/> is <see cref="GameAnalysisState.Error"/>.</summary>
+    /// <summary>Error description when <see cref="State"/> is <see cref="KifubaraGameAnalysisState.Error"/>.</summary>
     [JsonProperty("failure_message")]
     public string? FailureMessage { get; set; }
 
@@ -39,7 +39,7 @@ public class GameStateResponse
     [JsonProperty("retryable")]
     public bool? Retryable { get; set; }
 
-    public bool IsDone    => State == GameAnalysisState.Done;
-    public bool IsError   => State == GameAnalysisState.Error;
+    public bool IsDone    => State == KifubaraGameAnalysisState.Done;
+    public bool IsError   => State == KifubaraGameAnalysisState.Error;
     public bool IsComplete => IsDone || IsError;
 }

@@ -1,4 +1,5 @@
-﻿using Data.Model;
+﻿using Data.Extensions;
+using Data.Model;
 using Shared.Dto;
 using Shared.Enum;
 
@@ -17,7 +18,9 @@ public static class MatchExtension
             IsPlayed = match.IsComplete,
             Players = match.PlayerMatches?.Select(pm => pm.ToPlayerMatchDto(true)).ToArray(),
             Round = match.Round,
-            SeasonId = match.SeasonId
+            SeasonId = match.SeasonId,
+            GameAnalysisUrl =  match.GameAnalysisUrl,
+            Season = match.Season?.ToSeasonDto()
         };
     }
 

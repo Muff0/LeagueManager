@@ -7,8 +7,8 @@ namespace Kifubara.Models;
 public class GetGamesQuery
 {
     /// <summary>
-    /// Filter by analysis state. Use constants from <see cref="GameAnalysisState"/>.
-    /// <see cref="GameAnalysisState.Pending"/> matches all not-yet-done games (queued + analyzing).
+    /// Filter by analysis state. Use constants from <see cref="KifubaraGameAnalysisState"/>.
+    /// <see cref="KifubaraGameAnalysisState.Pending"/> matches all not-yet-done games (queued + analyzing).
     /// </summary>
     public string? State { get; set; }
 
@@ -25,7 +25,7 @@ public class GetGamesQuery
 }
 
 /// <summary>State string constants for use with <see cref="GetGamesQuery.State"/>.</summary>
-public static class GameAnalysisState
+public static class KifubaraGameAnalysisState
 {
     public const string Queued    = "queued";
     public const string Analyzing = "analyzing";

@@ -2,11 +2,11 @@
 
 namespace Data.Queries;
 
-public class GetTeacherQuery : Scalar<LeagueContext, Teacher>
+public class GetTeacherQuery : Query<LeagueContext, Teacher>
 {
     public int Id { get; set; }
 
-    protected override IQueryable<Teacher> BuildQuery(LeagueContext context)
+    public override IQueryable<Teacher> BuildQuery(LeagueContext context)
     {
         var query = base.BuildQuery(context);
 

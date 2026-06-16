@@ -17,7 +17,7 @@ public class PostDiscordPollHandler(
 
     public async Task HandleAsync(CommandMessage cmd)
     {
-        var nextPoll = await queueDataService.RunQueryAsync(
+        var nextPoll = await queueDataService.TakeFirstAsync(
             new GetNextPollQuery());
 
         if (nextPoll == null)

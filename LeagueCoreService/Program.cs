@@ -63,6 +63,9 @@ builder.Services.AddHttpClient<IOnlineLeagueClient, OnlineLeagueClient>();
 // OGS online_league API: OAuth2 client-credentials auth + bearer token handler.
 builder.Services.AddSingleton<IOgsTokenProvider, OgsTokenProvider>();
 builder.Services.AddTransient<OgsAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<IUnauthenticatedOgsClient, UnauthenticatedOgsClient>(c =>
+    c.BaseAddress = new Uri("https://online-go.com/api/v1/"));
+
 builder.Services.AddHttpClient<IGamesClient, GamesClient>(c =>
         c.BaseAddress = new Uri("https://online-go.com/api/v1/"))
     .AddHttpMessageHandler<OgsAuthenticatedHttpHandler>();

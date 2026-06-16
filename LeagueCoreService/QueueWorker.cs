@@ -26,7 +26,7 @@ public class QueueWorker : BackgroundService
 
     private async Task<CommandMessage?> GetNextCommand(string[] types)
     {
-        return await _queueDataService.RunQueryAsync(
+        return await _queueDataService.TakeFirstAsync(
             new GetNextCommandMessageQuery
             {
                 Types = types

@@ -15,13 +15,18 @@ public interface IDataService<T2> where T2 : DbContext
 
     Task ExecuteAsync(BatchCommand<T2> commandObject);
 
-    T? RunQuery<T>(Scalar<T2, T> queryObject) where T : class;
+    T? TakeFirst<T>(Query<T2, T> queryObject) where T : class;
 
     IList<T> RunQuery<T>(Query<T2, T> queryObject) where T : class;
 
-    Task<T?> RunQueryAsync<T>(Scalar<T2, T> queryObject) where T : class;
+    Task<T?> TakeFirstAsync<T>(Query<T2, T> queryObject) where T : class;
 
     Task<IList<T>> RunQueryAsync<T>(Query<T2, T> queryObject) where T : class;
+
+    int Count<T>(Query<T2, T> queryObject) where T : class;
+
+    Task<int> CountAsync<T>(Query<T2, T> queryObject) where T : class;
+
 
     #endregion Methods
 }

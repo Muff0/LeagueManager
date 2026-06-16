@@ -3,9 +3,9 @@ using Shared.Enum;
 
 namespace Data.Queries;
 
-public class GetNextPollQuery : Scalar<QueueContext, Poll>
+public class GetNextPollQuery : Query<QueueContext, Poll>
 {
-    protected override IQueryable<Poll> BuildQuery(QueueContext context)
+    public override IQueryable<Poll> BuildQuery(QueueContext context)
     {
         var query = base.BuildQuery(context);
 

@@ -106,9 +106,6 @@ namespace Data.Migrations.Queue
                     b.Property<DateTime>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime>("DateTime")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<int>("MatchId")
                         .HasColumnType("integer");
 
@@ -116,6 +113,10 @@ namespace Data.Migrations.Queue
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Sgf")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("StateUrl")
                         .IsRequired()
                         .HasColumnType("text");
 

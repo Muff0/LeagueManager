@@ -45,7 +45,7 @@ public class ReviewService(
     {
         try
         {
-            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
             var res = await leagueDataService.RunQueryAsync(new GetReviewsQuery
             {
                 IncludeMatch = true,
@@ -97,7 +97,6 @@ public class ReviewService(
     {
         try
         {
-            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
             var res = await leagueDataService.RunQueryAsync(new GetReviewsQuery
             {
                 IncludeMatch = true,
@@ -123,7 +122,7 @@ public class ReviewService(
 
     public async Task AssignRoundsToReviews()
     {
-        var activeSeason = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var activeSeason = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         var resGetPlayers = await leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
         {
             SeasonId = activeSeason.Id,
@@ -163,7 +162,7 @@ public class ReviewService(
 
     public async Task BuildMissingReviews()
     {
-        var activeSeason = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var activeSeason = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         var resGetPlayers = await leagueDataService.RunQueryAsync(
             new GetPlayerSeasonsQuery
             {
@@ -201,7 +200,7 @@ public class ReviewService(
 
     public async Task<ReviewScheduleDto[]> GetReviewSchedule()
     {
-        var activeSeason = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var activeSeason = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         var resGetReviews = await leagueDataService.RunQueryAsync(new GetReviewsQuery
         {
             SeasonId = activeSeason.Id,
@@ -285,7 +284,7 @@ public class ReviewService(
     {
         try
         {
-            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
             var res = await leagueDataService.RunQueryAsync(new GetReviewsQuery
             {
                 IncludeMatch = true,
@@ -357,7 +356,7 @@ public class ReviewService(
 
     public async Task AddReviewToPlayer(PlayerDto playerDto)
     {
-        var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         await leagueDataService.ExecuteAsync(new AddReviewToPlayerCommand
             { PlayerId = playerDto.Id ?? 0, SeasonId = season.Id });
     }

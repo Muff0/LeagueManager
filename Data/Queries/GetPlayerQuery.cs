@@ -2,13 +2,13 @@ using Data.Model;
 
 namespace Data.Queries;
 
-public class GetPlayerQuery : Scalar<LeagueContext, Player>
+public class GetPlayerQuery : Query<LeagueContext, Player>
 {
     public string? FirstName { get; set; }
     public string? DiscordHandle { get; set; }
     public ulong? DiscordId { get; set; }
 
-    protected override IQueryable<Player> BuildQuery(LeagueContext context)
+    public override IQueryable<Player> BuildQuery(LeagueContext context)
     {
         var query = base.BuildQuery(context);
 

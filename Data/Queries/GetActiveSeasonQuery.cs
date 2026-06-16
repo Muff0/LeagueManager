@@ -3,11 +3,11 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Queries;
 
-public class GetActiveSeasonQuery : Scalar<LeagueContext, Season>
+public class GetActiveSeasonQuery : Query<LeagueContext, Season>
 {
     public bool IncludePlayerSeasons { get; set; } = false;
 
-    protected override IQueryable<Season> BuildQuery(LeagueContext context)
+    public override IQueryable<Season> BuildQuery(LeagueContext context)
     {
         var query = base.BuildQuery(context);
 

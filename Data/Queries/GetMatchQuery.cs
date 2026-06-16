@@ -3,12 +3,12 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Data.Queries;
 
-public class GetMatchQuery : Scalar<LeagueContext, Match>
+public class GetMatchQuery : Query<LeagueContext, Match>
 {
     public int Id { get; set; }
     public bool IncludePlayers { get; set; } = false;
 
-    protected override IQueryable<Match> BuildQuery(LeagueContext context)
+    public override IQueryable<Match> BuildQuery(LeagueContext context)
     {
         var query = base.BuildQuery(context);
 

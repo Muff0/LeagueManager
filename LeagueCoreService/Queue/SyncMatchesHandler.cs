@@ -22,7 +22,7 @@ public class SyncMatchesHandler(
 
     public async Task SyncMatchesForRound(int round)
     {
-        var activeSeason = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var activeSeason = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         if (activeSeason == null)
             return;
 

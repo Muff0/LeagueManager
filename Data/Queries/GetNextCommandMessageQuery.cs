@@ -3,11 +3,11 @@ using Shared.Enum;
 
 namespace Data.Queries;
 
-public class GetNextCommandMessageQuery : Scalar<QueueContext, CommandMessage>
+public class GetNextCommandMessageQuery : Query<QueueContext, CommandMessage>
 {
     public string[] Types { get; set; } = [];
 
-    protected override IQueryable<CommandMessage> BuildQuery(QueueContext context)
+    public override IQueryable<CommandMessage> BuildQuery(QueueContext context)
     {
         var query = base.BuildQuery(context);
 

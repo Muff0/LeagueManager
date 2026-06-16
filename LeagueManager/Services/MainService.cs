@@ -177,7 +177,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var activeSeason = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var activeSeason = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
             var currentPlayers = await leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
             {
                 IncludePlayer = true,
@@ -204,7 +204,7 @@ public class MainService(QueueDataService queueDataService,
     {
         var cutoffDate = new DateTime(2026, 4, 1);
 
-        var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery { IncludePlayerSeasons = true });
+        var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery { IncludePlayerSeasons = true });
         var players = await leagueDataService.RunQueryAsync(new GetPlayersQuery());
 
         var noMatch = new List<PaymentDataDto>();
@@ -271,7 +271,7 @@ public class MainService(QueueDataService queueDataService,
 
     public async Task<PlayerDto[]> GetMissingPayments()
     {
-        var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         var resGetMp = await leagueDataService.RunQueryAsync(new GetMissingPaymentsQuery { SeasonId = season.Id });
 
         return resGetMp.Select(pl => new PlayerDto
@@ -311,7 +311,7 @@ public class MainService(QueueDataService queueDataService,
         try
         {
             var results = new List<CheckRankDto>();
-            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
             var players = await leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
             {
                 IncludePlayer = true,
@@ -436,7 +436,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
             var res = await leagueDataService.RunQueryAsync(new GetPlayersQuery
             {
                 IncludePlayerSeasons = true,
@@ -495,7 +495,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
             var res = await leagueDataService.RunQueryAsync(new GetReviewsQuery
             {
                 IncludeMatch = true,
@@ -563,7 +563,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var teacher = await leagueDataService.RunQueryAsync(new GetTeacherQuery { Id = teacherId });
+            var teacher = await leagueDataService.TakeFirstAsync(new GetTeacherQuery { Id = teacherId });
             if (teacher == null)
                 return;
 
@@ -571,7 +571,7 @@ public class MainService(QueueDataService queueDataService,
 
             foreach (var review in reviews)
             {
-                var toAdd = await leagueDataService.RunQueryAsync(new GetMatchQuery
+                var toAdd = await leagueDataService.TakeFirstAsync(new GetMatchQuery
                     { Id = (int)review.MatchId!, IncludePlayers = true });
                 games.Add(toAdd.ToMatchDto());
             }
@@ -613,7 +613,7 @@ public class MainService(QueueDataService queueDataService,
                 RoundEnd = roundDeadline,
                 RoundNumber = round
             });
-            var season = await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+            var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
             var players = await leagueDataService.RunQueryAsync(new GetPlayersForRoundQuery
             {
                 SeasonId = season.Id,
@@ -725,7 +725,7 @@ public class MainService(QueueDataService queueDataService,
 
     public async Task UpdatePlayersList()
     {
-        var activeSeason = leagueDataService.RunQuery(new GetActiveSeasonQuery());
+        var activeSeason = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
 
         if (activeSeason == null)
             return;
@@ -773,8 +773,12 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var handler =  new SendGameAnalysisHandler(queueDataService,leagueDataService,kifubaraService);
-            await handler.HandleAsync(new CommandMessage());
+            var startGameAnalysisHandler =  new StartGameAnalysisHandler(queueDataService,leagueDataService,kifubaraService);
+            await startGameAnalysisHandler.HandleAsync(new CommandMessage());
+            var checkGameAnalysisStatusHandler =  new CheckGameAnalysisStatusHandler(queueDataService,leagueDataService);
+            await checkGameAnalysisStatusHandler.HandleAsync(new CommandMessage());
+            var sendGameAnalysisHandler =  new SendGameAnalysisHandler(leagueDataService,queueDataService);
+            await sendGameAnalysisHandler.HandleAsync(new CommandMessage());
             SendTaskCompletedNotification();
         }
         catch (Exception e)

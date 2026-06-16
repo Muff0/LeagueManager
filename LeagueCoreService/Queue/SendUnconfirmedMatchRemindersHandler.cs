@@ -17,7 +17,7 @@ public class SendUnconfirmedMatchRemindersHandler(
 
     public async Task HandleAsync(CommandMessage cmd)
     {
-        var season = (await leagueDataService.RunQueryAsync(new GetActiveSeasonQuery()))!
+        var season = (await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery()))!
             .ToSeasonDto();
         var unconfirmedMatches = (await leagueDataService.RunQueryAsync(
             new GetUnconfirmedMatchesQuery

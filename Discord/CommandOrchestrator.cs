@@ -24,9 +24,9 @@ public class CommandOrchestrator
         _queueDataService = queueDataService;
     }
 
-    private async Task<Player> GetPlayerByDiscordIdAsync(ulong? discordId, string? discordHandle = null)
+    private async Task<Player?> GetPlayerByDiscordIdAsync(ulong? discordId, string? discordHandle = null)
     {
-        return await _leagueDataService.RunQueryAsync(
+        return await _leagueDataService.TakeFirstAsync(
             new GetPlayerQuery
             {
                 DiscordId = discordId,
@@ -42,7 +42,7 @@ public class CommandOrchestrator
             return
                 "We don't have your Discord Id yet, please add your Discord user to your Leago profile to enable this command";
 
-        var resGetO = await _leagueDataService.RunQueryAsync(new GetOpponentQuery
+        var resGetO = await _leagueDataService.TakeFirstAsync(new GetOpponentQuery
         {
             PlayerId = resGetP.Id,
             Round = inDto.Round

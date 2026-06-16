@@ -24,7 +24,7 @@ public class ReviewService : ServiceBase
 
     public async Task AssignRoundsToReviews()
     {
-        var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var activeSeason = await _leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         var resGetPlayers = await _leagueDataService.RunQueryAsync(new GetPlayerSeasonsQuery
         {
             SeasonId = activeSeason.Id,
@@ -95,7 +95,7 @@ public class ReviewService : ServiceBase
 
     public async Task BuildReviews()
     {
-        var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var activeSeason = await _leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         var resGetPlayers = await _leagueDataService.RunQueryAsync(
             new GetPlayerSeasonsQuery
             {
@@ -129,7 +129,7 @@ public class ReviewService : ServiceBase
 
     public async Task<ReviewScheduleDto[]> GetReviewSchedule()
     {
-        var activeSeason = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var activeSeason = await _leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         var resGetReviews = await _leagueDataService.RunQueryAsync(new GetReviewsQuery
         {
             SeasonId = activeSeason.Id,
@@ -218,7 +218,7 @@ public class ReviewService : ServiceBase
 
     public async Task AddReviewToPlayer(PlayerDto playerDto)
     {
-        var season = await _leagueDataService.RunQueryAsync(new GetActiveSeasonQuery());
+        var season = await _leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
         await _leagueDataService.ExecuteAsync(new AddReviewToPlayerCommand
             { PlayerId = playerDto.Id ?? 0, SeasonId = season.Id });
     }

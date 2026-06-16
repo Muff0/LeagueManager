@@ -11,5 +11,6 @@ public class MatchDto
     public int OgsLeagueMatchId { get; set; }
     public int Round { get; set; }
     public int SeasonId { get; set; }
+    public string? GameAnalysisUrl { get; set; }
     public SeasonDto? Season { get; set; }
 }
