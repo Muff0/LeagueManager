@@ -3,6 +3,7 @@ using Data.Commands.Match;
 using Data.Commands.Queue;
 using Data.Model;
 using Data.Queries;
+using LeagoService;
 using OGS;
 using OGS.Model;
 using Shared.Dto;
@@ -12,7 +13,8 @@ namespace LeagueCoreService.Queue;
 
 public class QueueGameAnalysisHandler(LeagueDataService leagueDataService,
     QueueDataService queueDataService,
-    OGSService ogsService)
+    OGSService ogsService,
+    LeagoMainService leagoService)
     : ICommandHandler
 {
     public string CommandType => "QueueGameAnalysis";
@@ -35,7 +37,14 @@ public class QueueGameAnalysisHandler(LeagueDataService leagueDataService,
         foreach (var match in matchesToSchedule)
         {
             var matchId = await ogsService.GetMatchIdFromLeagueId(match.OgsLeagueMatchId);
-            var sgf = await ogsService.GetSgf(matchId);
+            string sgf = string.Empty;
+            
+            if (matchId == 0)
+                // no OGS Link, we have to try getting the Leago sgf
+                await leagoService.GetSgf(match.LeagoKey);
+            else
+                sgf = await ogsService.GetSgf(matchId);
+
             if (IsValidSgfFormat(sgf))
             {
                 var gameAnalysis = new GameAnalysis()
@@ -51,6 +60,14 @@ public class QueueGameAnalysisHandler(LeagueDataService leagueDataService,
                 
                 queued.Add(match.ToMatchDto());
             }
+            else
+            {
+                await leagueDataService.ExecuteAsync(new UpdateMatchGameAnalysisCommand()
+                {
+                    MatchId = match.Id,
+                    SetNewStatus = GameAnalysisStatus.NoRecord
+                });
+            }
         }
 
         leagueDataService.ExecuteAsync(new SetMatchesGameAnalysisStatusCommand()
@@ -62,7 +79,7 @@ public class QueueGameAnalysisHandler(LeagueDataService leagueDataService,
     
     private bool IsValidSgfFormat(string sgf)
     {
-        //For now let's just check if there's anything inside
-        return !sgf.IsWhiteSpace();
+        // very light check, the sources are trusted
+        return !sgf.IsWhiteSpace() && sgf.Contains("RE[", StringComparison.InvariantCulture);
     }
 }

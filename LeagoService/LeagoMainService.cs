@@ -8,37 +8,22 @@ using PlayerMatchOutcome = Shared.Enum.PlayerMatchOutcome;
 
 namespace LeagoService;
 
-public class LeagoMainService : ServiceBase
+public class LeagoMainService(
+    ArenasClient arenasClient,
+    EventsClient eventsClient,
+    HealthClient healthClient,
+    LeaguesClient leaguesClient,
+    ProfilesClient profilesClient,
+    RoundsClient roundsClient,
+    TournamentsClient tournamentsClient,
+    MatchesClient matchesClient,
+    HttpClient httpClient,
+    ILogger<LeagoMainService> logger)  : ServiceBase(logger)
 {
-    private readonly ArenasClient _arenasClient;
-    private readonly EventsClient _eventsClient;
-    private readonly HealthClient _healthClient;
-    private readonly LeaguesClient _leaguesClient;
-    private readonly ProfilesClient _profilesClient;
-    private readonly RoundsClient _roundsClient;
-    private readonly TournamentsClient _tournamentsClient;
-    public LeagoMainService(
-        ArenasClient arenasClient,
-        EventsClient eventsClient,
-        HealthClient healthClient,
-        LeaguesClient leaguesClient,
-        ProfilesClient profilesClient,
-        RoundsClient roundsClient,
-        TournamentsClient tournamentsClient,
-        ILogger<LeagoMainService> logger) : base(logger)
-    {
-        _arenasClient = arenasClient;
-        _eventsClient = eventsClient;
-        _healthClient = healthClient;
-        _leaguesClient = leaguesClient;
-        _profilesClient = profilesClient;
-        _roundsClient = roundsClient;
-        _tournamentsClient = tournamentsClient;
-    }
 
     public Task GetHealth()
     {
-        return _healthClient.HealthAsync();
+        return healthClient.HealthAsync();
     }
 
     public async Task<GetTournamentOutDto> GetTournament(GetTournamentInDto inDto)
@@ -46,7 +31,7 @@ public class LeagoMainService : ServiceBase
         var res = new GetTournamentOutDto();
         try
         {
-            var ires = await _tournamentsClient.GetTournamentAsync(inDto.TournamentName);
+            var ires = await tournamentsClient.GetTournamentAsync(inDto.TournamentName);
 
             res.Result = new TournamentDto
             {
@@ -73,7 +58,7 @@ public class LeagoMainService : ServiceBase
     {
         var res = new GetMatchesOutDto();
 
-        var mres = await _roundsClient.ListRoundMatchesAsync(inDto.TournamentKey, inDto.RoundKey, inDto.MatchesOffset,
+        var mres = await roundsClient.ListRoundMatchesAsync(inDto.TournamentKey, inDto.RoundKey, inDto.MatchesOffset,
             inDto.MatchesCount);
 
         res.Matches = mres.Select(mm => new MatchDto
@@ -109,9 +94,9 @@ public class LeagoMainService : ServiceBase
         var res = new GetPlayersOutDto();
         try
         {
-            var ires = await _eventsClient.ListTournamentsAsync(inDto.TournamentKey, false);
+            var ires = await eventsClient.ListTournamentsAsync(inDto.TournamentKey, false);
 
-            var pres = await _tournamentsClient.ListTournamentPlayersAsync(ires.FirstOrDefault()?.Key ?? "");
+            var pres = await tournamentsClient.ListTournamentPlayersAsync(ires.FirstOrDefault()?.Key ?? "");
 
             res.Players = pres.Select(p => new PlayerDto
             {
@@ -136,7 +121,7 @@ public class LeagoMainService : ServiceBase
         var res = new GetEventsOutDto();
         try
         {
-            var ires = await _leaguesClient.GetLeaguePageAsync(0, 10);
+            var ires = await leaguesClient.GetLeaguePageAsync(0, 10);
 
             res.Events = ires.Items.Select(i => new EventDto
             {
@@ -156,7 +141,7 @@ public class LeagoMainService : ServiceBase
         var res = new GetLeagueOutDto();
         try
         {
-            var sres = await _arenasClient.GetLeagueSeasonsPageAsync(inDto.ArenaKey, inDto.LeagueKey, "", false, true,
+            var sres = await arenasClient.GetLeagueSeasonsPageAsync(inDto.ArenaKey, inDto.LeagueKey, "", false, true,
                 "", 0, 10);
 
             var league = new LeagueDto
@@ -188,8 +173,8 @@ public class LeagoMainService : ServiceBase
         var res = new GetProfileOutDto();
         try
         {
-            var ires = await _profilesClient.GetPublicProfileAsync(inDto.ProfileKey);
-            var rres = await _arenasClient.GetMemberAsync(inDto.ArenaKey, inDto.ArenaKey + "-" + inDto.ProfileKey);
+            var ires = await profilesClient.GetPublicProfileAsync(inDto.ProfileKey);
+            var rres = await arenasClient.GetMemberAsync(inDto.ArenaKey, inDto.ArenaKey + "-" + inDto.ProfileKey);
             res.Timezone = ires.Timezone;
             res.Email = rres.Email;
             res.DiscordHandle = ires.Discord;
@@ -200,5 +185,15 @@ public class LeagoMainService : ServiceBase
         }
 
         return res;
+    }
+
+    public async Task<string> GetSgf(string matchLeagoKey)
+    {
+        var record = (await matchesClient.ListGameRecordsAsync(matchLeagoKey)).FirstOrDefault();
+        if (record == null)
+            return string.Empty;
+
+        string content = await httpClient.GetStringAsync(record.Url);
+            return content;
     }
 }

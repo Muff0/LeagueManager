@@ -773,12 +773,7 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            var startGameAnalysisHandler =  new StartGameAnalysisHandler(queueDataService,leagueDataService,kifubaraService);
-            await startGameAnalysisHandler.HandleAsync(new CommandMessage());
-            var checkGameAnalysisStatusHandler =  new CheckGameAnalysisStatusHandler(queueDataService,leagueDataService);
-            await checkGameAnalysisStatusHandler.HandleAsync(new CommandMessage());
-            var sendGameAnalysisHandler =  new SendGameAnalysisHandler(leagueDataService,queueDataService);
-            await sendGameAnalysisHandler.HandleAsync(new CommandMessage());
+            leagoService.GetSgf("nqtm8un6g35xaco3cm9t");
             SendTaskCompletedNotification();
         }
         catch (Exception e)

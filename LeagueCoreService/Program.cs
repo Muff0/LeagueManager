@@ -42,23 +42,18 @@ JsonConvert.DefaultSettings = () => new JsonSerializerSettings
     NullValueHandling = NullValueHandling.Ignore
 };
 
-
 // Clients registration
 
-builder.Services.AddHttpClient<AccountClient>();
 builder.Services.AddHttpClient<ArenaMembersClient>();
 builder.Services.AddHttpClient<ArenasClient>();
 builder.Services.AddHttpClient<EventsClient>();
 builder.Services.AddHttpClient<HealthClient>();
 builder.Services.AddHttpClient<LeaguesClient>();
 builder.Services.AddHttpClient<MatchesClient>();
-builder.Services.AddHttpClient<PaymentsClient>();
 builder.Services.AddHttpClient<ProfilesClient>();
 builder.Services.AddHttpClient<RoundsClient>();
 builder.Services.AddHttpClient<TournamentsClient>();
-builder.Services.AddHttpClient<UsersClient>();
-
-builder.Services.AddHttpClient<IOnlineLeagueClient, OnlineLeagueClient>();
+builder.Services.AddHttpClient<LeagoMainService>();
 
 // OGS online_league API: OAuth2 client-credentials auth + bearer token handler.
 builder.Services.AddSingleton<IOgsTokenProvider, OgsTokenProvider>();

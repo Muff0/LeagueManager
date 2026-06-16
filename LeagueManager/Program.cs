@@ -44,8 +44,7 @@ builder.Services.AddTransient<LeagoAuthenticatedHttpHandler>();
 
 // Clients registration
 
-builder.Services.AddHttpClient<AccountClient>()
-    .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
+builder.Services.AddHttpClient<LeagoMainService>();
 builder.Services.AddHttpClient<ArenaMembersClient>()
     .AddHttpMessageHandler<LeagoAuthenticatedHttpHandler>();
 builder.Services.AddHttpClient<ArenasClient>()
