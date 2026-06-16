@@ -22,15 +22,13 @@ public class QueueGameAnalysisHandler(LeagueDataService leagueDataService,
     public async Task HandleAsync(CommandMessage cmd)
     {
         var season = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());
-        var round = 3;
-
         var matchesToSchedule = await leagueDataService.RunQueryAsync(new GetMatchesQuery()
         {
             HasGameAnalysisUrl = false,
             HasScheduledGameAnalysis = false,
             IsPlayed = true,
             WithSeasonId = season!.Id,
-            WithRound = round
+            WithGameAnalysisStatus = GameAnalysisStatus.NotQueued
         });
 
         var queued = new List<MatchDto>();
