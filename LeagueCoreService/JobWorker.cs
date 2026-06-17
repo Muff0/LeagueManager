@@ -2,6 +2,8 @@ using Data;
 using Data.Queries;
 using LeagueCoreService.Extensions;
 using LeagueCoreService.ScheduledJobs;
+using Microsoft.Extensions.Options;
+using Shared.Settings;
 
 namespace LeagueCoreService
 {
@@ -9,8 +11,11 @@ namespace LeagueCoreService
         ILogger<JobWorker> logger,
         IServiceScopeFactory scopeFactory,
         QueueDataService queueDataService,
+        IOptions<SchedulerSettings> schedulerSettings,
         IJobRegistryCache cache) : BackgroundService
     {
+        private DateTime _nextJobCacheReloadUtc;
+        
         protected override async Task ExecuteAsync(CancellationToken ct)
         {
             await SeedRegistryAsync();
@@ -18,7 +23,9 @@ namespace LeagueCoreService
             while (!ct.IsCancellationRequested)
             {
                 await TickAsync(ct);
-                await Task.Delay(TimeSpan.FromSeconds(30), ct);
+                await Task.Delay(TimeSpan.FromSeconds(schedulerSettings.Value.TickDelaySeconds), ct);
+                if (_nextJobCacheReloadUtc < DateTime.UtcNow)
+                    await ReloadJobCacheAsync();
             }
         }
         private async Task TickAsync(CancellationToken ct)
@@ -68,11 +75,18 @@ namespace LeagueCoreService
             foreach (var job in jobs.Where(j => !existingTypes.Contains(j.JobType)))
                 await queueDataService.CreateJobRegistryEntryAsync(job.JobType, job.DefaultSettingsJson);
 
-            var all = await queueDataService.RunQueryAsync(new GetJobRegistryQuery());
-            cache.Reload(all.AsReadOnly(), registeredTypes);
+            await ReloadJobCacheAsync();
 
             logger.LogInformation("Job registry seeded. Registered: {Types}",
                 string.Join(", ", registeredTypes));
+        }
+        
+        private async Task ReloadJobCacheAsync()
+        {
+            var all = await queueDataService.RunQueryAsync(new GetJobRegistryQuery());
+            cache.Reload(all.AsReadOnly());
+            _nextJobCacheReloadUtc = DateTime.UtcNow.AddSeconds(schedulerSettings.Value.JobCacheReloadIntervalSeconds);
+            logger.LogInformation("Job registry cache reloaded.");
         }
     }
 }

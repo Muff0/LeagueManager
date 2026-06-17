@@ -39,12 +39,12 @@ public class JobRegistryCache : IJobRegistryCache
         };
     }
 
-    public void Reload(IReadOnlyList<Data.Model.JobRegistry> entries, IReadOnlySet<string> registeredTypes)
+    public void Reload(IReadOnlyList<Data.Model.JobRegistry> entries)
     {
         _cache = entries.ToDictionary(
             e => e.JobType,
             e => new Snapshot(e.IsEnabled, e.SettingsJson, e.LastRunAtUtc)); 
-        RegisteredTypes = registeredTypes;
+        RegisteredTypes = entries.Select(j => j.JobType).ToHashSet();;
     }
 
 }

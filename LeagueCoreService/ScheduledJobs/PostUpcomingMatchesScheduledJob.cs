@@ -14,8 +14,7 @@ namespace LeagueCoreService.ScheduledJobs;
 public class PostUpcomingMatchesScheduledJob(
     DiscordService discordService,
     TimeIntervalSchedulerService schedulerService,
-    LeagueDataService leagueDataService,
-    IOptions<SchedulerSettings> settings)
+    LeagueDataService leagueDataService)
     : ScheduledJobBase<TimeIntervalSchedulerService>(schedulerService)
 {
     public override string JobType => "PostUpcomingMatches";
@@ -23,7 +22,23 @@ public class PostUpcomingMatchesScheduledJob(
     
     public override async Task ExecuteAsync(string? settingsJson, CancellationToken ct)
     {
-        await SendUpcomingMatchesNotification();
+        var settings = JsonConvert.DeserializeObject<PostUpcomingMatchesSettings>(settingsJson ?? string.Empty);
+        if (settings  == null)
+            throw new InvalidOperationException($"Invalid settings: {nameof(PostUpcomingMatchesScheduledJob)}, Json: {settingsJson}");
+        
+        var resm = await GetUpcomingMatches(settings.UpcomingMatchesTimeSpanSeconds);
+
+        if (resm.Length == 0)
+            return;
+        var dto = resm.Select(mm => mm.ToMatchDto()).ToArray();
+        await discordService.SendUpcomingMatchesNotification(new SendUpcomingMatchesNotificationInDto
+        {
+            Matches = dto
+        });
+        await leagueDataService.ExecuteAsync(new SetMatchesNotifiedCommand
+        {
+            Matches = dto
+        });
     }
 
     public override string? DefaultSettingsJson => JsonConvert.SerializeObject(
@@ -31,7 +46,7 @@ public class PostUpcomingMatchesScheduledJob(
         {
             IntervalSeconds = 300
         });
-    public async Task<Match[]> GetUpcomingMatches()
+    private async Task<Match[]> GetUpcomingMatches(int secondsInterval = 300)
     {
         var query = new GetMatchesByTimeQuery
         {
@@ -40,7 +55,7 @@ public class PostUpcomingMatchesScheduledJob(
             IncludeNotConfirmed = false,
             IsNotificationSent = false,
             TimeFromUTC = DateTime.Now.ToUniversalTime(),
-            TimeToUTC = DateTime.Now.AddMinutes(settings.Value.UpcomingMatchesTimeSpanMinutes).ToUniversalTime(),
+            TimeToUTC = DateTime.Now.AddSeconds(secondsInterval).ToUniversalTime(),
             Count = 5
         };
 
@@ -49,20 +64,4 @@ public class PostUpcomingMatchesScheduledJob(
         return res.ToArray();
     }
 
-    public async Task SendUpcomingMatchesNotification()
-    {
-            var resm = await GetUpcomingMatches();
-
-            if (resm.Length == 0)
-                return;
-            var dto = resm.Select(mm => mm.ToMatchDto()).ToArray();
-            await discordService.SendUpcomingMatchesNotification(new SendUpcomingMatchesNotificationInDto
-            {
-                Matches = dto
-            });
-            await leagueDataService.ExecuteAsync(new SetMatchesNotifiedCommand
-            {
-                Matches = dto
-            });
-    }
 }
