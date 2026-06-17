@@ -3,23 +3,32 @@ using Data.Commands.Match;
 using Data.Model;
 using Data.Queries;
 using LeagoService;
+using LeagueCoreService.ScheduledJobs;
+using Newtonsoft.Json;
 using Shared.Dto;
+using Shared.Services;
+using Shared.Settings;
 
-namespace LeagueCoreService.Queue;
+namespace LeagueCoreService.ScheduledJobs;
 
-public class SyncMatchesHandler(
+public class SyncMatchesSchedulerJobs(
     LeagueDataService leagueDataService,
-    LeagoMainService leagoService)
-    : ICommandHandler
+    LeagoMainService leagoService,
+    TimeIntervalSchedulerService schedulerService)
+    : ScheduledJobBase<TimeIntervalSchedulerService>(schedulerService)
 {
-    public string CommandType => "SyncMatches";
+    public override string JobType => "SyncMatches";
 
-    public async Task HandleAsync(CommandMessage cmd)
+    public override string? DefaultSettingsJson => JsonConvert.SerializeObject(
+        new TimeIntervalJobSettings()
+        {
+            IntervalSeconds = 60
+        });
+    public override async Task ExecuteAsync(string? settingsJson, CancellationToken ct)
     {
         await SyncMatches();
     }
-
-
+    
     public async Task SyncMatchesForRound(int round)
     {
         var activeSeason = await leagueDataService.TakeFirstAsync(new GetActiveSeasonQuery());

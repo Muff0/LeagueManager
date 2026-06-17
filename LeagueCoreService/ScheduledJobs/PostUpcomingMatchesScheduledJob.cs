@@ -1,37 +1,68 @@
 using Data;
+using Data.Commands.Match;
+using Data.Model;
 using Data.Queries;
+using Discord;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
+using Shared.Dto.Discord;
 using Shared.Services;
 using Shared.Settings;
 
 namespace LeagueCoreService.ScheduledJobs;
 
 public class PostUpcomingMatchesScheduledJob(
-    QueueDataService queueDataService,
-    PostUpcomingMatchesSchedulerService schedulerService,
+    DiscordService discordService,
+    TimeIntervalSchedulerService schedulerService,
     LeagueDataService leagueDataService,
     IOptions<SchedulerSettings> settings)
-    : ScheduledJobBase<PostUpcomingMatchesSchedulerService>(queueDataService, schedulerService)
+    : ScheduledJobBase<TimeIntervalSchedulerService>(schedulerService)
 {
-    public override string Command { get; } = "PostUpcomingMatches";
+    public override string JobType => "PostUpcomingMatches";
 
-    public override async Task<bool> ShouldRun(DateTime now)
+    
+    public override async Task ExecuteAsync(string? settingsJson, CancellationToken ct)
     {
-        var shouldRun = await base.ShouldRun(now);
-        if (!shouldRun)
-            return false;
+        await SendUpcomingMatchesNotification();
+    }
 
-        var isUpcoming = await leagueDataService.CountAsync(new GetMatchesByTimeQuery
+    public override string? DefaultSettingsJson => JsonConvert.SerializeObject(
+        new TimeIntervalJobSettings()
+        {
+            IntervalSeconds = 300
+        });
+    public async Task<Match[]> GetUpcomingMatches()
+    {
+        var query = new GetMatchesByTimeQuery
         {
             InlcudePlayers = true,
             IncludeCompleted = false,
             IncludeNotConfirmed = false,
             IsNotificationSent = false,
             TimeFromUTC = DateTime.Now.ToUniversalTime(),
-            TimeToUTC = DateTime.Now.ToUniversalTime().AddMinutes(settings.Value.UpcomingMatchesTimeSpanMinutes),
+            TimeToUTC = DateTime.Now.AddMinutes(settings.Value.UpcomingMatchesTimeSpanMinutes).ToUniversalTime(),
             Count = 5
-        });
+        };
 
-        return isUpcoming > 0;
+        var res = await leagueDataService.RunQueryAsync(query);
+
+        return res.ToArray();
+    }
+
+    public async Task SendUpcomingMatchesNotification()
+    {
+            var resm = await GetUpcomingMatches();
+
+            if (resm.Length == 0)
+                return;
+            var dto = resm.Select(mm => mm.ToMatchDto()).ToArray();
+            await discordService.SendUpcomingMatchesNotification(new SendUpcomingMatchesNotificationInDto
+            {
+                Matches = dto
+            });
+            await leagueDataService.ExecuteAsync(new SetMatchesNotifiedCommand
+            {
+                Matches = dto
+            });
     }
 }

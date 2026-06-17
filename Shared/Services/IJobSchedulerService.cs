@@ -2,5 +2,5 @@ namespace Shared.Services;
 
 public interface IJobSchedulerService
 {
-    DateTime GetNextOccurrence(DateTime lastOccurrence, DateTime? currentTime = null);
+    DateTime GetNextOccurrence(DateTime lastOccurrence, string? settingsJson, DateTime? currentTime = null);
 }

@@ -14,6 +14,7 @@ public class QueueContext : DbContext
     public DbSet<DomainEvent> EventQueue { get; set; }
     public DbSet<OutgoingMessage> MessageQueue { get; set; }
     public DbSet<Poll> PollQueue { get; set; }
+    public DbSet<JobRegistry> JobRegistry { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -130,6 +130,36 @@ namespace Data.Migrations.Queue
                     b.ToTable("GameAnalysis");
                 });
 
+            modelBuilder.Entity("Data.Model.JobRegistry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("JobType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<DateTime?>("LastRunAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("SettingsJson")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("SettingsUpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("JobRegistry");
+                });
+
             modelBuilder.Entity("Data.Model.OutgoingMessage", b =>
                 {
                     b.Property<int>("Id")

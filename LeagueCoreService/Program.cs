@@ -152,25 +152,23 @@ builder.Services.AddScoped<MainService>();
 
 // Register all the Queue management classes
 
-typeof(SchedulerSettings).Assembly.GetTypes()
-    .Where(t => !t.IsAbstract && typeof(IJobSchedulerService).IsAssignableFrom(t))
-    .ToList()
-    .ForEach(t => builder.Services.AddSingleton(t));
-
+builder.Services.AddSingleton < TimeIntervalSchedulerService>();
+builder.Services.AddSingleton < DayOfWeekSchedulerService>();
 typeof(QueueWorker).Assembly.GetTypes()
     .Where(t => !t.IsAbstract && typeof(ICommandHandler).IsAssignableFrom(t))
     .ToList()
     .ForEach(t => builder.Services.AddScoped(typeof(ICommandHandler), t));
 
-typeof(QueueWorker).Assembly.GetTypes()
+typeof(JobWorker).Assembly.GetTypes()
     .Where(t => !t.IsAbstract && typeof(IScheduledJob).IsAssignableFrom(t))
     .ToList()
-    .ForEach(t => builder.Services.AddSingleton(t));
+    .ForEach(t => builder.Services.AddScoped(t));
 
 
 builder.Services.AddHostedService<QueueWorker>();
-builder.Services.AddHostedService<SchedulerWorker>();
 
+builder.Services.AddSingleton<IJobRegistryCache, JobRegistryCache>();
+builder.Services.AddHostedService<JobWorker>();
 
 var host = builder.Build();
 
