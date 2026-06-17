@@ -146,13 +146,13 @@ namespace Data.Migrations.Queue
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<DateTime?>("LastRunAt")
+                    b.Property<DateTime?>("LastRunAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("SettingsJson")
                         .HasColumnType("text");
 
-                    b.Property<DateTime>("SettingsUpdatedAt")
+                    b.Property<DateTime>("SettingsUpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");

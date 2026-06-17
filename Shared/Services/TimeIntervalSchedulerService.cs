@@ -5,12 +5,12 @@ namespace Shared.Services;
 
 public class TimeIntervalSchedulerService() : IJobSchedulerService
 {
-    public DateTime GetNextOccurrence(DateTime lastOccurrence, string? settingsJson, DateTime? currentTime = null)
+    public DateTime GetNextOccurrence(DateTime lastOccurrenceUtc, string? settingsJson, DateTime? currentTimeUtc = null)
     {
         var settings = JsonConvert.DeserializeObject<TimeIntervalJobSettings>(settingsJson);
-        var now = currentTime ?? DateTime.UtcNow;
+        var now = currentTimeUtc ?? DateTime.UtcNow;
 
-        var candidate = lastOccurrence.Date
+        var candidate = lastOccurrenceUtc
             .AddSeconds(settings.IntervalSeconds);
 
         return candidate <= now ? now : candidate;

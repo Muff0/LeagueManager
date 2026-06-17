@@ -7,15 +7,15 @@ namespace Shared.Services;
 public class DayOfWeekSchedulerService : IJobSchedulerService
 {
 
-    public DateTime GetNextOccurrence(DateTime lastOccurrence,string? jsonSettings, DateTime? currentTime = null)
+    public DateTime GetNextOccurrence(DateTime lastOccurrenceUtc,string? jsonSettings, DateTime? currentTimeUtc = null)
     {
         var settings = JsonConvert.DeserializeObject<DayOfWeekJobSettings>(jsonSettings);
-        var now = currentTime ?? DateTime.UtcNow;
+        var now = currentTimeUtc ?? DateTime.UtcNow;
 
-        var daysUntil = ((int)settings.DayOfWeek - (int)lastOccurrence.DayOfWeek + 7) % 7;
+        var daysUntil = ((int)settings.DayOfWeek - (int)lastOccurrenceUtc.DayOfWeek + 7) % 7;
         if (daysUntil == 0) daysUntil = 7;
 
-        var candidate = lastOccurrence.Date
+        var candidate = lastOccurrenceUtc.Date
             .AddDays(daysUntil)
             .AddHours(settings.HourOfDayUtc);
 

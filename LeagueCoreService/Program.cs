@@ -162,7 +162,7 @@ typeof(QueueWorker).Assembly.GetTypes()
 typeof(JobWorker).Assembly.GetTypes()
     .Where(t => !t.IsAbstract && typeof(IScheduledJob).IsAssignableFrom(t))
     .ToList()
-    .ForEach(t => builder.Services.AddScoped(t));
+    .ForEach(t => builder.Services.AddScoped(typeof(IScheduledJob),t));
 
 
 builder.Services.AddHostedService<QueueWorker>();

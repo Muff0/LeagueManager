@@ -29,7 +29,7 @@ namespace LeagueCoreService
             foreach (var job in jobs)
             {
                 var settings = cache.GetSettingsJson(job.JobType);
-                if (job.IsDue(DateTime.Now, cache.GetLastRunAt(job.JobType), settings))
+                if (job.IsDue(DateTime.UtcNow, cache.GetLastRunAt(job.JobType), settings))
                     await RunAsync(job, settings, ct);
             }
         }
@@ -48,12 +48,11 @@ namespace LeagueCoreService
             {
                 await job.ExecuteAsync(settings, ct);
                 cache.SetLastRunAt(job.JobType, DateTime.UtcNow);
+                await queueDataService.UpdateJobLastRun(job.JobType);
             }
             catch (Exception ex)
             {
                 logger.LogError(ex, "Job {JobType} failed", job.JobType);
-                // still set LastRunAt so a failing job doesn't hammer on every tick
-                cache.SetLastRunAt(job.JobType, DateTime.UtcNow);
             }
         }
 

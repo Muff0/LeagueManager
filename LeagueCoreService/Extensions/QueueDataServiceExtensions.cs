@@ -16,8 +16,18 @@ public static class QueueDataServiceExtensions
                 IsEnabled = true,
                 JobType = jobType,
                 SettingsJson = defaultSettingsJson,
-                SettingsUpdatedAt = DateTime.Now
+                SettingsUpdatedAtUtc = DateTime.UtcNow
             }));
 
+    }
+
+    public static async Task UpdateJobLastRun(this QueueDataService queueDataService, string jobType)
+    {
+        await queueDataService.ExecuteAsync(
+            new UpdateJobLastRunCommand()
+            {
+                JobType = jobType,
+                LastRun = DateTime.UtcNow
+            });
     }
 }

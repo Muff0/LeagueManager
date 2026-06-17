@@ -10,7 +10,7 @@ public class DeleteOldCommandMessagesCommand : Command<QueueContext>
     
     protected override void RunAction(QueueContext context)
     {
-        var cutoffDate = DateTime.Now - MaxAge; 
+        var cutoffDate = DateTime.UtcNow.Subtract(MaxAge); 
         var query = context.CommandQueue.Where(cq => cq.ProcessedAtUtc < cutoffDate);
             if(ExcludeCommandTypes.Length>0)
                 query = query.Where(cq => !ExcludeCommandTypes.Contains(cq.Type));

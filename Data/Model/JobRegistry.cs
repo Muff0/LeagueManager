@@ -10,7 +10,7 @@ namespace Data.Model
         public string JobType { get; set; } = null!;
         public bool IsEnabled { get; set; } = true;
         public string? SettingsJson { get; set; }
-        public DateTime? LastRunAt { get; set; }
-        public DateTime SettingsUpdatedAt { get; set; }
+        public DateTime? LastRunAtUtc { get; set; }
+        public DateTime SettingsUpdatedAtUtc { get; set; }
     }
 }

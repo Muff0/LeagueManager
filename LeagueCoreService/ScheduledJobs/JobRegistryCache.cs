@@ -43,7 +43,7 @@ public class JobRegistryCache : IJobRegistryCache
     {
         _cache = entries.ToDictionary(
             e => e.JobType,
-            e => new Snapshot(e.IsEnabled, e.SettingsJson, null)); // LastRunAt always null on reload
+            e => new Snapshot(e.IsEnabled, e.SettingsJson, e.LastRunAtUtc)); 
         RegisteredTypes = registeredTypes;
     }
 
