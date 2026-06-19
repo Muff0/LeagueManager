@@ -1,91 +1,90 @@
-// Discord/Logging/DiscordWebhookSink.cs
-
 using System.Text;
 using Newtonsoft.Json;
 using Serilog.Core;
 using Serilog.Events;
 
 namespace Discord.Logging;
-
-public sealed class DiscordWebhookSink : ILogEventSink, IDisposable
+public sealed class DiscordWebhookSink : IBatchedLogEventSink, IDisposable
 {
-    private readonly HttpClient _http = new();
-
-    private readonly LogEventLevel _minimumLevel;
-
-    // Basic rate-limit guard: Discord webhooks allow ~5 req/2s per URL
-    private readonly SemaphoreSlim _throttle = new(1, 1);
     private readonly string _webhookUrl;
+    private readonly HttpClient _http = new();
+    private readonly TimeSpan _repeatSuppressWindow;
 
-    public DiscordWebhookSink(string webhookUrl, LogEventLevel minimumLevel = LogEventLevel.Error)
+    // Safe as a plain Dictionary — EmitBatchAsync calls are guaranteed non-concurrent.
+    private readonly Dictionary<string, DateTime> _lastSentByKey = new();
+
+    public DiscordWebhookSink(string webhookUrl, TimeSpan? repeatSuppressWindow = null)
     {
         _webhookUrl = webhookUrl;
-        _minimumLevel = minimumLevel;
+        _repeatSuppressWindow = repeatSuppressWindow ?? TimeSpan.FromMinutes(5);
     }
 
-    public void Dispose()
+    public async Task EmitBatchAsync(IReadOnlyCollection<LogEvent> batch)
     {
-        _http.Dispose();
+        var now = DateTime.UtcNow;
+
+        // Collapse duplicate errors that landed in the same batch window
+        foreach (var group in batch.GroupBy(BuildDedupeKey))
+        {
+            var events = group.ToList();
+            var representative = events[0];
+
+            if (_lastSentByKey.TryGetValue(group.Key, out var lastSent) &&
+                now - lastSent < _repeatSuppressWindow)
+                continue; // same error, still within suppression window — skip
+
+            _lastSentByKey[group.Key] = now;
+            await PostToDiscordAsync(representative, events.Count);
+        }
     }
 
-    public void Emit(LogEvent logEvent)
+    public Task OnEmptyBatchAsync() => Task.CompletedTask;
+
+    private static string BuildDedupeKey(LogEvent e)
     {
-        if (logEvent.Level < _minimumLevel) return;
-        // Fire-and-forget — never block the caller
-        _ = EmitAsync(logEvent);
+        var exceptionType = e.Exception?.GetType().FullName ?? "";
+        var source = e.Properties.TryGetValue("SourceContext", out var sc) ? sc.ToString() : "";
+        // MessageTemplate.Text, not RenderMessage() — "{SeasonId}" stays one
+        // key regardless of which season ID triggered it
+        return $"{source}|{e.MessageTemplate.Text}|{exceptionType}";
     }
 
-    private async Task EmitAsync(LogEvent logEvent)
+    private async Task PostToDiscordAsync(LogEvent e, int countInBatch)
     {
-        await _throttle.WaitAsync();
         try
         {
-            var embed = BuildEmbed(logEvent);
+            var embed = BuildEmbed(e, countInBatch);
             var body = JsonConvert.SerializeObject(new { embeds = new[] { embed } });
-            await _http.PostAsync(_webhookUrl,
-                new StringContent(body, Encoding.UTF8, "application/json"));
-            await Task.Delay(500); // stay well under rate limit
+            await _http.PostAsync(_webhookUrl, new StringContent(body, Encoding.UTF8, "application/json"));
         }
-        catch
-        {
-            /* logging must never throw */
-        }
-        finally
-        {
-            _throttle.Release();
-        }
+        catch { /* a sink must never throw */ }
     }
 
-    private static object BuildEmbed(LogEvent e)
+    private static object BuildEmbed(LogEvent e, int countInBatch)
     {
         var color = e.Level switch
         {
             LogEventLevel.Warning => 0xFFA500,
-            LogEventLevel.Error => 0xE74C3C,
-            LogEventLevel.Fatal => 0x8B0000,
-            _ => 0x95A5A6
+            LogEventLevel.Error   => 0xE74C3C,
+            LogEventLevel.Fatal   => 0x8B0000,
+            _                     => 0x95A5A6
         };
 
-        // Source context = the class name that called ILogger<T>
         e.Properties.TryGetValue("SourceContext", out var sourceCtx);
-
         var fields = new List<object>();
-
         if (sourceCtx is not null)
             fields.Add(new { name = "Source", value = sourceCtx.ToString().Trim('"'), inline = true });
-
         if (e.Exception is not null)
-            fields.Add(new
-            {
-                name = "Exception",
-                value = $"```\n{Truncate(e.Exception.ToString(), 1000)}\n```",
-                inline = false
-            });
+            fields.Add(new { name = "Exception", value = $"```\n{Truncate(e.Exception.ToString(), 1000)}\n```" });
+
+        var description = Truncate(e.RenderMessage(), 2000);
+        if (countInBatch > 1)
+            description += $"\n\n_(×{countInBatch} occurrences in this batch)_";
 
         return new
         {
             title = $"[{e.Level}] LeagueManager",
-            description = Truncate(e.RenderMessage(), 2000),
+            description,
             color,
             fields,
             timestamp = e.Timestamp.UtcDateTime.ToString("o"),
@@ -93,8 +92,7 @@ public sealed class DiscordWebhookSink : ILogEventSink, IDisposable
         };
     }
 
-    private static string Truncate(string s, int max)
-    {
-        return s.Length <= max ? s : s[..max] + "…";
-    }
+    private static string Truncate(string s, int max) => s.Length <= max ? s : s[..max] + "…";
+
+    public void Dispose() => _http.Dispose();
 }

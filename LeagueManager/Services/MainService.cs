@@ -38,7 +38,6 @@ public class MainService(QueueDataService queueDataService,
     DiscordService discordService,
     ReviewService reviewService,
     OGSService ogsService,
-    KifubaraService kifubaraService,
     INotificationDispatcher notificationService,
     ILogger<MainService> logger) : ServiceBase(logger)
 {
@@ -773,7 +772,6 @@ public class MainService(QueueDataService queueDataService,
     {
         try
         {
-            leagoService.GetSgf("nqtm8un6g35xaco3cm9t");
             SendTaskCompletedNotification();
         }
         catch (Exception e)

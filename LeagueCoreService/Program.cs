@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using OGS;
 using OGS.Client;
 using Serilog;
+using Serilog.Configuration;
 using Serilog.Events;
 using Serilog.Extensions.Logging;
 using Shared.Converter;
@@ -91,9 +92,18 @@ var logConfig = new LoggerConfiguration()
         "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}");
 
 if (!string.IsNullOrEmpty(discordSettings.AlertWebhookUrl))
-    logConfig.WriteTo.WriteToDiscordWebhook(
-        discordSettings.AlertWebhookUrl,
-        LogEventLevel.Error);
+{
+    logConfig.WriteTo.Sink(
+        new DiscordWebhookSink(discordSettings.AlertWebhookUrl, repeatSuppressWindow: TimeSpan.FromMinutes(20)),
+        new BatchingOptions
+        {
+            BatchSizeLimit = 50,
+            BufferingTimeLimit = TimeSpan.FromSeconds(15),
+            EagerlyEmitFirstEvent = true,   // first error posts immediately, not after the buffer window
+            QueueLimit = 1000
+        },
+        restrictedToMinimumLevel: LogEventLevel.Error);
+}
 
 Log.Logger = logConfig.CreateLogger();
 
