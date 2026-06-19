@@ -71,7 +71,7 @@ public class QueueGameAnalysisScheduledJob(QueueDataService queueDataService,
             }
         }
 
-        leagueDataService.ExecuteAsync(new SetMatchesGameAnalysisStatusCommand()
+        await leagueDataService.ExecuteAsync(new SetMatchesGameAnalysisStatusCommand()
         {
             NewStatus = GameAnalysisStatus.Queued,
             Matches = queued.ToArray()

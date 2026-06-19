@@ -567,13 +567,23 @@ public class MainService(QueueDataService queueDataService,
                 return;
 
             var games = new List<MatchDto>();
+            var toAssign = new List<ReviewDto>();
 
             foreach (var review in reviews)
             {
                 var toAdd = await leagueDataService.TakeFirstAsync(new GetMatchQuery
                     { Id = (int)review.MatchId!, IncludePlayers = true });
+                if (toAdd == null)
+                    continue;
                 games.Add(toAdd.ToMatchDto());
+                toAssign.Add(review.ToReviewDto());
             }
+
+            await reviewService.AssignTeacherToReviews(
+                toAssign.ToArray(),
+                teacher.Id);
+            
+            await reviewService.MoveToAllocated(toAssign);
 
             await discordService.SendReviewEventNotification(new SendReviewEventNotificationInDto
             {

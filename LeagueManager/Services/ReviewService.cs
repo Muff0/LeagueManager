@@ -338,13 +338,13 @@ public class ReviewService(
         }
     }
 
-    public async Task MoveToAllocated(IEnumerable<ReviewViewModel> reviews)
+    public async Task MoveToAllocated(IEnumerable<ReviewDto> reviews)
     {
         try
         {
             await SetReviewStatus(new SetReviewStatusInDto
             {
-                Reviews = reviews.Select(re => re.ToReviewDto()),
+                Reviews = reviews,
                 NewStatus = ReviewStatus.Allocated
             });
         }

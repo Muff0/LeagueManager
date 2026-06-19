@@ -8,14 +8,6 @@
 
 <PageTitle>Reviews</PageTitle>
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h1 class="mb-0">Reviews</h1>
-    @if (!string.IsNullOrEmpty(_message))
-    {
-        <span class="text-danger fw-semibold">@_message</span>
-    }
-</div>
-
 @* Global actions: not selection-dependent *@
 <div class="d-flex gap-2 mb-3">
     <button class="btn btn-outline-primary" @onclick="GenerateReviews">Generate Reviews</button>
@@ -86,7 +78,6 @@
                                         <option value="@opt.Id">@opt.Name</option>
                                     }
                                 </InputSelect>
-                                <button class="btn btn-primary" @onclick="AssignTeacher">Assign</button>
                             </div>
                         </div>
                         <div class="col-auto">
@@ -190,7 +181,6 @@
     private HxGrid<ReviewViewModel>? _schedulingGrid, _postingGrid, _missedGrid, _overviewGrid;
     private HashSet<ReviewViewModel>? _selectedSchedulingReviews, _selectedMissedReviews, _selectedOverviewReviews, _selectedPostingReviews;
     private ReviewViewModel? _selectedPostingReview, _selectedOverviewReview;
-    private string _message = string.Empty;
     private string _activeTab = string.Empty;
     private DateTime? _reviewEventDate;
     private int _selectedTeacherId;
@@ -250,50 +240,34 @@
 
     private async void SetDuplicate()
     {
-        try
-        {
-            var selected = GetCurrentTabSelectedList();
-            if (selected?.Any() != true) return;
-            await MainService.SetCanceledReview(selected);
-            RefreshCurrentGrid();
-        }
-        catch { _message = "Error"; }
+        var selected = GetCurrentTabSelectedList();
+        if (selected?.Any() != true) return;
+        await MainService.SetCanceledReview(selected);
+        RefreshCurrentGrid();
     }
 
     private async void CancelReview()
     {
-        try
-        {
-            var selected = GetCurrentTabSelectedList();
-            if (selected?.Any() != true) return;
-            await ReviewService.SetDuplicateReview(selected);
-            RefreshCurrentGrid();
-        }
-        catch { _message = "Error"; }
+        var selected = GetCurrentTabSelectedList();
+        if (selected?.Any() != true) return;
+        await ReviewService.SetDuplicateReview(selected);
+        RefreshCurrentGrid();
     }
 
     private async void UnlinkMatch()
     {
-        try
-        {
-            var selected = GetCurrentTabSelectedList()?.ToList();
-            if (selected is not { Count: > 0 }) return;
-            await MainService.UnlinkMatchFromReviews(selected, true);
-            RefreshCurrentGrid();
-        }
-        catch { _message = "Error"; }
+        var selected = GetCurrentTabSelectedList()?.ToList();
+        if (selected is not { Count: > 0 }) return;
+        await MainService.UnlinkMatchFromReviews(selected, true);
+        RefreshCurrentGrid();
     }
 
     private async void DeleteReviews()
     {
-        try
-        {
             var selected = GetCurrentTabSelectedList()?.ToList();
             if (selected is not { Count: > 0 }) return;
             await MainService.DeleteReviews(selected);
             RefreshCurrentGrid();
-        }
-        catch { _message = "Error"; }
     }
 
     // -------------------------------------------------------------------------
@@ -302,52 +276,30 @@
 
     private async void GenerateReviews()
     {
-        try { await ReviewService.BuildReviews(); }
-        catch { _message = "Error"; }
+        await ReviewService.BuildReviews(); 
     }
 
     private async void LinkReviewMatches()
     {
-        try { await MainService.LinkReviewMatches(); }
-        catch { _message = "Error"; }
+        await MainService.LinkReviewMatches(); 
     }
 
     // -------------------------------------------------------------------------
     // Scheduling tab actions
     // -------------------------------------------------------------------------
 
-    private async void AssignTeacher()
-    {
-        try
-        {
-            if (_selectedSchedulingReviews is not { Count: > 0 }) return;
-            await MainService.AssignTeacherToReviews(_selectedSchedulingReviews, _selectedTeacherId);
-            RefreshScheduleGrid();
-        }
-        catch { _message = "Error"; }
-    }
-
     private async void SendReviewNotice()
     {
-        try
-        {
-            if (_selectedSchedulingReviews is not { Count: > 0 }) return;
-            await MainService.ScheduleReviews(_selectedSchedulingReviews, _reviewEventDate.GetValueOrDefault(), _selectedTeacherId);
-            await ReviewService.MoveToAllocated(_selectedSchedulingReviews);
-            RefreshScheduleGrid();
-        }
-        catch { _message = "Error"; }
+        if (_selectedSchedulingReviews is not { Count: > 0 }) return;
+        await MainService.ScheduleReviews(_selectedSchedulingReviews, _reviewEventDate.GetValueOrDefault(), _selectedTeacherId);
+        RefreshScheduleGrid();
     }
 
     private async void MoveToAllocated()
     {
-        try
-        {
-            if (_selectedSchedulingReviews is not { Count: > 0 }) return;
-            await ReviewService.MoveToAllocated(_selectedSchedulingReviews);
-            RefreshScheduleGrid();
-        }
-        catch { _message = "Error"; }
+        if (_selectedSchedulingReviews is not { Count: > 0 }) return;
+        await ReviewService.MoveToAllocated(_selectedSchedulingReviews.Select(rv => rv.ToReviewDto()).ToArray());
+        RefreshScheduleGrid();
     }
 
     // -------------------------------------------------------------------------
@@ -356,21 +308,14 @@
 
     private async void PostReviews()
     {
-        try {
          await MainService.PostReviews(); 
          RefreshPostingGrid();
-         }
-        catch { _message = "Error"; }
     }
 
     private async Task SaveChanges()
     {
-        try
-        {
-            if (_selectedPostingReview == null) return;
-            await MainService.SaveReviewChanges(new List<ReviewViewModel> { _selectedPostingReview });
-        }
-        catch { _message = "Error"; }
+        if (_selectedPostingReview == null) return;
+        await MainService.SaveReviewChanges(new List<ReviewViewModel> { _selectedPostingReview });
     }
 
     private async void HandleSelectedPostingReviewKeyDown(KeyboardEventArgs e)
@@ -413,25 +358,21 @@
 
     private async void RefreshOverviewGrid()
     {
-        try { if (_overviewGrid != null) await _overviewGrid.RefreshDataAsync(); }
-        catch { _message = "Error"; }
+        if (_overviewGrid != null) await _overviewGrid.RefreshDataAsync(); 
     }
 
     private async void RefreshScheduleGrid()
     {
-        try { if (_schedulingGrid != null) await _schedulingGrid.RefreshDataAsync(); }
-        catch { _message = "Error"; }
+        if (_schedulingGrid != null) await _schedulingGrid.RefreshDataAsync();
     }
 
     private async void RefreshPostingGrid()
     {
-        try { if (_postingGrid != null) await _postingGrid.RefreshDataAsync(); }
-        catch { _message = "Error"; }
+        if (_postingGrid != null) await _postingGrid.RefreshDataAsync();
     }
 
     private async void RefreshMissedGrid()
     {
-        try { if (_missedGrid != null) await _missedGrid.RefreshDataAsync(); }
-        catch { _message = "Error"; }
+        if (_missedGrid != null) await _missedGrid.RefreshDataAsync();
     }
 }

@@ -1,0 +1,156 @@
+@*
+    NOTE on confidence: the HxGrid / HxCheckbox shape below matches the common Havit.Blazor
+    pattern (Columns -> HxGridColumn -> ItemTemplate, Data="..." for static binding).
+    The HxModal API (Title param, ShowAsync/HideAsync, BodyTemplate/FooterTemplate) and the
+    GetDisplayName() extension namespace are less certain on my end - if either fails to
+    compile, check IntelliSense / the installed Havit.Blazor version rather than trusting
+    this verbatim.
+*@
+@page "/matches"
+@using LeagueManager.Services
+@using LeagueManager.ViewModel
+@using Shared.Enum
+@inject MatchesService MatchesService
+
+<PageTitle>Unplayed Matches</PageTitle>
+
+<h3>Unplayed Matches</h3>
+
+<div class="d-flex align-items-center gap-2 mb-3">
+    <label for="round-select" class="form-label mb-0">Round:</label>
+    <select id="round-select" class="form-select w-auto"
+            @bind="SelectedRound" @bind:after="LoadMatchesAsync">
+        @foreach (var round in AvailableRounds)
+        {
+            <option value="@round">@round</option>
+        }
+    </select>
+</div>
+
+@if (UnplayedMatches is null)
+{
+    <p><em>Loading...</em></p>
+}
+else if (UnplayedMatches.Count == 0)
+{
+    <p>No unplayed matches for round @SelectedRound.</p>
+}
+else
+{
+    <HxGrid TItem="UnplayedMatchViewModel" Data="Matches">
+        <Columns>
+            <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Player 1">
+                <ItemTemplate>
+                    @context.Player1.FirstName (@context.Player1.Rank.GetDisplayName())
+                </ItemTemplate>
+            </HxGridColumn>
+
+            <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Forfeit" CssClass="text-center">
+                <ItemTemplate>
+                    <HxCheckbox @bind-Value="context.Player1Forfeit" />
+                </ItemTemplate>
+            </HxGridColumn>
+
+            <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Player 2">
+                <ItemTemplate>
+                    @context.Player2.FirstName (@context.Player2.Rank.GetDisplayName())
+                </ItemTemplate>
+            </HxGridColumn>
+
+            <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Forfeit" CssClass="text-center">
+                <ItemTemplate>
+                    <HxCheckbox @bind-Value="context.Player2Forfeit" />
+                </ItemTemplate>
+            </HxGridColumn>
+
+            <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="">
+                <ItemTemplate>
+                    <button type="button" class="btn btn-sm btn-outline-secondary"
+                            @onclick="() => ShowDetailAsync(context)">
+                        Details
+                    </button>
+                </ItemTemplate>
+            </HxGridColumn>
+        </Columns>
+    </HxGrid>
+
+    <button type="button" class="btn btn-danger mt-3"
+            disabled="@(!UnplayedMatches.Any(m => m.HasAnyForfeit))"
+            @onclick="ProcessForfeitsAsync">
+        Process Forfeits
+    </button>
+}
+
+<HxModal @ref="detailModal" Title="Match Details">
+    <BodyTemplate>
+        @if (selectedMatch is not null)
+        {
+            <h6>Player 1</h6>
+            <p class="mb-3">
+                OGS: @(selectedMatch.Player1.OgsUsername ?? "—")<br />
+                Discord: @(selectedMatch.Player1.DiscordHandle ?? "—")<br />
+                Confirmed time: @(selectedMatch.Player1.HasConfirmedTime ? "Yes" : "No")
+            </p>
+
+            <h6>Player 2</h6>
+            <p class="mb-3">
+                OGS: @(selectedMatch.Player2.OgsUsername ?? "—")<br />
+                Discord: @(selectedMatch.Player2.DiscordHandle ?? "—")<br />
+                Confirmed time: @(selectedMatch.Player2.HasConfirmedTime ? "Yes" : "No")
+            </p>
+
+            <h6>Scheduled time</h6>
+            <p>@(selectedMatch.ScheduledTime?.ToString("g") ?? "Not scheduled")</p>
+        }
+    </BodyTemplate>
+    <FooterTemplate>
+        <button type="button" class="btn btn-secondary" @onclick="() => detailModal!.HideAsync()">
+            Close
+        </button>
+    </FooterTemplate>
+</HxModal>
+
+@code {
+    private List<int> AvailableRounds = new();
+    private int SelectedRound;
+    private List<UnplayedMatchViewModel>? UnplayedMatches;
+
+    private HxModal? detailModal;
+    private UnplayedMatchViewModel? selectedMatch;
+
+    protected override async Task OnInitializedAsync()
+    {
+        AvailableRounds = await MatchesService.GetAvailableRoundsAsync();
+
+        if (AvailableRounds.Count > 0)
+        {
+            SelectedRound = AvailableRounds[^1]; // defaults to latest round - change if you want "current round" semantics instead
+            await LoadMatchesAsync();
+        }
+    }
+
+    private async Task LoadMatchesAsync()
+    {
+        UnplayedMatches = null; // shows the "Loading..." state while the await is in flight
+        UnplayedMatches = await MatchesService.GetUnplayedMatchesAsync(SelectedRound);
+    }
+
+    private async Task ShowDetailAsync(UnplayedMatchViewModel match)
+    {
+        selectedMatch = match;
+        if (detailModal is not null)
+        {
+            await detailModal.ShowAsync();
+        }
+    }
+
+    private async Task ProcessForfeitsAsync()
+    {
+        var matchesWithForfeits = UnplayedMatches!.Where(m => m.HasAnyForfeit).ToList();
+
+        await MatchesService.ProcessForfeitsAsync(matchesWithForfeits);
+
+        // TODO (Pietro): success/error feedback (toast?), then refresh
+        await LoadMatchesAsync();
+    }
+}
