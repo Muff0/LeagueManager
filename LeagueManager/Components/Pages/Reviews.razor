@@ -122,6 +122,7 @@
             <div class="d-flex gap-2 my-2">
                 <button class="btn btn-primary" @onclick="PostReviews">Post Reviews</button>
                 <button class="btn btn-outline-primary" @onclick="SaveChanges">Save Video URL</button>
+                <button class="btn btn-outline-primary" @onclick="Deallocate">Deallocate</button>
             </div>
             <HxGrid @ref="_postingGrid" TItem="ReviewViewModel" DataProvider="GetPostingGridData"
                     SelectedDataItem="_selectedPostingReview"
@@ -306,6 +307,13 @@
     // Posting tab actions
     // -------------------------------------------------------------------------
 
+    private async void Deallocate()
+    {
+        if (_selectedPostingReviews is not { Count: > 0 }) return;
+        await ReviewService.Deallocate(_selectedPostingReviews);
+        RefreshPostingGrid();
+    }
+    
     private async void PostReviews()
     {
          await MainService.PostReviews(); 

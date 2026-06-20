@@ -360,4 +360,20 @@ public class ReviewService(
         await leagueDataService.ExecuteAsync(new AddReviewToPlayerCommand
             { PlayerId = playerDto.Id ?? 0, SeasonId = season.Id });
     }
+
+    public async Task Deallocate(HashSet<ReviewViewModel> toDeallocate)
+    {
+        try
+        {
+            await leagueDataService.ExecuteAsync(
+                new DeallocateReviewsCommand()
+                {
+                    Reviews = toDeallocate.Select(rr => rr.ToReviewDto()).ToArray()
+                });
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
+    }
 }

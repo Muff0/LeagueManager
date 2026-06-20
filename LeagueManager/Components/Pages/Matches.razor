@@ -15,29 +15,22 @@
 <PageTitle>Unplayed Matches</PageTitle>
 
 <h3>Unplayed Matches</h3>
-
 <div class="d-flex align-items-center gap-2 mb-3">
     <label for="round-select" class="form-label mb-0">Round:</label>
     <select id="round-select" class="form-select w-auto"
-            @bind="SelectedRound" @bind:after="LoadMatchesAsync">
-        @foreach (var round in AvailableRounds)
+            @bind="SelectedRound" @bind:after="Refresh">
+        @if (AvailableRounds != null)
         {
-            <option value="@round">@round</option>
+            @foreach (var round in AvailableRounds)
+            {
+                <option value="@round">@round</option>
+            }
         }
     </select>
 </div>
 
-@if (UnplayedMatches is null)
-{
-    <p><em>Loading...</em></p>
-}
-else if (UnplayedMatches.Count == 0)
-{
-    <p>No unplayed matches for round @SelectedRound.</p>
-}
-else
-{
-    <HxGrid TItem="UnplayedMatchViewModel" Data="Matches">
+
+<HxGrid @ref="missedMatchesGrid" TItem="UnplayedMatchViewModel" DataProvider="GetUnplayedMatchesData">
         <Columns>
             <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Player 1">
                 <ItemTemplate>
@@ -45,7 +38,7 @@ else
                 </ItemTemplate>
             </HxGridColumn>
 
-            <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Forfeit" CssClass="text-center">
+            <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Forfeit" ItemCssClass="text-center">
                 <ItemTemplate>
                     <HxCheckbox @bind-Value="context.Player1Forfeit" />
                 </ItemTemplate>
@@ -57,7 +50,7 @@ else
                 </ItemTemplate>
             </HxGridColumn>
 
-            <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Forfeit" CssClass="text-center">
+            <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Forfeit" ItemCssClass="text-center">
                 <ItemTemplate>
                     <HxCheckbox @bind-Value="context.Player2Forfeit" />
                 </ItemTemplate>
@@ -75,11 +68,11 @@ else
     </HxGrid>
 
     <button type="button" class="btn btn-danger mt-3"
-            disabled="@(!UnplayedMatches.Any(m => m.HasAnyForfeit))"
+            disabled="@(UnplayedMatches != null && !UnplayedMatches.Any(m => m.HasAnyForfeit))"
             @onclick="ProcessForfeitsAsync">
         Process Forfeits
     </button>
-}
+
 
 <HxModal @ref="detailModal" Title="Match Details">
     <BodyTemplate>
@@ -115,6 +108,7 @@ else
     private int SelectedRound;
     private List<UnplayedMatchViewModel>? UnplayedMatches;
 
+    private HxGrid<UnplayedMatchViewModel>? missedMatchesGrid;
     private HxModal? detailModal;
     private UnplayedMatchViewModel? selectedMatch;
 
@@ -125,15 +119,10 @@ else
         if (AvailableRounds.Count > 0)
         {
             SelectedRound = AvailableRounds[^1]; // defaults to latest round - change if you want "current round" semantics instead
-            await LoadMatchesAsync();
+            await Refresh();
         }
     }
 
-    private async Task LoadMatchesAsync()
-    {
-        UnplayedMatches = null; // shows the "Loading..." state while the await is in flight
-        UnplayedMatches = await MatchesService.GetUnplayedMatchesAsync(SelectedRound);
-    }
 
     private async Task ShowDetailAsync(UnplayedMatchViewModel match)
     {
@@ -150,7 +139,17 @@ else
 
         await MatchesService.ProcessForfeitsAsync(matchesWithForfeits);
 
-        // TODO (Pietro): success/error feedback (toast?), then refresh
-        await LoadMatchesAsync();
+        await Refresh();
+    }
+    
+    private async Task Refresh()
+    {
+        if (missedMatchesGrid != null) await missedMatchesGrid.RefreshDataAsync(); 
+    }
+
+    private async Task<GridDataProviderResult<UnplayedMatchViewModel>> GetUnplayedMatchesData(GridDataProviderRequest<UnplayedMatchViewModel> request)
+    {
+        var data = await MatchesService.GetUnplayedMatchesAsync(SelectedRound, request.StartIndex, request.Count, request.CancellationToken);
+        return new GridDataProviderResult<UnplayedMatchViewModel> { Data = data, TotalCount = data.Count };
     }
 }

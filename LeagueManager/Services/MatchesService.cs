@@ -1,11 +1,13 @@
 using Data;
 using Data.Queries;
 using LeagueManager.ViewModel;
+using Shared;
 using Shared.Dto;
 
 namespace LeagueManager.Services;
 
-public class MatchesService(LeagueDataService leagueDataService)
+public class MatchesService(LeagueDataService leagueDataService,
+    ILogger<MatchesService> logger) : ServiceBase(logger)
 {
     public async Task<MatchDto[]> GetUnplayedMatches(int round)
     {
@@ -27,13 +29,23 @@ public class MatchesService(LeagueDataService leagueDataService)
         throw new NotImplementedException();
     }
 
-    public async Task<List<UnplayedMatchViewModel>?> GetUnplayedMatchesAsync(int selectedRound)
+    public async Task<List<UnplayedMatchViewModel>> GetUnplayedMatchesAsync(int round, int? startIndex = null, int? count= null,
+        CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        try
+        {
+            throw new NotImplementedException();
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
+
+        return new List<UnplayedMatchViewModel>();
     }
 
     public async Task<List<int>> GetAvailableRoundsAsync()
     {
-        throw new NotImplementedException();
+        return [1, 2, 3, 4, 5];
     }
 }

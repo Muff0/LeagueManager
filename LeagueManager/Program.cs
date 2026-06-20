@@ -103,6 +103,18 @@ builder.Services.AddDbContextFactory<LeagueContext>(options =>
 builder.Services.AddDbContextFactory<QueueContext>(options =>
     options.UseNpgsql(connectionString));
 
+// Mail Service
+
+builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
+builder.Services.AddScoped<MailService>();
+
+// Notification Services
+builder.Services.AddSignalR();
+builder.Services.AddSingleton<NotificationDispatcher>();
+builder.Services.AddSingleton<INotificationDispatcher>(sp =>
+    sp.GetRequiredService<NotificationDispatcher>()); // same instance
+builder.Services.AddHostedService<NotificationRelayService>();
+builder.Services.AddSingleton<NotificationService>();
 
 // Custom services registrations
 
@@ -116,19 +128,7 @@ builder.Services.AddScoped<DiscordService>();
 builder.Services.AddSingleton<StatService>();
 builder.Services.AddScoped<KifubaraService>();
 builder.Services.AddScoped<MainService>();
-
-// Notification Services
-builder.Services.AddSignalR();
-builder.Services.AddSingleton<NotificationDispatcher>();
-builder.Services.AddSingleton<INotificationDispatcher>(sp =>
-    sp.GetRequiredService<NotificationDispatcher>()); // same instance
-builder.Services.AddHostedService<NotificationRelayService>();
-builder.Services.AddSingleton<NotificationService>();
-
-// Mail Service
-
-builder.Services.Configure<MailSettings>(builder.Configuration.GetSection("Mail"));
-builder.Services.AddScoped<MailService>();
+builder.Services.AddScoped<MatchesService>();
 
 // Start the Discord service
 builder.Services.AddDiscordGateway();

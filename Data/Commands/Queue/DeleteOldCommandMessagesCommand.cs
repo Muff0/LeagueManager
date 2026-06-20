@@ -14,6 +14,6 @@ public class DeleteOldCommandMessagesCommand : Command<QueueContext>
         var query = context.CommandQueue.Where(cq => cq.ProcessedAtUtc < cutoffDate);
             if(ExcludeCommandTypes.Length>0)
                 query = query.Where(cq => !ExcludeCommandTypes.Contains(cq.Type));
-            query.ExecuteDeleteAsync();
+            context.CommandQueue.RemoveRange(query);
     }
 }
