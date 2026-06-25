@@ -8,9 +8,6 @@
 
 <h1>Sync</h1>
 
-<p role="status">@_message</p>
-
-
 <button class="btn btn-primary" @onclick="SendNotification">Test Notification</button>
 
 
@@ -25,30 +22,14 @@
 @code {
 
     private readonly NotificationViewModel _notificationModel = new();
-    private string _message = "Loading...";
-
     private async Task SendNotification()
     {
-        try
-        {
             await MainService.SendMissingPaymentsEmail();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
     }
 
     private async Task SendRoundStartNotification()
     {
-        try
-        {
             await MainService.SendRoundStartNotification(_notificationModel.Round, _notificationModel.Deadline.GetValueOrDefault());
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
     }
 
 }

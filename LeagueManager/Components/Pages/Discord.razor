@@ -7,27 +7,15 @@
 
 <h1>Discord</h1>
 
-<p role="status">@_message</p>
-
 <button class="btn btn-primary" @onclick="UpdatePlayerRole">Update Player Role</button>
 <button class="btn btn-primary" @onclick="UpdateMissingDiscordIds">Update Discord Ids</button>
 <button class="btn btn-primary" @onclick="SendReviewSchedule">Send Review Schedule</button>
 
 
-
 @code {
-    private string _message = "Loading...";
-
     private async void UpdateMissingDiscordIds()
     {
-        try
-        {
             await MainService.FetchMissingDiscordIds();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
     }
 
 
@@ -38,26 +26,12 @@
 
     private async void UpdatePlayerRole()
     {
-        try
-        {
             await MainService.UpdateDiscordPlayerRole();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
     }
 
     private async void SyncPlayers()
     {
-        try
-        {
             await MainService.UpdatePlayers();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
     }
 
 }

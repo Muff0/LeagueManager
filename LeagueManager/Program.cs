@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Data;
 using Discord;
 using Havit.Blazor.Components.Web;
@@ -8,11 +9,16 @@ using LeagoService;
 using LeagueManager.Components;
 using LeagueManager.Services;
 using Mail;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using NetCord.Hosting.Gateway;
 using Newtonsoft.Json;
 using OGS;
 using OGS.Client;
+using Org.BouncyCastle.Crypto.Generators;
 using Shared.Converter;
 using Shared.Notifications;
 using Shared.Settings;
@@ -149,5 +155,36 @@ app.MapHub<NotificationHub>("/hubs/notifications");
 app.MapStaticAssets();
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+// Auth components
+
+app.MapPost("/account/login", async (
+    [FromForm] string username,
+    [FromForm] string password,
+    [FromForm] string? returnUrl,
+    IOptions<AuthSettings> authSettings,
+    HttpContext ctx) =>
+{
+    var admin = authSettings.Value.Admins
+        .FirstOrDefault(a => a.Username == username);
+
+    if (admin is null || !BCrypt.Net.BCrypt.Verify(password, admin.PasswordHash))
+    {
+        var qs = returnUrl is not null ? $"&returnUrl={Uri.EscapeDataString(returnUrl)}" : "";
+        return Results.Redirect($"/login?error=true{qs}");
+    }
+
+    var claims = new[] { new Claim(ClaimTypes.Name, admin.Username) };
+    var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+    await ctx.SignInAsync(new ClaimsPrincipal(identity));
+
+    return Results.LocalRedirect(returnUrl ?? "/");
+}).DisableAntiforgery();
+
+app.MapGet("/account/logout", async (HttpContext ctx) =>
+{
+    await ctx.SignOutAsync();
+    return Results.Redirect("/login");
+}).RequireAuthorization();
 
 app.Run();

@@ -1,0 +1,19 @@
+@page "/login"
+@using Microsoft.AspNetCore.Authorization
+@attribute [AllowAnonymous]
+
+<form method="post" action="/account/login">
+    <input name="username" type="text" placeholder="Username" />
+    <input name="password" type="password" placeholder="Password" />
+    <input name="returnUrl" type="hidden" value="@ReturnUrl" />
+    @if (Error)
+    {
+        <p>Invalid username or password.</p>
+    }
+    <button type="submit">Sign in</button>
+</form>
+
+@code {
+    [SupplyParameterFromQuery] public string? ReturnUrl { get; set; }
+    [SupplyParameterFromQuery] public bool Error { get; set; }
+}

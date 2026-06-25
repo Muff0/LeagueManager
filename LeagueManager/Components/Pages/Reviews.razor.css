@@ -1,0 +1,8 @@
+.video-url-cell {
+    min-width: 220px;
+    width: 220px;
+}
+
+.video-url-cell input {
+    width: 100%;
+}

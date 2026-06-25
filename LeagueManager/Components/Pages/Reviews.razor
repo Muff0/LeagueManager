@@ -1,5 +1,6 @@
 ﻿@page "/reviews"
 @using LeagueManager.Extensions
+@inject IJSRuntime Js
 @using LeagueManager.Services
 @using LeagueManager.ViewModel
 @inject MainService MainService
@@ -125,32 +126,58 @@
                 <button class="btn btn-outline-primary" @onclick="Deallocate">Deallocate</button>
             </div>
             <HxGrid @ref="_postingGrid" TItem="ReviewViewModel" DataProvider="GetPostingGridData"
-                    SelectedDataItem="_selectedPostingReview"
-                    @bind-SelectedDataItems="_selectedPostingReviews"
-                    SelectedDataItemChanged="HandleSelectedPostingReviewChanged"
-                    MultiSelectionEnabled="true" PageSize="20" Responsive="true">
-                <Columns>
-                    <HxGridColumn HeaderText="Black" ItemTextSelector="rev => rev.BlackPlayerName + ' ' + rev.BlackPlayerRank"/>
-                    <HxGridColumn HeaderText="White" ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank"/>
-                    <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName"/>
-                    <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerHandle"/>
-                    <HxGridColumn HeaderText="Link" ItemTextSelector="rev => rev.MatchUrl"/>
-                    <HxGridColumn HeaderText="Video URL">
-                        <ItemTemplate Context="review">
-                            @if (review == _selectedPostingReview)
-                            {
-                                <InputText @bind-Value="review.ReviewUrl"
-                                           @onkeydown="HandleSelectedPostingReviewKeyDown"/>
-                            }
-                            else
-                            {
-                                @review.ReviewUrl
-                            }
-                        </ItemTemplate>
-                    </HxGridColumn>
-                    <HxGridColumn HeaderText="Match String" ItemTextSelector="rev => rev.BuildLongMatchTitle()"/>
-                </Columns>
-            </HxGrid>
+        SelectedDataItem="_selectedPostingReview"
+        @bind-SelectedDataItems="_selectedPostingReviews"
+        SelectedDataItemChanged="HandleSelectedPostingReviewChanged"
+        MultiSelectionEnabled="true" PageSize="20" Responsive="true">
+    <Columns>
+        <HxGridColumn HeaderText="Black" ItemTextSelector="rev => rev.BlackPlayerName + ' ' + rev.BlackPlayerRank"/>
+        <HxGridColumn HeaderText="White" ItemTextSelector="rev => rev.WhitePlayerName + ' ' + rev.WhitePlayerRank"/>
+        <HxGridColumn HeaderText="Teacher" ItemTextSelector="rev => rev.TeacherName"/>
+        <HxGridColumn HeaderText="Owner" ItemTextSelector="rev => rev.OwnerHandle"/>
+        <HxGridColumn HeaderText="Link">
+            <ItemTemplate Context="review">
+                @if (!string.IsNullOrEmpty(review.MatchUrl))
+                {
+                    <button class="btn btn-sm btn-outline-secondary me-1" title="Copy link"
+                            @onclick="() => CopyToClipboardAsync(review.MatchUrl)"
+                            @onclick:stopPropagation="true">
+                        <HxIcon Icon="BootstrapIcon.Clipboard"/>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" title="Open in browser"
+                            @onclick="() => OpenUrlAsync(review.MatchUrl)"
+                            @onclick:stopPropagation="true">
+                        <HxIcon Icon="BootstrapIcon.BoxArrowUpRight"/>
+                    </button>
+                }
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Video URL">
+            <ItemTemplate Context="review">
+                <div class="video-url-cell">
+                    @if (review == _selectedPostingReview)
+                    {
+                        <InputText @bind-Value="review.ReviewUrl"
+                                   @onkeydown="HandleSelectedPostingReviewKeyDown"/>
+                    }
+                    else
+                    {
+                        @review.ReviewUrl
+                    }
+                </div>
+            </ItemTemplate>
+        </HxGridColumn>
+        <HxGridColumn HeaderText="Match String" ItemTextSelector="rev => rev.BuildLongMatchTitle()">
+            <ItemTemplate Context="review">
+                    <button class="btn btn-sm btn-outline-secondary me-1" title="Copy link"
+                            @onclick="() => CopyToClipboardAsync(review.BuildLongMatchTitle())"
+                            @onclick:stopPropagation="true">
+                        <HxIcon Icon="BootstrapIcon.Clipboard"/>
+                    </button>
+            </ItemTemplate>
+        </HxGridColumn>
+    </Columns>
+</HxGrid>
         </Content>
     </HxTab>
 
@@ -382,5 +409,16 @@
     private async void RefreshMissedGrid()
     {
         if (_missedGrid != null) await _missedGrid.RefreshDataAsync();
+    }
+    
+    
+    private async Task CopyToClipboardAsync(string url)
+    {
+        await Js.InvokeVoidAsync("navigator.clipboard.writeText", url);
+    }
+
+    private async Task OpenUrlAsync(string url)
+    {
+        await Js.InvokeVoidAsync("open", url, "_blank");
     }
 }
