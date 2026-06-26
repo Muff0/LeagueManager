@@ -15,6 +15,12 @@
             <span
                 class="lm-page-sub">@(_filteredCount.HasValue ? $"{_filteredCount} player{(_filteredCount == 1 ? "" : "s")}" : "Loading…")</span>
         </div>
+        
+        @* {{!-- Actions --}} *@
+        <div class="d-flex gap-2 pt-2 border-top">
+            <button class="btn btn-primary btn-sm" @onclick="SyncPlayers">Sync Players</button>
+        </div>
+        
         <div class="lm-search-wrap">
             <i class="ti ti-search" aria-hidden="true"></i>
             <input type="text" placeholder="Search by name, handle, ID…"
@@ -110,6 +116,12 @@
         if (idx >= 0) _allPlayers[idx] = updated;
         ApplyFilter();
     }
+    
+    private async void SyncPlayers()
+    {
+        await MainService.UpdatePlayers();
+    }
+    
 
     private void ClosePanel()
     {

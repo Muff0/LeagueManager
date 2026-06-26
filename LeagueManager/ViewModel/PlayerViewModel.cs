@@ -1,4 +1,5 @@
-﻿using Shared.Enum;
+﻿using Data.Model;
+using Shared.Enum;
 
 namespace LeagueManager.ViewModel;
 
@@ -15,5 +16,6 @@ public class PlayerViewModel
     public string? LeagoKey { get; set; }
     public int? GoMagicUserId { get; set; }
     public ulong? DiscordId { get; set; }
-    public string TimeZone { get; set; }
+    public string TimeZone { get; set; }  = string.Empty;
+    public PlayerSeasonViewModel[] PlayerSeasons { get; set; }  = Array.Empty<PlayerSeasonViewModel>();
 }

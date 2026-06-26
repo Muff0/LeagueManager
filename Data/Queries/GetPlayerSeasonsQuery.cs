@@ -9,6 +9,7 @@ public class GetPlayerSeasonsQuery : Query<LeagueContext, PlayerSeason>
     public bool IncludePlayer { get; set; } = false;
     public bool IncludeSeason { get; set; } = false;
 
+    public int PlayerId { get; set; } = 0;
     public int SeasonId { get; set; } = 0;
     public PlayerParticipationTier[] ParticipationTiers { get; set; } = [];
     public bool IncludeReviews { get; set; }
@@ -31,6 +32,9 @@ public class GetPlayerSeasonsQuery : Query<LeagueContext, PlayerSeason>
 
         if (ParticipationTiers.Length > 0)
             query = query.Where(ps => ParticipationTiers.Contains(ps.ParticipationTier));
+        
+        if (PlayerId != 0)
+            query = query.Where(ps => ps.PlayerId == PlayerId);
 
         return query;
     }

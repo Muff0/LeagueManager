@@ -8,9 +8,6 @@
 
 <h1>Sync</h1>
 
-<p role="status">@_message</p>
-
-<button class="btn btn-primary" @onclick="SyncPlayers">Sync Players</button>
 <button class="btn btn-primary" @onclick="SyncMatches">Sync Matches</button>
 <button class="btn btn-primary" @onclick="CheckOgsRanks">Check Ranks</button>
 
@@ -26,7 +23,6 @@
 </HxGrid>
 
 @code {
-    private string _message = "Loading...";
     private HxGrid<CheckRankDto> _checkRankGrid;
     private IEnumerable<CheckRankDto> _checkRankResults;
 
@@ -37,39 +33,14 @@
 
     private async void SyncMatches()
     {
-        try
-        {
             await MainService.SyncMatches();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
     }
 
-    private async void SyncPlayers()
-    {
-        try
-        {
-            await MainService.UpdatePlayers();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
-    }
 
     private async void CheckOgsRanks()
     {
-        try
-        {
             _checkRankResults = await MainService.CheckRanks();
             await _checkRankGrid.RefreshDataAsync();
-        }
-        catch (Exception e)
-        {
-            _message = "Error";
-        }
     }
 
 }

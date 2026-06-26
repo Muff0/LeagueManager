@@ -789,4 +789,22 @@ public class MainService(QueueDataService queueDataService,
             HandleException(e);
         }
     }
+
+    public async Task<PlayerSeasonViewModel[]> GetPlayerSeasons(int playerId)
+    {
+        var res = await leagueDataService.RunQueryAsync(
+            new GetPlayerSeasonsQuery()
+            {
+                IncludeSeason = true,
+                PlayerId = playerId
+            });
+
+        return res.Select(ps => new PlayerSeasonViewModel()
+        {
+            PlayerId = ps.PlayerId,
+            SeasonId = ps.SeasonId,
+            SeasonTitle = ps.Season?.Title ?? "",
+            PlayerParticipationTier = ps.ParticipationTier
+        }).ToArray();
+    }
 }
