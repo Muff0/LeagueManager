@@ -30,7 +30,7 @@
 
 @code {
     private HxGrid<PaymentDataDto> _missingRegistrationsGrid;
-    private IEnumerable<PaymentDataDto> missingPayments;
+    private IEnumerable<PaymentDataDto> _missingPayments;
     private string _missingpayments = "...";
 
     private async void GetMissingPayments()
@@ -43,7 +43,7 @@
 
     private Task<GridDataProviderResult<PaymentDataDto>> GetGridData(GridDataProviderRequest<PaymentDataDto> request)
     {
-        return Task.FromResult(request.ApplyTo(missingPayments));
+        return Task.FromResult(request.ApplyTo(_missingPayments));
     }
 
     private async void OnFileUploaded(InputFileChangeEventArgs e)
@@ -54,7 +54,7 @@
             using var stream = file.OpenReadStream(10_000_000); // 10 MB limit
             var result = await MainService.UploadOrdersFile(stream);
 
-            missingPayments = result.MissingRegistrations.Concat(result.NoMatches);
+            _missingPayments = result.MissingRegistrations.Concat(result.NoMatches);
             await _missingRegistrationsGrid.RefreshDataAsync();
         }
     }

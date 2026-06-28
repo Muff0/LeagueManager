@@ -2,7 +2,7 @@
 
 public class SendReviewEventNotificationInDto
 {
-    public DateTime DateTimeUTC { get; set; }
+    public DateTime DateTimeUtc { get; set; }
     public TeacherDto Teacher { get; set; } = new();
     public MatchDto[] Reviews { get; set; } = [];
 }

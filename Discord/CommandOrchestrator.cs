@@ -58,7 +58,7 @@ public class CommandOrchestrator
                     (resGetO.DiscordId != null
                         ? _discordService.MentionUser((ulong)resGetO.DiscordId)
                         : "Unavailable") + Environment.NewLine;
-        response += "OGS: " + resGetO.OGSHandle + Environment.NewLine;
+        response += "OGS: " + resGetO.OgsHandle + Environment.NewLine;
         response += "Email: " + resGetO.EmailAddress;
 
         return response;

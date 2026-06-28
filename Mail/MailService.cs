@@ -13,7 +13,7 @@ public class MailService(IOptions<MailSettings> options, ILogger<MailService> lo
 {
     private readonly MailSettings _settings = options.Value;
 
-    private readonly string Signature =
+    private readonly string _signature =
         """<br clear="all"></div><div><div dir="ltr" class="gmail_signature" data-smartmail="gmail_signature"><div dir="ltr"><span><div><p class="MsoNormal"><b>Pietro <br></b></p><p class="MsoNormal"><b>Tournament Director<br></b></p><p class="MsoNormal"><b><a href="https://gomagic.org/" target="_blank" data-saferedirecturl="https://www.google.com/url?q=https://gomagic.org/&amp;source=gmail&amp;ust=1780259372360000&amp;usg=AOvVaw31FH_rgpiQZMchmCjdgH6I"><img src="https://ci3.googleusercontent.com/meips/ADKq_NZhW3TeGXQ0kahXOkaTBTV2Eu5YPymLi8UN_BDvqUgIJLLNGSFrBgLAXUr325ZYRC07c_hlGvg6Xr08vWMmO5lg6xCFXuc05SiL2MKUnv-h1lQxEws1qIPSjzFT-cEclOGbdnWVjZotlN2M0-FSOQcRTLM6BF0gbQjDrXQtqtd1s5fxlMDcWKg4CwCbYFuC_S3nuGVJpgptG5JsoNnjzzV-uAeSscno8Uc4vVNB3q1DSxsmwKILQvGc3VA3EeB_F0wAaBWWfr1Dy4wbr2cDvIioRZbmAt0pDubTRwUF=s0-d-e1-ft#https://img.posteml.com/en/v5/user-files?userId=6193633&amp;resource=himg&amp;disposition=inline&amp;name=6iymtxstz9gatumke5xi5nsmwb3dtw65xdega4ukxgq56x6kthsa5g7mw6rrazb7f7jeex9s83uy45gtn69376bud8fwtwop8mmuu1ze" width="200" height="46" class="CToWUd" data-bit="iit">""";
 
     /// <summary>
@@ -125,8 +125,8 @@ public class MailService(IOptions<MailSettings> options, ILogger<MailService> lo
 
         var builder = new BodyBuilder
         {
-            HtmlBody = htmlBody + Signature,
-            TextBody = HtmlToPlainText(htmlBody + Signature)
+            HtmlBody = htmlBody + _signature,
+            TextBody = HtmlToPlainText(htmlBody + _signature)
         };
         message.Body = builder.ToMessageBody();
 

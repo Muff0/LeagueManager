@@ -13,7 +13,7 @@ namespace Data.Migrations.Queue
 {
     [DbContext(typeof(QueueContext))]
     [Migration("20260616163602_stateLink")]
-    partial class stateLink
+    partial class StateLink
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

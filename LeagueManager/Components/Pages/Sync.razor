@@ -17,8 +17,8 @@
     <Columns>
         <HxGridColumn HeaderText="Player" ItemTextSelector="rev => rev.Player.FirstName + ' ' + rev.Player.LastName"/>
         <HxGridColumn HeaderText="Rank" ItemTextSelector="rev => rev.Player.Rank.ToString()"/>
-        <HxGridColumn HeaderText="OGSRank" ItemTextSelector="rev => (30 - rev.OGSRank).ToString()"/>
-        <HxGridColumn HeaderText="OGSProfile" ItemTextSelector="pl => pl.Player.OGSHandle"></HxGridColumn>
+        <HxGridColumn HeaderText="OGSRank" ItemTextSelector="rev => (30 - rev.OgsRank).ToString()"/>
+        <HxGridColumn HeaderText="OGSProfile" ItemTextSelector="pl => pl.Player.OgsHandle"></HxGridColumn>
     </Columns>
 </HxGrid>
 

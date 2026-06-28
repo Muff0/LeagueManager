@@ -37,7 +37,7 @@ public class MainService(QueueDataService queueDataService,
     IOptions<LeagoSettings> leagoOptions,
     DiscordService discordService,
     ReviewService reviewService,
-    OGSService ogsService,
+    OgsService ogsService,
     INotificationDispatcher notificationService,
     ILogger<MainService> logger) : ServiceBase(logger)
 {
@@ -319,10 +319,10 @@ public class MainService(QueueDataService queueDataService,
 
             foreach (var player in players)
             {
-                if (player.Player == null || player.Player.OGSHandle == "")
+                if (player.Player == null || player.Player.OgsHandle == "")
                     continue;
 
-                var ogsPl = await ogsService.GetPlayer(player.Player.OGSHandle);
+                var ogsPl = await ogsService.GetPlayer(player.Player.OgsHandle);
 
                 if (ogsPl == null)
                     continue;
@@ -330,8 +330,8 @@ public class MainService(QueueDataService queueDataService,
                 results.Add(new CheckRankDto
                 {
                     Player = player.Player.ToPlayerDto(),
-                    OGSRank = ogsService.RatingToRank(ogsPl.Rating),
-                    OGSRating = ogsPl.Rating
+                    OgsRank = ogsService.RatingToRank(ogsPl.Rating),
+                    OgsRating = ogsPl.Rating
                 });
             }
 
@@ -391,7 +391,7 @@ public class MainService(QueueDataService queueDataService,
             var dateString = row.Field<string>("Date");
             newPaymentData.DateTime = DateTime.Parse(dateString);
             newPaymentData.BillingEmail = row.Field<string>("Billing Email") ?? "";
-            newPaymentData.USD = double.Parse(row.Field<string>("USD"));
+            newPaymentData.Usd = double.Parse(row.Field<string>("USD"));
             newPaymentData.UserEmail = row.Field<string>("User Email") ?? "";
             newPaymentData.UserId = int.Parse(row.Field<string>("User ID"));
             newPaymentData.UserName = row.Field<string>("User Name") ?? "";
@@ -587,7 +587,7 @@ public class MainService(QueueDataService queueDataService,
 
             await discordService.SendReviewEventNotification(new SendReviewEventNotificationInDto
             {
-                DateTimeUTC = reviewEventDate,
+                DateTimeUtc = reviewEventDate,
                 Reviews = games.ToArray(),
                 Teacher = teacher.ToTeacherDto()
             });
@@ -760,19 +760,33 @@ public class MainService(QueueDataService queueDataService,
 
         foreach (var player in players)
         {
+            if (player.LastLeagoProfileSyncUtc.AddHours(leagoOptions.Value.ProfileUpdateDelayHours) > DateTime.UtcNow)
+                continue;
+                
+            var current = new PlayerDto()
+            {
+                Id =  player.Id,
+            };
             var pres = await leagoService.GetProfile(new GetProfileInDto
             {
                 ProfileKey = player.LeagoKey,
                 ArenaKey = leagoOptions.Value.ArenaKey
             });
 
-            toAdd.Add(new PlayerDto
+            current.DiscordHandle = pres.DiscordHandle;
+            current.TimeZone = pres.TimeZone;
+            var email = await leagoService.GetEmail(new GetProfileInDto
             {
-                Id = player.Id,
-                DiscordHandle = pres.DiscordHandle,
-                EmailAddress = pres.Email,
-                TimeZone = pres.Timezone
+                ProfileKey = player.LeagoKey,
+                ArenaKey = leagoOptions.Value.ArenaKey
             });
+            
+            if (email != "")
+                current.EmailAddress = email;
+
+            current.LastLeagoProfileSync = DateTime.UtcNow;
+            toAdd.Add(current);
+            await Task.Delay(3000);
         }
 
         leagueDataService.Execute(new UpdatePlayersDataCommand { Players = toAdd.ToArray() });

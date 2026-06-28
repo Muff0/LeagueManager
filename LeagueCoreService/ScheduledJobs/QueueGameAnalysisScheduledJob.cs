@@ -15,7 +15,7 @@ namespace LeagueCoreService.ScheduledJobs;
 
 public class QueueGameAnalysisScheduledJob(QueueDataService queueDataService,
     LeagueDataService leagueDataService,
-    OGSService ogsService,
+    OgsService ogsService,
     LeagoMainService leagoService,
     TimeIntervalSchedulerService schedulerService)
     : ScheduledJobBase<TimeIntervalSchedulerService>(schedulerService)

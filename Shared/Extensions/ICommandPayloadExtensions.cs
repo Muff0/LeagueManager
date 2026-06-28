@@ -3,9 +3,9 @@ using Shared.Queue;
 
 namespace Shared.Extensions;
 
-public static class ICommandPayloadExtensions
+public static class CommandPayloadExtensions
 {
-    public static string SerializePayload(this ICommandPayload payload)
+    public static string SerializePayload(this CommandPayload payload)
     {
         return JsonConvert.SerializeObject(payload);
     }

@@ -13,7 +13,7 @@ namespace Data.Migrations.League
 {
     [DbContext(typeof(LeagueContext))]
     [Migration("20260615232755_removedMatchUrl")]
-    partial class removedMatchUrl
+    partial class RemovedMatchUrl
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

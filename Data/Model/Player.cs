@@ -16,7 +16,7 @@ public class Player
 
     public string EmailAddress { get; set; } = string.Empty;
     public string DiscordHandle { get; set; } = string.Empty;
-    public string OGSHandle { get; set; } = string.Empty;
+    public string OgsHandle { get; set; } = string.Empty;
     public string LeagoMemberId { get; set; } = string.Empty;
     public int GoMagicUserId { get; set; }
     public PlayerRank Rank { get; set; }
@@ -26,4 +26,5 @@ public class Player
     public ICollection<Review> Reviews { get; set; } = new List<Review>();
     public ulong? DiscordId { get; set; }
     public string Timezone { get; internal set; }
+    public DateTime LastLeagoProfileSyncUtc { get; set; }
 }

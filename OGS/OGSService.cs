@@ -6,28 +6,28 @@ using Shared.Dto.OGS;
 
 namespace OGS;
 
-public class OGSService(HttpClient httpClient,
+public class OgsService(HttpClient httpClient,
     IOgsPlayerClient playerClient,
     IUnauthenticatedOgsClient ogsClient,
-                               ILogger<OGSService> logger) : ServiceBase(logger)
+                               ILogger<OgsService> logger) : ServiceBase(logger)
 {
     private readonly string _baseAddress = "https://online-go.com";
-    private readonly string gameUrlFormat = "https://online-go.com/game/";
-    private readonly string leagueGameUrlFormat = "https://online-go.com/online-league/league-game/";
+    private readonly string _gameUrlFormat = "https://online-go.com/game/";
+    private readonly string _leagueGameUrlFormat = "https://online-go.com/online-league/league-game/";
     
-    private readonly double A = 525;
-    private readonly double C = 23.15;
-    private readonly double MAX_RATING = 6000;
+    private readonly double _a = 525;
+    private readonly double _c = 23.15;
+    private readonly double _maxRating = 6000;
 
-    private readonly double MIN_RATING = 100;
+    private readonly double _minRating = 100;
 
 
     public double RatingToRank(double rating)
     {
-        return Math.Log(Math.Min(MAX_RATING, Math.Max(MIN_RATING, rating)) / A) * C;
+        return Math.Log(Math.Min(_maxRating, Math.Max(_minRating, rating)) / _a) * _c;
     }
     
-    public async Task<OGSPlayer?> GetPlayer(string userId)
+    public async Task<OgsPlayer?> GetPlayer(string userId)
     {
         var url = _baseAddress + "/api/v1/players?username=" + userId;
 
@@ -52,9 +52,9 @@ public class OGSService(HttpClient httpClient,
         return sgf;
     }
 
-    private bool IsValidGameUrl(string url) => url.Contains(gameUrlFormat);
-    private string GetIdFromGameUrl(string url) => url.Replace(gameUrlFormat, string.Empty);
-    private string GetLeagueIdFromGameUrl(string url) => url.Replace(leagueGameUrlFormat, string.Empty);
+    private bool IsValidGameUrl(string url) => url.Contains(_gameUrlFormat);
+    private string GetIdFromGameUrl(string url) => url.Replace(_gameUrlFormat, string.Empty);
+    private string GetLeagueIdFromGameUrl(string url) => url.Replace(_leagueGameUrlFormat, string.Empty);
 
     public async Task<int> GetMatchIdFromLeagueId(int matchId)
     {

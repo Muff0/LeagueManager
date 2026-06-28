@@ -31,13 +31,14 @@ public class UpdatePlayersDataCommand : Command<LeagueContext>
                 {
                     FirstName = player.FirstName ?? string.Empty,
                     LastName = player.LastName ?? string.Empty,
-                    OGSHandle = player.OGSHandle ?? string.Empty,
+                    OgsHandle = player.OgsHandle ?? string.Empty,
                     DiscordHandle = player.DiscordHandle ?? string.Empty,
                     LeagoMemberId = player.LeagoMemberId ?? string.Empty,
                     LeagoKey = player.LeagoKey ?? string.Empty,
                     Rank = player.Rank,
                     EmailAddress = player.EmailAddress ?? string.Empty,
-                    Timezone = player.TimeZone ?? string.Empty
+                    Timezone = player.TimeZone ?? string.Empty,
+                    LastLeagoProfileSyncUtc = player.LastLeagoProfileSync ?? DateTime.MinValue,
                 };
                 context.Players.Add(existingPlayer);
             }
@@ -45,8 +46,8 @@ public class UpdatePlayersDataCommand : Command<LeagueContext>
             {
                 if (player.Rank != PlayerRank.MinValue)
                     existingPlayer.Rank = player.Rank;
-                if (player.OGSHandle != null)
-                    existingPlayer.OGSHandle = player.OGSHandle;
+                if (player.OgsHandle != null)
+                    existingPlayer.OgsHandle = player.OgsHandle;
                 if (player.LeagoMemberId != null)
                     existingPlayer.LeagoMemberId = player.LeagoMemberId;
                 if (player.LeagoKey != null)
@@ -61,6 +62,8 @@ public class UpdatePlayersDataCommand : Command<LeagueContext>
                     existingPlayer.DiscordId = player.DiscordId;
                 if (player.TimeZone != null)
                     existingPlayer.Timezone = player.TimeZone;
+                if (player.LastLeagoProfileSync != null)
+                    existingPlayer.LastLeagoProfileSyncUtc = player.LastLeagoProfileSync.Value;
 
                 context.Entry(existingPlayer).State = EntityState.Modified;
             }

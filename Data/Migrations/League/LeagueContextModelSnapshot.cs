@@ -102,6 +102,9 @@ namespace Data.Migrations.League
                     b.Property<int>("GoMagicUserId")
                         .HasColumnType("integer");
 
+                    b.Property<DateTime>("LastLeagoProfileSyncUtc")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<string>("LastName")
                         .IsRequired()
                         .HasColumnType("text");
@@ -114,7 +117,7 @@ namespace Data.Migrations.League
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("OGSHandle")
+                    b.Property<string>("OgsHandle")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -234,7 +237,7 @@ namespace Data.Migrations.League
                     b.Property<int>("ReviewId")
                         .HasColumnType("integer");
 
-                    b.Property<DateTime>("UTCSchedule")
+                    b.Property<DateTime>("ScheduledDateTimeUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");

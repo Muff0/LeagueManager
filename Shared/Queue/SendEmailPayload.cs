@@ -1,6 +1,6 @@
 namespace Shared.Queue;
 
-public class SendEmailPayload : ICommandPayload
+public class SendEmailPayload : CommandPayload
 {
     public string HtmlBody { get; set; } = string.Empty;
     public string[] Tos { get; set; } = [];

@@ -6,5 +6,5 @@ public class GetPlayersResult
 {
     [JsonPropertyName("count")] public int Count { get; set; }
 
-    [JsonPropertyName("results")] public OGSPlayer[] Results { get; set; }
+    [JsonPropertyName("results")] public OgsPlayer[] Results { get; set; }
 }

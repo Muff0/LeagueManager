@@ -5,7 +5,7 @@
 namespace Data.Migrations.League
 {
     /// <inheritdoc />
-    public partial class removedMatchUrl : Migration
+    public partial class RemovedMatchUrl : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

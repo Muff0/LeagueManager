@@ -12,7 +12,7 @@ public static class PlayerExtensions
         {
             Id = player.Id,
             LeagoMemberId = player.LeagoMemberId,
-            OgsHandle = player.OGSHandle,
+            OgsHandle = player.OgsHandle,
             DiscordHandle = player.DiscordHandle,
             DiscordId = player.DiscordId,
             EmailAddress = player.EmailAddress,
@@ -29,7 +29,7 @@ public static class PlayerExtensions
         {
             Id = player.Id,
             LeagoMemberId = player.LeagoMemberId,
-            OGSHandle = player.OgsHandle,
+            OgsHandle = player.OgsHandle,
             DiscordHandle = player.DiscordHandle,
             DiscordId = player.DiscordId,
             EmailAddress = player.EmailAddress,

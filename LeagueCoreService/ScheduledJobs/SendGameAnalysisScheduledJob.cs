@@ -15,7 +15,8 @@ namespace LeagueCoreService.ScheduledJobs;
 
 public class SendGameAnalysisScheduledJob(QueueDataService queueDataService, 
     LeagueDataService leagueDataService,
-    TimeIntervalSchedulerService schedulerService)
+    TimeIntervalSchedulerService schedulerService, 
+    ILogger<SendGameAnalysisScheduledJob> logger)
     : ScheduledJobBase<TimeIntervalSchedulerService>(schedulerService)
 {
     public override string JobType => "SendGameAnalysis";
@@ -37,11 +38,14 @@ public class SendGameAnalysisScheduledJob(QueueDataService queueDataService,
 
         foreach (var game in games)
         {
-            await leagueDataService.ExecuteAsync(new UpdateMatchGameAnalysisCommand()
+            var toAddresses = game.PlayerMatches.Select(pm => pm.Player.EmailAddress).ToArray();
+
+            if (toAddresses.Length == 0 || toAddresses.Any(string.IsNullOrEmpty))
             {
-                MatchId = game.Id,
-                SetNewStatus = GameAnalysisStatus.Sent
-            });
+                logger.LogError("Missing email addresses for players:" 
+                                + string.Join(", " ,game.PlayerMatches.Select(pm => pm.Player?.FirstName + " " + pm.Player?.LastName)));
+                continue;
+            }
             
             var message = new GameAnalysisReadyMessage(game.ToMatchDto());
             await queueDataService.ExecuteAsync(new
@@ -54,10 +58,17 @@ public class SendGameAnalysisScheduledJob(QueueDataService queueDataService,
                         {
                             Subject = message.Subject,
                             HtmlBody = message.HtmlBody,
-                            Tos = game.PlayerMatches.Select(pm => pm.Player.EmailAddress).ToArray()
+                            Tos = toAddresses
                         }.SerializePayload()
                     }
                 });
+            
+            
+            await leagueDataService.ExecuteAsync(new UpdateMatchGameAnalysisCommand()
+            {
+                MatchId = game.Id,
+                SetNewStatus = GameAnalysisStatus.Sent
+            });
         }
     }
 }

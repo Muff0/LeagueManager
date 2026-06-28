@@ -54,8 +54,8 @@ public class PostUpcomingMatchesScheduledJob(
             IncludeCompleted = false,
             IncludeNotConfirmed = false,
             IsNotificationSent = false,
-            TimeFromUTC = DateTime.Now.ToUniversalTime(),
-            TimeToUTC = DateTime.Now.AddSeconds(secondsInterval).ToUniversalTime(),
+            TimeFromUtc = DateTime.Now.ToUniversalTime(),
+            TimeToUtc = DateTime.Now.AddSeconds(secondsInterval).ToUniversalTime(),
             Count = 5
         };
 

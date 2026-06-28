@@ -18,10 +18,10 @@
 <div class="d-flex align-items-center gap-2 mb-3">
     <label for="round-select" class="form-label mb-0">Round:</label>
     <select id="round-select" class="form-select w-auto"
-            @bind="SelectedRound" @bind:after="Refresh">
-        @if (AvailableRounds != null)
+            @bind="_selectedRound" @bind:after="Refresh">
+        @if (_availableRounds != null)
         {
-            @foreach (var round in AvailableRounds)
+            @foreach (var round in _availableRounds)
             {
                 <option value="@round">@round</option>
             }
@@ -30,7 +30,7 @@
 </div>
 
 
-<HxGrid @ref="missedMatchesGrid" TItem="UnplayedMatchViewModel" DataProvider="GetUnplayedMatchesData">
+<HxGrid @ref="_missedMatchesGrid" TItem="UnplayedMatchViewModel" DataProvider="GetUnplayedMatchesData">
         <Columns>
             <HxGridColumn TItem="UnplayedMatchViewModel" HeaderText="Player 1">
                 <ItemTemplate>
@@ -68,57 +68,57 @@
     </HxGrid>
 
     <button type="button" class="btn btn-danger mt-3"
-            disabled="@(UnplayedMatches != null && !UnplayedMatches.Any(m => m.HasAnyForfeit))"
+            disabled="@(_unplayedMatches != null && !_unplayedMatches.Any(m => m.HasAnyForfeit))"
             @onclick="ProcessForfeitsAsync">
         Process Forfeits
     </button>
 
 
-<HxModal @ref="detailModal" Title="Match Details">
+<HxModal @ref="_detailModal" Title="Match Details">
     <BodyTemplate>
-        @if (selectedMatch is not null)
+        @if (_selectedMatch is not null)
         {
             <h6>Player 1</h6>
             <p class="mb-3">
-                OGS: @(selectedMatch.Player1.OgsUsername ?? "—")<br />
-                Discord: @(selectedMatch.Player1.DiscordHandle ?? "—")<br />
-                Confirmed time: @(selectedMatch.Player1.HasConfirmedTime ? "Yes" : "No")
+                OGS: @(_selectedMatch.Player1.OgsUsername ?? "—")<br />
+                Discord: @(_selectedMatch.Player1.DiscordHandle ?? "—")<br />
+                Confirmed time: @(_selectedMatch.Player1.HasConfirmedTime ? "Yes" : "No")
             </p>
 
             <h6>Player 2</h6>
             <p class="mb-3">
-                OGS: @(selectedMatch.Player2.OgsUsername ?? "—")<br />
-                Discord: @(selectedMatch.Player2.DiscordHandle ?? "—")<br />
-                Confirmed time: @(selectedMatch.Player2.HasConfirmedTime ? "Yes" : "No")
+                OGS: @(_selectedMatch.Player2.OgsUsername ?? "—")<br />
+                Discord: @(_selectedMatch.Player2.DiscordHandle ?? "—")<br />
+                Confirmed time: @(_selectedMatch.Player2.HasConfirmedTime ? "Yes" : "No")
             </p>
 
             <h6>Scheduled time</h6>
-            <p>@(selectedMatch.ScheduledTime?.ToString("g") ?? "Not scheduled")</p>
+            <p>@(_selectedMatch.ScheduledTime?.ToString("g") ?? "Not scheduled")</p>
         }
     </BodyTemplate>
     <FooterTemplate>
-        <button type="button" class="btn btn-secondary" @onclick="() => detailModal!.HideAsync()">
+        <button type="button" class="btn btn-secondary" @onclick="() => _detailModal!.HideAsync()">
             Close
         </button>
     </FooterTemplate>
 </HxModal>
 
 @code {
-    private List<int> AvailableRounds = new();
-    private int SelectedRound;
-    private List<UnplayedMatchViewModel>? UnplayedMatches;
+    private List<int> _availableRounds = new();
+    private int _selectedRound;
+    private List<UnplayedMatchViewModel>? _unplayedMatches;
 
-    private HxGrid<UnplayedMatchViewModel>? missedMatchesGrid;
-    private HxModal? detailModal;
-    private UnplayedMatchViewModel? selectedMatch;
+    private HxGrid<UnplayedMatchViewModel>? _missedMatchesGrid;
+    private HxModal? _detailModal;
+    private UnplayedMatchViewModel? _selectedMatch;
 
     protected override async Task OnInitializedAsync()
     {
-        AvailableRounds = await MatchesService.GetAvailableRoundsAsync();
+        _availableRounds = await MatchesService.GetAvailableRoundsAsync();
 
-        if (AvailableRounds.Count > 0)
+        if (_availableRounds.Count > 0)
         {
-            SelectedRound = AvailableRounds[^1]; // defaults to latest round - change if you want "current round" semantics instead
+            _selectedRound = _availableRounds[^1]; // defaults to latest round - change if you want "current round" semantics instead
             await Refresh();
         }
     }
@@ -126,16 +126,16 @@
 
     private async Task ShowDetailAsync(UnplayedMatchViewModel match)
     {
-        selectedMatch = match;
-        if (detailModal is not null)
+        _selectedMatch = match;
+        if (_detailModal is not null)
         {
-            await detailModal.ShowAsync();
+            await _detailModal.ShowAsync();
         }
     }
 
     private async Task ProcessForfeitsAsync()
     {
-        var matchesWithForfeits = UnplayedMatches!.Where(m => m.HasAnyForfeit).ToList();
+        var matchesWithForfeits = _unplayedMatches!.Where(m => m.HasAnyForfeit).ToList();
 
         await MatchesService.ProcessForfeitsAsync(matchesWithForfeits);
 
@@ -144,12 +144,12 @@
     
     private async Task Refresh()
     {
-        if (missedMatchesGrid != null) await missedMatchesGrid.RefreshDataAsync(); 
+        if (_missedMatchesGrid != null) await _missedMatchesGrid.RefreshDataAsync(); 
     }
 
     private async Task<GridDataProviderResult<UnplayedMatchViewModel>> GetUnplayedMatchesData(GridDataProviderRequest<UnplayedMatchViewModel> request)
     {
-        var data = await MatchesService.GetUnplayedMatchesAsync(SelectedRound, request.StartIndex, request.Count, request.CancellationToken);
+        var data = await MatchesService.GetUnplayedMatchesAsync(_selectedRound, request.StartIndex, request.Count, request.CancellationToken);
         return new GridDataProviderResult<UnplayedMatchViewModel> { Data = data, TotalCount = data.Count };
     }
 }

@@ -129,7 +129,7 @@ builder.Services.AddSingleton<QueueDataService>();
 builder.Services.AddScoped<LeagoMainService>();
 builder.Services.AddScoped<MailService>();
 builder.Services.AddScoped<ReviewService>();
-builder.Services.AddScoped<OGSService>();
+builder.Services.AddScoped<OgsService>();
 builder.Services.AddScoped<DiscordService>();
 builder.Services.AddSingleton<StatService>();
 builder.Services.AddScoped<KifubaraService>();

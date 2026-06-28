@@ -1,5 +1,5 @@
 namespace Shared.Queue;
 
-public class ICommandPayload
+public class CommandPayload
 {
 }

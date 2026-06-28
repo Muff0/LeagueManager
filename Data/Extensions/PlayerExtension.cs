@@ -11,7 +11,7 @@ public static class PlayerExtension
         {
             Id = player.Id,
             LeagoMemberId = player.LeagoMemberId,
-            OGSHandle = player.OGSHandle,
+            OgsHandle = player.OgsHandle,
             DiscordHandle = player.DiscordHandle,
             DiscordId = player.DiscordId,
             EmailAddress = player.EmailAddress,

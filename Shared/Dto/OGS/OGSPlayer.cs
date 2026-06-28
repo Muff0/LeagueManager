@@ -3,7 +3,7 @@ using Newtonsoft.Json.Linq;
 
 namespace Shared.Dto.OGS;
 
-public class OGSPlayer
+public class OgsPlayer
 {
     [JsonProperty("ratings/overall/rating")]
     public double Ranking { get; set; }

@@ -11,7 +11,7 @@ public class ReviewSchedule
 
     public int ReviewId { get; set; }
 
-    public DateTime UTCSchedule { get; set; }
+    public DateTime ScheduledDateTimeUtc { get; set; }
 
     public ulong DiscordEventId { get; set; }
     public Review? Review { get; set; }

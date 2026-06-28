@@ -57,7 +57,7 @@ public static class ReviewExtensions
             MatchId = review.MatchId,
             OwnerName = review.OwnerPlayer?.FirstName + " " + review.OwnerPlayer?.LastName,
             OwnerTimezone = review.OwnerPlayer?.Timezone ?? "",
-            OwnerHandle = review.OwnerPlayer?.OGSHandle ?? "",
+            OwnerHandle = review.OwnerPlayer?.OgsHandle ?? "",
             ReviewUrl = review.ReviewUrl,
             Round = review.Round,
             TeacherId = review.TeacherId,

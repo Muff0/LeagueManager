@@ -1,6 +1,6 @@
 namespace Shared.Queue;
 
-public class ReportForfeitPayload : ICommandPayload
+public class ReportForfeitPayload : CommandPayload
 {
     public ulong DiscordId { get; set; }
     public int Round { get; set; }

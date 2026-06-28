@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Data.Migrations.Queue
 {
     /// <inheritdoc />
-    public partial class stateLink : Migration
+    public partial class StateLink : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)

@@ -74,7 +74,7 @@ public class LeagoMainService(
                     LastName = pp.FamilyName,
                     LeagoKey = pp.Key,
                     LeagoMemberId = pp.MemberId,
-                    OGSHandle = pp.OnlineHandle,
+                    OgsHandle = pp.OnlineHandle,
                     Rank = (PlayerRank)pp.RankId
                 },
                 Color = pp.Color.Equals("black", StringComparison.OrdinalIgnoreCase)
@@ -105,7 +105,7 @@ public class LeagoMainService(
                 LeagoMemberId = p.MemberId ?? "",
                 LeagoKey = p.Key ?? "",
                 Rank = (PlayerRank)p.RankId,
-                OGSHandle = p.OnlineHandle ?? ""
+                OgsHandle = p.OnlineHandle ?? ""
             }).ToArray();
         }
         catch(Exception e)
@@ -174,9 +174,7 @@ public class LeagoMainService(
         try
         {
             var ires = await profilesClient.GetPublicProfileAsync(inDto.ProfileKey);
-            var rres = await arenasClient.GetMemberAsync(inDto.ArenaKey, inDto.ArenaKey + "-" + inDto.ProfileKey);
-            res.Timezone = ires.Timezone;
-            res.Email = rres.Email;
+            res.TimeZone = ires.Timezone;
             res.DiscordHandle = ires.Discord;
         }
         catch(Exception e)
@@ -187,6 +185,20 @@ public class LeagoMainService(
         return res;
     }
 
+    public async Task<string> GetEmail(GetProfileInDto inDto)
+    { try
+        {
+            var rres = await arenasClient.GetMemberAsync(inDto.ArenaKey, inDto.ArenaKey + "-" + inDto.ProfileKey);
+            return rres.Email;
+        }
+        catch(Exception e)
+        {
+            HandleException(e);
+            return string.Empty;
+        }
+    }
+    
+    
     public async Task<string> GetSgf(string matchLeagoKey)
     {
         var record = (await matchesClient.ListGameRecordsAsync(matchLeagoKey)).FirstOrDefault();

@@ -245,7 +245,7 @@ public class DiscordService : ServiceBase
 
         var eventProperties = new GuildScheduledEventProperties("Review Night",
                 GuildScheduledEventPrivacyLevel.GuildOnly,
-                new DateTimeOffset(inDto.DateTimeUTC, TimeSpan.Zero),
+                new DateTimeOffset(inDto.DateTimeUtc, TimeSpan.Zero),
                 GuildScheduledEventEntityType.StageInstance)
             .WithChannelId(_settings.Value.LiveReviewChannelId)
             .WithDescription(content);

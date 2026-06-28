@@ -3,6 +3,7 @@
 public class LeagoSettings
 {
     public string ArenaKey { get; set; } = string.Empty;
+    public int ProfileUpdateDelayHours { get; set; } = 48;
     public string LeagueKey { get; set; } = string.Empty;
     public string OauthTokenEndpoint { get; set; } = string.Empty;
     public string ClientId { get; set; } = string.Empty;
