@@ -137,6 +137,7 @@
     [Parameter] public PlayerViewModel? Player { get; set; }
     [Parameter] public bool IsOpen { get; set; }
     [Parameter] public EventCallback<PlayerViewModel> OnSave { get; set; }
+    [Parameter] public EventCallback<List<PlayerSeasonViewModel>> OnSaveSeasons { get; set; }
     [Parameter] public EventCallback OnClose { get; set; }
 
     [Inject] public MainService MainService { get; set; } = default!;
@@ -150,11 +151,6 @@
     private string Initials => Player is null
         ? ""
         : $"{Player.FirstName?[0]}{Player.LastName?[0]}".ToUpperInvariant();
-
-    private bool IsDirty =>
-        _editHandle != (Player?.DiscordHandle ?? "") ||
-        _editDiscordId != (Player?.DiscordId?.ToString() ?? "") ||
-        _editSeasons.Any(ps => ps.PlayerParticipationTier != OriginalTier(ps.SeasonId));
 
     private PlayerParticipationTier OriginalTier(int seasonId) =>
         _originalTiers.GetValueOrDefault(seasonId);
@@ -195,25 +191,49 @@
         if (Enum.TryParse<PlayerParticipationTier>(e.Value?.ToString(), out var tier))
             ps.PlayerParticipationTier = tier;
     }
+    private bool IsPlayerDirty =>
+        _editHandle != (Player?.DiscordHandle ?? "") ||
+        _editDiscordId != (Player?.DiscordId?.ToString() ?? "");
+
+    private bool IsSeasonsDirty =>
+        _editSeasons.Any(ps => ps.PlayerParticipationTier != OriginalTier(ps.SeasonId));
+
+    private bool IsDirty => IsPlayerDirty || IsSeasonsDirty;
 
     private async Task Save()
     {
         if (Player is null) return;
-        var updated = new PlayerViewModel
+
+        if (IsPlayerDirty)
         {
-            Id = Player.Id,
-            FirstName = Player.FirstName,
-            LastName = Player.LastName,
-            EmailAddress = Player.EmailAddress,
-            OgsHandle = Player.OgsHandle,
-            LeagoMemberId = Player.LeagoMemberId,
-            Rank = Player.Rank,
-            LeagoKey = Player.LeagoKey,
-            GoMagicUserId = Player.GoMagicUserId,
-            TimeZone = Player.TimeZone,
-            DiscordHandle = string.IsNullOrWhiteSpace(_editHandle) ? null : _editHandle,
-            DiscordId = ulong.TryParse(_editDiscordId, out var id) ? id : null,
-        };
-        await OnSave.InvokeAsync(updated);
+            var updated = new PlayerViewModel
+            {
+                Id = Player.Id,
+                FirstName = Player.FirstName,
+                LastName = Player.LastName,
+                EmailAddress = Player.EmailAddress,
+                OgsHandle = Player.OgsHandle,
+                LeagoMemberId = Player.LeagoMemberId,
+                Rank = Player.Rank,
+                LeagoKey = Player.LeagoKey,
+                GoMagicUserId = Player.GoMagicUserId,
+                TimeZone = Player.TimeZone,
+                DiscordHandle = string.IsNullOrWhiteSpace(_editHandle) ? null : _editHandle,
+                DiscordId = ulong.TryParse(_editDiscordId, out var id) ? id : null,
+            };
+            await OnSave.InvokeAsync(updated);
+        }
+
+        if (IsSeasonsDirty)
+        {
+            var changedSeasons = _editSeasons
+                .Where(ps => ps.PlayerParticipationTier != OriginalTier(ps.SeasonId))
+                .ToList();
+            await OnSaveSeasons.InvokeAsync(changedSeasons);
+
+            // sync baseline so the highlight/dirty state clears without a full reload
+            foreach (var ps in changedSeasons)
+                _originalTiers[ps.SeasonId] = ps.PlayerParticipationTier;
+        }
     }
 }

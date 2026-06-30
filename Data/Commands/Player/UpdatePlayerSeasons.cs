@@ -4,13 +4,13 @@ namespace Data.Commands.Player;
 
 public class UpdatePlayerSeasons : Command<LeagueContext>
 {
-    public PlayerRegistrationDto[] PlayerRegistrations { get; set; } = [];
+    public PlayerSeasonDto[] PlayerSeasons { get; set; } = [];
 
     protected override void RunAction(LeagueContext context)
     {
         base.RunAction(context);
 
-        foreach (var player in PlayerRegistrations)
+        foreach (var player in PlayerSeasons)
         {
             var existingPlayerSeason = context.PlayerSeasons.FirstOrDefault(ps =>
                 ps.PlayerId == player.PlayerId && ps.SeasonId == player.SeasonId);
@@ -18,8 +18,10 @@ public class UpdatePlayerSeasons : Command<LeagueContext>
             if (existingPlayerSeason == null)
                 continue;
 
-            existingPlayerSeason.ParticipationTier = player.PlayerParticipationTier;
-            existingPlayerSeason.PaymentStatus = player.PlayerPaymentStatus;
+            if (player.PlayerParticipationTier != null)
+                existingPlayerSeason.ParticipationTier = player.PlayerParticipationTier.Value;
+            if(player.PlayerPaymentStatus!= null)
+                existingPlayerSeason.PaymentStatus = player.PlayerPaymentStatus.Value;
         }
     }
 }

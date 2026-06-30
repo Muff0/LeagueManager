@@ -62,7 +62,8 @@
         <PlayerPanel Player="_selectedPlayer"
                      IsOpen="_selectedPlayer != null"
                      OnSave="HandlePanelSave"
-                     OnClose="ClosePanel"/>
+                     OnSaveSeasons="HandlePanelSaveSeasons"
+                     OnClose="ClosePanel" />
     </div>
 </div>
 
@@ -85,6 +86,11 @@
         ApplyFilter();
     }
 
+    private async Task HandlePanelSaveSeasons(List<PlayerSeasonViewModel> changedSeasons)
+    {
+        await MainService.SavePlayerSeasonChanges(changedSeasons);
+    }
+    
     private void ApplyFilter()
     {
         var q = _searchQuery.Trim().ToLowerInvariant();

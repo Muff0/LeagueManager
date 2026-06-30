@@ -8,4 +8,5 @@ public class PlayerSeasonViewModel
     public int SeasonId { get; set; }
     public string SeasonTitle { get; set; } = string.Empty;
     public PlayerParticipationTier PlayerParticipationTier { get; set; }
+    public PlayerPaymentStatus PlayerPaymentStatus { get; set; }
 }

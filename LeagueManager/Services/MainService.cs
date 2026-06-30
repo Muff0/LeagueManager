@@ -208,7 +208,7 @@ public class MainService(QueueDataService queueDataService,
 
         var noMatch = new List<PaymentDataDto>();
         var noReg = new List<PaymentDataDto>();
-        var toUpdate = new List<PlayerRegistrationDto>();
+        var toUpdate = new List<PlayerSeasonDto>();
         var updateGoMagicIdList = new List<PlayerDto>();
 
         foreach (var payment in payments)
@@ -248,9 +248,8 @@ public class MainService(QueueDataService queueDataService,
 
             if (currentPlayerSeason.PaymentStatus == PlayerPaymentStatus.None
                 || currentPlayerSeason.ParticipationTier != partTier)
-                toUpdate.Add(new PlayerRegistrationDto
+                toUpdate.Add(new PlayerSeasonDto
                 {
-                    DateTime = payment.DateTime,
                     PlayerId = player.Id,
                     PlayerParticipationTier = partTier,
                     SeasonId = season.Id,
@@ -258,7 +257,7 @@ public class MainService(QueueDataService queueDataService,
                 });
         }
 
-        leagueDataService.Execute(new UpdatePlayerSeasons { PlayerRegistrations = toUpdate.ToArray() });
+        leagueDataService.Execute(new UpdatePlayerSeasons { PlayerSeasons = toUpdate.ToArray() });
         leagueDataService.Execute(new UpdatePlayersDataCommand { Players = updateGoMagicIdList.ToArray() });
 
         return new ProcessPaymentDataOutDto
@@ -361,15 +360,24 @@ public class MainService(QueueDataService queueDataService,
             foreach (var review in unposted)
             {
                 var reviewDto = review.ToReviewDto();
-                await discordService.PostReviewThread(new PostReviewThreadInDto
+                try
                 {
-                    Review = reviewDto,
-                    Match = review.Match!.ToMatchDto(),
-                    Teacher = review.Teacher!.ToTeacherDto()
-                });
+                    await discordService.PostReviewThread(new PostReviewThreadInDto
+                    {
+                        Review = reviewDto,
+                        Match = review.Match!.ToMatchDto(),
+                        Teacher = review.Teacher!.ToTeacherDto()
+                    });
+                    
+                    await SendPostedReviewEmail(reviewDto);
 
-                reviewDto.ReviewStatus = ReviewStatus.Notified;
-                posted.Add(reviewDto);
+                    reviewDto.ReviewStatus = ReviewStatus.Notified;
+                    posted.Add(reviewDto);
+                }
+                catch (Exception e)
+                {
+                    HandleException(e);
+                }
             }
 
             await leagueDataService.ExecuteAsync(new UpdateReviewsCommand { Reviews = posted.ToArray() });
@@ -378,6 +386,38 @@ public class MainService(QueueDataService queueDataService,
         {
             HandleException(ex);
         }
+    }
+
+    private async Task SendPostedReviewEmail(ReviewDto reviewDto)
+    {
+        var match = await leagueDataService.TakeFirstAsync(new GetMatchesQuery()
+        {
+            WithId = reviewDto.MatchId!.Value,
+            IncludeSeason =  true,
+            IncludePlayers = true
+        });
+
+        var teacher = await leagueDataService.TakeFirstAsync(new GetTeacherQuery()
+        {
+            Id = reviewDto.TeacherId!.Value
+        });
+        
+        var message = new PostedReviewMessage(reviewDto, match!.ToMatchDto(), teacher!.ToTeacherDto());
+
+        await queueDataService.ExecuteAsync(
+            new InsertCommandMessageCommand()
+            {
+                NewCommand = new CommandMessage()
+                {
+                    Type = "SendEmail",
+                    Payload = new SendEmailPayload()
+                    {
+                        HtmlBody = message.HtmlBody,
+                        Subject = message.Subject,
+                        Tos = match!.PlayerMatches.Select(pm => pm.Player!.EmailAddress).ToArray(),
+                    }.SerializePayload()
+                }
+            });
     }
 
     protected PaymentDataDto[] ParsePaymentData(DataTable table)
@@ -818,7 +858,23 @@ public class MainService(QueueDataService queueDataService,
             PlayerId = ps.PlayerId,
             SeasonId = ps.SeasonId,
             SeasonTitle = ps.Season?.Title ?? "",
-            PlayerParticipationTier = ps.ParticipationTier
+            PlayerParticipationTier = ps.ParticipationTier,
+            PlayerPaymentStatus =  ps.PaymentStatus,
         }).ToArray();
+    }
+
+    public async Task SavePlayerSeasonChanges(List<PlayerSeasonViewModel> changedSeasons)
+    {
+        try
+        {
+            await leagueDataService.ExecuteAsync(new UpdatePlayerSeasons()
+            {
+                PlayerSeasons = changedSeasons.Select(psv => psv.ToPlayerSeasonDto()).ToArray()
+            });
+        }
+        catch (Exception e)
+        {
+            HandleException(e);
+        }
     }
 }

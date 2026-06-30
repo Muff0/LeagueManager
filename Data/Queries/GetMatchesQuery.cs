@@ -11,6 +11,7 @@ public class GetMatchesQuery : Query<LeagueContext, Match>
     public bool? HasGameAnalysisUrl { get; set; }
     public bool? HasScheduledGameAnalysis { get; set; }
     public bool? IsPlayed { get; set; }
+    public int? WithId { get; set; }
     public int? WithSeasonId { get; set; }
     public int? WithRound { get; set; }
     public GameAnalysisStatus? WithGameAnalysisStatus { get; set; } = null;
@@ -24,6 +25,8 @@ public class GetMatchesQuery : Query<LeagueContext, Match>
         if (IncludePlayers)
             query = query.Include(mm => mm.PlayerMatches)
                 .ThenInclude(pm => pm.Player);
+        if (WithId.HasValue)
+            query = query.Where(mm => mm.Id == WithId.Value);
         if (WithSeasonId.HasValue)
             query = query.Where(mm => mm.SeasonId == WithSeasonId);
         if (WithRound.HasValue)
